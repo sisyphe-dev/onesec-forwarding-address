@@ -6,10 +6,10 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sisyphe-dev/key_token.git"
+    "url": "git+https://github.com/sisyphe-dev/onesec-forwarding-address"
   },
   "bugs": {
-    "url": "https://github.com/sisyphe-dev/key_token.git"
+    "url": "https://github.com/sisyphe-dev/onesec-forwarding-address"
   },
   "files": [
     "dist",
