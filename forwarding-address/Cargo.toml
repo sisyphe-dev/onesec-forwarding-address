@@ -1,0 +1,23 @@
+[package]
+name = "forwarding-address"
+version.workspace = true
+edition.workspace = true
+
+[features]
+default = ["js"]
+js = ["dep:getrandom"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+ic-ethereum-types.workspace = true
+ic-secp256k1.workspace = true
+ic-sha3.workspace = true
+getrandom = { version = "0.2", features = ["custom"], optional = true }
+
+[dev-dependencies]
+candid.workspace = true
+icp-ledger.workspace = true
+ic-base-types.workspace = true
