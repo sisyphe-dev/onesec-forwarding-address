@@ -17,105 +17,129 @@ const MAINNET: OneSecForwardingImpl = new OneSecForwardingImpl("Mainnet");
 const TESTNET: OneSecForwardingImpl = new OneSecForwardingImpl("Testnet");
 const LOCAL: OneSecForwardingImpl = new OneSecForwardingImpl("Local");
 
-it("should compute a forwarding address from principal using the local key", () => {
-  let address = LOCAL.computeAddressFor({ owner: TEST_USER }).address;
+it("should compute a forwarding address from principal using the local key", async () => {
+  let address = (await LOCAL.computeAddressFor({ owner: TEST_USER })).address;
   expect(address).toBe("0x72B1E739D1820c107444A905fB8BA3a0892c609D");
 
-  address = LOCAL.computeAddressFor({
-    owner: TEST_USER,
-    subaccount: ZERO_SUBACCOUNT,
-  }).address;
+  address = (
+    await LOCAL.computeAddressFor({
+      owner: TEST_USER,
+      subaccount: ZERO_SUBACCOUNT,
+    })
+  ).address;
   expect(address).toBe("0x72B1E739D1820c107444A905fB8BA3a0892c609D");
 
-  address = LOCAL.computeAddressFor({ owner: TEST_CANISTER }).address;
+  address = (await LOCAL.computeAddressFor({ owner: TEST_CANISTER })).address;
   expect(address).toBe("0x52d3bA7321Af4d539cE460bf51312F12781A5980");
 
-  address = LOCAL.computeAddressFor({
-    owner: TEST_CANISTER,
-    subaccount: ZERO_SUBACCOUNT,
-  }).address;
+  address = (
+    await LOCAL.computeAddressFor({
+      owner: TEST_CANISTER,
+      subaccount: ZERO_SUBACCOUNT,
+    })
+  ).address;
   expect(address).toBe("0x52d3bA7321Af4d539cE460bf51312F12781A5980");
 });
 
-it("should compute a forwarding address from principal and subaccount using the local key", () => {
-  let address = LOCAL.computeAddressFor({
-    owner: TEST_USER,
-    subaccount: SUBACCOUNT,
-  }).address;
+it("should compute a forwarding address from principal and subaccount using the local key", async () => {
+  let address = (
+    await LOCAL.computeAddressFor({
+      owner: TEST_USER,
+      subaccount: SUBACCOUNT,
+    })
+  ).address;
   expect(address).toBe("0xbD258f996193DB6Aa331F6fe15e8A616F6c959da");
 
-  address = LOCAL.computeAddressFor({
-    owner: TEST_CANISTER,
-    subaccount: SUBACCOUNT,
-  }).address;
+  address = (
+    await LOCAL.computeAddressFor({
+      owner: TEST_CANISTER,
+      subaccount: SUBACCOUNT,
+    })
+  ).address;
   expect(address).toBe("0x7690153FA77E24A0b4d99c5470D5ecfc194638A4");
 });
 
-it("should compute a forwarding address from principal using the testnet key", () => {
-  let address = TESTNET.computeAddressFor({ owner: TEST_USER }).address;
+it("should compute a forwarding address from principal using the testnet key", async () => {
+  let address = (await TESTNET.computeAddressFor({ owner: TEST_USER })).address;
   expect(address).toBe("0xCB2Cb2891A17EC7061C893b92339A94fEFf931A4");
 
-  address = TESTNET.computeAddressFor({
-    owner: TEST_USER,
-    subaccount: ZERO_SUBACCOUNT,
-  }).address;
+  address = (
+    await TESTNET.computeAddressFor({
+      owner: TEST_USER,
+      subaccount: ZERO_SUBACCOUNT,
+    })
+  ).address;
   expect(address).toBe("0xCB2Cb2891A17EC7061C893b92339A94fEFf931A4");
 
-  address = TESTNET.computeAddressFor({ owner: TEST_CANISTER }).address;
+  address = (await TESTNET.computeAddressFor({ owner: TEST_CANISTER })).address;
   expect(address).toBe("0xeDB5b0F1643Da8D7b469c9f341f3d9a73FD3375b");
 
-  address = TESTNET.computeAddressFor({
-    owner: TEST_CANISTER,
-    subaccount: ZERO_SUBACCOUNT,
-  }).address;
+  address = (
+    await TESTNET.computeAddressFor({
+      owner: TEST_CANISTER,
+      subaccount: ZERO_SUBACCOUNT,
+    })
+  ).address;
   expect(address).toBe("0xeDB5b0F1643Da8D7b469c9f341f3d9a73FD3375b");
 });
 
-it("should compute a forwarding address from principal and subaccount using the testnet key", () => {
-  let address = TESTNET.computeAddressFor({
-    owner: TEST_USER,
-    subaccount: SUBACCOUNT,
-  }).address;
+it("should compute a forwarding address from principal and subaccount using the testnet key", async () => {
+  let address = (
+    await TESTNET.computeAddressFor({
+      owner: TEST_USER,
+      subaccount: SUBACCOUNT,
+    })
+  ).address;
   expect(address).toBe("0x8EaEABd80C19564cD0aE96403819b6Bcd4613137");
 
-  address = TESTNET.computeAddressFor({
-    owner: TEST_CANISTER,
-    subaccount: SUBACCOUNT,
-  }).address;
+  address = (
+    await TESTNET.computeAddressFor({
+      owner: TEST_CANISTER,
+      subaccount: SUBACCOUNT,
+    })
+  ).address;
   expect(address).toBe("0xbE0272AA6184af0d0260Dba6939805892d6E4D02");
 });
 
-it("should compute a forwarding address from principal using the mainnet key", () => {
-  let address = MAINNET.computeAddressFor({ owner: TEST_USER }).address;
+it("should compute a forwarding address from principal using the mainnet key", async () => {
+  let address = (await MAINNET.computeAddressFor({ owner: TEST_USER })).address;
   expect(address).toBe("0xd9a24235A26CE7bFe34b6Ca1eB95272D2D4d084E");
 
-  address = MAINNET.computeAddressFor({
-    owner: TEST_USER,
-    subaccount: ZERO_SUBACCOUNT,
-  }).address;
+  address = (
+    await MAINNET.computeAddressFor({
+      owner: TEST_USER,
+      subaccount: ZERO_SUBACCOUNT,
+    })
+  ).address;
   expect(address).toBe("0xd9a24235A26CE7bFe34b6Ca1eB95272D2D4d084E");
 
-  address = MAINNET.computeAddressFor({ owner: TEST_CANISTER }).address;
+  address = (await MAINNET.computeAddressFor({ owner: TEST_CANISTER })).address;
   expect(address).toBe("0x657fCc7D102F28573f1e26325e6C2953875cc8cE");
 
-  address = MAINNET.computeAddressFor({
-    owner: TEST_CANISTER,
-    subaccount: ZERO_SUBACCOUNT,
-  }).address;
+  address = (
+    await MAINNET.computeAddressFor({
+      owner: TEST_CANISTER,
+      subaccount: ZERO_SUBACCOUNT,
+    })
+  ).address;
   expect(address).toBe("0x657fCc7D102F28573f1e26325e6C2953875cc8cE");
 });
 
-it("should compute a forwarding address from principal and subaccount using the mainnet key", () => {
-  let address = MAINNET.computeAddressFor({
-    owner: TEST_USER,
-    subaccount: SUBACCOUNT,
-  }).address;
+it("should compute a forwarding address from principal and subaccount using the mainnet key", async () => {
+  let address = (
+    await MAINNET.computeAddressFor({
+      owner: TEST_USER,
+      subaccount: SUBACCOUNT,
+    })
+  ).address;
   expect(address).toBe("0xE91da02501A1f04713B68B9B8A3E5f7c390B3b1F");
 
-  address = MAINNET.computeAddressFor({
-    owner: TEST_CANISTER,
-    subaccount: SUBACCOUNT,
-  }).address;
+  address = (
+    await MAINNET.computeAddressFor({
+      owner: TEST_CANISTER,
+      subaccount: SUBACCOUNT,
+    })
+  ).address;
   expect(address).toBe("0xafc13a1c52022aAad32Cd7Bb6753Cb41ef25cd45");
 });
 
