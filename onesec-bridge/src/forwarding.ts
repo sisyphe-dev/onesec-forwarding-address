@@ -16,7 +16,13 @@ import type {
   TransferId,
 } from "./types";
 
+let wasmInitialized = false;
+
 async function setupWasm(): Promise<void> {
+  if (wasmInitialized) {
+    return;
+  }
+
   const zipped = Uint8Array.from(atob(FORWARDING_ADDRESS_WASM), (c) =>
     c.charCodeAt(0),
   );
@@ -27,10 +33,10 @@ async function setupWasm(): Promise<void> {
       resolve(data.buffer as ArrayBuffer);
     });
   });
-  await wasmInit({ module_or_path: unzipped });
-}
 
-await setupWasm();
+  await wasmInit({ module_or_path: unzipped });
+  wasmInitialized = true;
+}
 
 export class OneSecForwardingImpl implements OneSecForwarding {
   deployment: Deployment;
@@ -46,7 +52,7 @@ export class OneSecForwardingImpl implements OneSecForwarding {
       onesec = this.onesec = await anonymousOneSec(this.deployment);
     }
 
-    const address = this.computeAddressFor(receiver);
+    const address = await this.computeAddressFor(receiver);
     const result = await onesec.validate_forwarding_address(
       toCandid.icpAccount(receiver),
       address.address,
@@ -91,7 +97,8 @@ export class OneSecForwardingImpl implements OneSecForwarding {
     return fromCandid.transfer(result.Ok);
   }
 
-  computeAddressFor(receiver: IcrcAccount): EvmAccount {
+  async computeAddressFor(receiver: IcrcAccount): Promise<EvmAccount> {
+    await setupWasm();
     if (
       receiver.subaccount !== undefined &&
       receiver.subaccount.length !== 32
