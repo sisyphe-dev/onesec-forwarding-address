@@ -25,12 +25,24 @@
     "icp",
     "internet computer"
   ],
-  "main": "./dist/index.js",      
-  "module": "./dist/index.es.js",   
-  "types": "./dist/types/index.d.ts",
+<<<<<<< Updated upstream
+  "main": "./dist/node/index.mjs",
+  "module": "./dist/browser/index.js",
   "exports": {
-    "import": "./dist/index.es.js",
-    "require": "./dist/index.js"
+    ".": {
+      "import": "./dist/browser/index.js",
+      "require": "./dist/node/index.mjs"
+=======
+  "main": "./dist/index.cjs.js",      
+  "module": "./dist/index.es.js",   
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs.js",
+      "types": "./dist/index.d.ts"
+>>>>>>> Stashed changes
+    }
   },
   "scripts": {
     "dev": "vite",
