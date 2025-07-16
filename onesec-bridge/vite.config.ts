@@ -4,13 +4,6 @@ import dts from 'vite-plugin-dts'
 import { resolve } from 'node:path'
 
 export default defineConfig({
-<<<<<<< Updated upstream
-  test: {
-    environment: "node",
-    include: ["src/**/*.spec.ts"],
-    globals: true,
-    watch: false,
-=======
    plugins: [dts({
     entryRoot: 'src',
     outDir: 'dist',
@@ -34,6 +27,5 @@ export default defineConfig({
         }
       }
     }
->>>>>>> Stashed changes
   },
 })
