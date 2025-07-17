@@ -176,7 +176,7 @@ export interface OneSecForwarding {
    * @param receiver - the ICP address for receiving tokens on the ICP chain.
    * @returns the EVM forwarding address.
    */
-  addressFor: (receiver: IcrcAccount) => Promise<EvmAccount>;
+  addressFor: (receiver: IcrcAccount) => Promise<string>;
 
   /**
    * Initiates bridging of tokens from the forwarding address on the EVM chain
@@ -193,7 +193,7 @@ export interface OneSecForwarding {
   forwardEvmToIcp: (
     token: Token,
     chain: EvmChain,
-    forwardingAddress: EvmAccount,
+    forwardingAddress: string,
     receiver: IcrcAccount,
   ) => Promise<ForwardingResponse>;
 

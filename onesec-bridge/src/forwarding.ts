@@ -46,7 +46,7 @@ export class OneSecForwardingImpl implements OneSecForwarding {
     this.deployment = deployment;
   }
 
-  async addressFor(receiver: IcrcAccount): Promise<EvmAccount> {
+  async addressFor(receiver: IcrcAccount): Promise<string> {
     let onesec = this.onesec;
     if (onesec === undefined) {
       onesec = this.onesec = await anonymousOneSec(this.deployment);
@@ -60,13 +60,13 @@ export class OneSecForwardingImpl implements OneSecForwarding {
     if ("Err" in result) {
       throw Error(result.Err);
     }
-    return address;
+    return address.address;
   }
 
   async forwardEvmToIcp(
     token: Token,
     sourceChain: EvmChain,
-    sender: EvmAccount,
+    sender: string,
     receiver: IcrcAccount,
   ): Promise<ForwardingResponse> {
     let onesec = this.onesec;
@@ -76,7 +76,7 @@ export class OneSecForwardingImpl implements OneSecForwarding {
     const result = await onesec.forward_evm_to_icp({
       chain: toCandid.chain(sourceChain),
       token: toCandid.token(token),
-      address: sender.address,
+      address: sender,
       receiver: toCandid.icpAccount(receiver),
     });
     if ("Err" in result) {
