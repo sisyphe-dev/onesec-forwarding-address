@@ -1,5 +1,5 @@
 import { OneSecForwardingImpl } from "./forwarding";
-import type { OneSecForwarding } from "./types";
+import type { Deployment, OneSecForwarding } from "./types";
 export type { OneSecForwarding } from "./types";
 
 /**
@@ -10,6 +10,14 @@ export type { OneSecForwarding } from "./types";
  * Tokens transferred to the forwarding address on EVM are bridged to the
  * corresponding ICP address on ICP.
  */
-export function oneSecForwarding(): OneSecForwarding {
-  return new OneSecForwardingImpl("Mainnet");
+export function oneSecForwarding(setup?: Deployment): OneSecForwarding {
+  if (!setup) return new OneSecForwardingImpl("Mainnet");
+  switch (setup) {
+    case "Mainnet":
+      return new OneSecForwardingImpl("Mainnet");
+    case "Testnet":
+      return new OneSecForwardingImpl("Testnet");
+    case "Local":
+      return new OneSecForwardingImpl("Local");
+  }
 }

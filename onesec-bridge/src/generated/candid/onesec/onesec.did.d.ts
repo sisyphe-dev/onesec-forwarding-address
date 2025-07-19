@@ -416,6 +416,10 @@ export interface _SERVICE {
     [IcpAccount],
     { Ok: string } | { Err: string }
   >;
+  get_forwarding_status: ActorMethod<
+    [ForwardEvmToIcpArg],
+    { Ok: ForwardingResponse } | { Err: string }
+  >;
   get_forwarding_transactions: ActorMethod<
     [EvmChain],
     Array<SignedForwardingTx>
