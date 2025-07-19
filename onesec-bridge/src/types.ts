@@ -179,6 +179,25 @@ export interface OneSecForwarding {
   addressFor: (receiver: IcrcAccount) => Promise<string>;
 
   /**
+   * Checks the current status of a potential forwarding request.
+   *
+   * This function should be called **after** `getForwardingStatus`.
+   * It does **not** initiate a new forwarding request; it only inspects the current status.
+   *
+   * @param token - the token that is bridged.
+   * @param chain - the source EVM chain.
+   * @param forwardingAddress - the EVM forwarding address.
+   * @param receiver - the ICP receiving address.
+   *
+   */
+  getForwardingStatus: (
+    token: Token,
+    chain: EvmChain,
+    forwardingAddress: string,
+    receiver: IcrcAccount,
+  ) => Promise<ForwardingResponse>;
+
+  /**
    * Initiates bridging of tokens from the forwarding address on the EVM chain
    * to the receiving address on the ICP chain.
    *

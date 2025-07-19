@@ -421,6 +421,11 @@ export const idlFactory = ({ IDL }) => {
       [IDL.Variant({ Ok: IDL.Text, Err: IDL.Text })],
       ["query"],
     ),
+    get_forwarding_status: IDL.Func(
+      [ForwardEvmToIcpArg],
+      [IDL.Variant({ Ok: ForwardingResponse, Err: IDL.Text })],
+      ["query"],
+    ),
     get_forwarding_transactions: IDL.Func(
       [EvmChain],
       [IDL.Vec(SignedForwardingTx)],
