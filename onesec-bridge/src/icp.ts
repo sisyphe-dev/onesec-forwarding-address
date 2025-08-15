@@ -36,7 +36,7 @@ function url(deployment: Deployment): string {
     case "Testnet":
       return "https://ic0.app";
     case "Local":
-      return "http://127.0.1:8080";
+      return "http://127.0.0.1:8080";
   }
 }
 
