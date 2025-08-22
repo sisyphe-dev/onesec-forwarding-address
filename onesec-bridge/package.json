@@ -58,6 +58,12 @@
   },
   "dependencies": {
     "@dfinity/agent": "^3.2.1",
+    "@dfinity/candid": "^3.2.2",
+    "@dfinity/identity": "^3.2.2",
+    "@dfinity/identity-secp256k1": "^3.2.2",
+    "@dfinity/principal": "^3.2.2",
+    "@dfinity/utils": "^2.14.0",
+    "ethers": "^6.15.0",
     "fflate": "^0.8.2"
   }
 }

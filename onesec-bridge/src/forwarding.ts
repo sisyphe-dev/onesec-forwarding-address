@@ -5,6 +5,7 @@ import { FORWARDING_ADDRESS_WASM } from "./generated/wasm/forwarding_address.was
 import { anonymousOneSec, type OneSec } from "./icp";
 import * as toCandid from "./toCandid";
 import type {
+  Addresses,
   Deployment,
   EvmAccount,
   EvmChain,
@@ -40,16 +41,21 @@ async function setupWasm(): Promise<void> {
 
 export class OneSecForwardingImpl implements OneSecForwarding {
   deployment: Deployment;
+  addresses?: Addresses;
   onesec?: OneSec;
 
-  constructor(deployment: Deployment) {
+  constructor(deployment: Deployment, addresses?: Addresses) {
     this.deployment = deployment;
+    this.addresses = addresses;
   }
 
   async addressFor(receiver: IcrcAccount): Promise<string> {
     let onesec = this.onesec;
     if (onesec === undefined) {
-      onesec = this.onesec = await anonymousOneSec(this.deployment);
+      onesec = this.onesec = await anonymousOneSec(
+        this.deployment,
+        this.addresses,
+      );
     }
 
     const account = await this.computeAddressFor(receiver);
@@ -71,7 +77,10 @@ export class OneSecForwardingImpl implements OneSecForwarding {
   ): Promise<ForwardingResponse> {
     let onesec = this.onesec;
     if (onesec == undefined) {
-      onesec = this.onesec = await anonymousOneSec(this.deployment);
+      onesec = this.onesec = await anonymousOneSec(
+        this.deployment,
+        this.addresses,
+      );
     }
 
     const result = await onesec.get_forwarding_status({
@@ -95,7 +104,10 @@ export class OneSecForwardingImpl implements OneSecForwarding {
   ): Promise<ForwardingResponse> {
     let onesec = this.onesec;
     if (onesec === undefined) {
-      onesec = this.onesec = await anonymousOneSec(this.deployment);
+      onesec = this.onesec = await anonymousOneSec(
+        this.deployment,
+        this.addresses,
+      );
     }
     const result = await onesec.forward_evm_to_icp({
       chain: toCandid.chain(sourceChain),
@@ -112,7 +124,10 @@ export class OneSecForwardingImpl implements OneSecForwarding {
   async getTransfer(transferId: TransferId): Promise<Transfer> {
     let onesec = this.onesec;
     if (onesec === undefined) {
-      onesec = this.onesec = await anonymousOneSec(this.deployment);
+      onesec = this.onesec = await anonymousOneSec(
+        this.deployment,
+        this.addresses,
+      );
     }
     const result = await onesec.get_transfer(transferId);
     if ("Err" in result) {

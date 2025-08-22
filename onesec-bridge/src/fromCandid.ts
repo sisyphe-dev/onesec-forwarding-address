@@ -10,6 +10,7 @@ import type {
   Status,
   Token,
   Transfer,
+  TransferResponse,
   Tx,
 } from "./types";
 
@@ -223,4 +224,21 @@ export function transfer(transfer: candid.Transfer): Transfer {
     destination: asset(transfer.destination),
     status: status(transfer.status[0]),
   };
+}
+
+export function transferResponse(
+  response: candid.TransferResponse,
+): TransferResponse {
+  switch (true) {
+    case "Failed" in response:
+      return { Failed: response.Failed };
+    case "Accepted" in response:
+      return { Accepted: response.Accepted };
+    case "Fetching" in response:
+      return { Fetching: { blockHeight: response.Fetching.block_height } };
+    default: {
+      const _exhaustiveCheck: never = response;
+      throw Error("unexpected candid transfer response");
+    }
+  }
 }
