@@ -1,6 +1,4 @@
-import type { Agent } from "@dfinity/agent";
 import type { Principal } from "@dfinity/principal";
-import { Signer } from "ethers";
 
 /**
  * Specifies a supported EVM chain.
@@ -28,14 +26,6 @@ export type Token =
  * Specifies the network where the bridging smart contract is deployed.
  */
 export type Deployment = "Mainnet" | "Testnet" | "Local";
-
-/**
- * Contains canister IDs for OneSec and token ledgers.
- */
-export interface Addresses {
-  oneSec?: string;
-  ledgers?: Map<Token, string>;
-}
 
 /**
  * An EVM transaction hash with an optional log index.
@@ -245,56 +235,62 @@ export interface OneSecForwarding {
 /**
  * A helper for direct bridging operations between ICP and EVM chains.
  */
-export interface OneSecBridge {
-  /**
-   * Initiates bridging of tokens from ICP to an EVM chain.
-   *
-   * @param agent - the agent for ICP communication.
-   * @param token - the token that is bridged.
-   * @param icpAccount - the source ICP account.
-   * @param icpAmount - the amount to bridge from ICP.
-   * @param evmChain - the destination EVM chain.
-   * @param evmAddress - the destination EVM address.
-   * @param evmAmount - optional minimum amount to receive on EVM.
-   * The transfer will not start if the current fees are large such that the
-   * actual amount received would be lower than `evmAmount`.
-   */
-  transferIcpToEvm: (
-    agent: Agent,
-    token: Token,
-    icpAccount: IcrcAccount,
-    icpAmount: bigint,
-    evmChain: EvmChain,
-    evmAddress: string,
-    evmAmount?: bigint,
-  ) => Promise<TransferResponse>;
 
-  /**
-   * Initiates bridging of tokens from an EVM chain to ICP.
-   *
-   * @param token - the token that is bridged.
-   * @param evmChain - the source EVM chain.
-   * @param evmAddress - the source EVM address.
-   * @param evmAmount - the amount to bridge from EVM.
-   * @param icpAccount - the destination ICP account.
-   * @param icpAmount - optional minimum amount to receive on ICP.
-   * The transfer will not start if the current fees are large such that the
-   * actual amount received would be lower than `icpAmount`.
-   */
-  transferEvmToIcp: (
-    signer: Signer,
-    token: Token,
-    evmChain: EvmChain,
-    evmAddress: string,
-    evmAmount: bigint,
-    icpAccount: IcrcAccount,
-    icpAmount?: bigint,
-  ) => Promise<TransferResponse>;
+export type Amount = {
+  inTokens: number;
+  inUnits: bigint;
+};
 
-  /**
-   * Fetches details of a bridging transfer by its id.
-   *
-   * @param transferId - the id of the transfer.
-   */
-  getTransfer: (transferId: TransferId) => Promise<Transfer>;
+export type Details = {
+  summary: string;
+  description: string;
+};
+
+export type Result =
+  | {
+      Ok: {
+        details: Details;
+        amount?: Amount;
+        transaction?: Tx;
+        link?: string;
+      };
+    }
+  | {
+      Err: Details;
+    };
+
+export type StepStatus =
+  | { Planned: null }
+  | { Pending: { summary: string; description: string } }
+  | { Done: Result };
+
+export interface Step {
+  details: () => Details;
+
+  chain: () => Chain;
+  contract: () => string | undefined;
+  method: () => string | undefined;
+  args: () => string | undefined;
+
+  status: () => StepStatus;
+
+  run: () => Promise<StepStatus>;
+
+  expectedDurationMs: () => number;
+}
+
+export interface BridgingPlan {
+  steps: () => Step[];
+
+  result: () => Result | undefined;
+
+  lastStep: () => Step | undefined;
+
+  nextStep: () => Step | undefined;
+
+  runAllSteps: () => Promise<Result>;
+
+  expectedDurationMs: () => number;
+  expectedFees: () => Amount;
+  expectedReceive: () => Amount;
 }

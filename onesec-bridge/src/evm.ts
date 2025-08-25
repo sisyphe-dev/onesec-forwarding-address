@@ -21,7 +21,7 @@ export function erc20(
   chain: EvmChain,
   token: Token,
   config: Config = DEFAULT_CONFIG,
-): Contract {
+): [Contract, string] {
   const tokenConfig = config.evm.get(chain)?.tokens.get(token);
   if (!tokenConfig) {
     throw Error(`no EVM config for ${chain} and ${token}`);
@@ -30,7 +30,7 @@ export function erc20(
     tokenConfig.mode === "minter"
       ? config.abi.erc20_and_minter
       : config.abi.erc20;
-  return new Contract(tokenConfig.erc20, abi, signer);
+  return [new Contract(tokenConfig.erc20, abi, signer), tokenConfig.erc20];
 }
 
 export function locker(

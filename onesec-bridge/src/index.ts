@@ -1,15 +1,23 @@
-import { OneSecBridgeImpl } from "./bridge";
-import type { Config } from "./config";
 import { OneSecForwardingImpl } from "./forwarding";
 import type {
-  Addresses,
+  Amount,
   Deployment,
-  OneSecBridge,
   OneSecForwarding,
+  Result,
+  Step,
 } from "./types";
+
+export { EvmToIcpBridgeBuilder, IcpToEvmBridgeBuilder } from "./bridge";
 export { DEFAULT_CONFIG } from "./config";
 export type { Config, EvmConfig, EvmTokenConfig, IcpConfig } from "./config";
-export type { Addresses, OneSecBridge, OneSecForwarding } from "./types";
+export type {
+  Amount,
+  Details,
+  OneSecForwarding,
+  Result,
+  Step,
+  StepStatus,
+} from "./types";
 
 /**
  * Constructs an instance of `OneSecForwarding` for bridging tokens from EVM
@@ -22,28 +30,90 @@ export type { Addresses, OneSecBridge, OneSecForwarding } from "./types";
  * @param setup - the deployment environment (defaults to Mainnet)
  * @param addresses - optional canister IDs for custom deployments
  */
-export function oneSecForwarding(
-  setup?: Deployment,
-  addresses?: Addresses,
-): OneSecForwarding {
-  return new OneSecForwardingImpl(setup ?? "Mainnet", addresses);
+export function oneSecForwarding(setup?: Deployment): OneSecForwarding {
+  return new OneSecForwardingImpl(setup ?? "Mainnet");
 }
 
-/**
- * Constructs an instance of `OneSecBridge` for direct bridging operations
- * between ICP and EVM chains.
- *
- * This interface provides methods for transferring tokens directly from ICP
- * to EVM chains and retrieving transfer details.
- *
- * @param setup - the deployment environment (defaults to Mainnet)
- * @param addresses - optional canister IDs for custom deployments
- * @param config - optional EVM configuration for tokens and contracts
- */
-export function oneSecBridge(
-  setup?: Deployment,
-  addresses?: Addresses,
-  config?: Config,
-): OneSecBridge {
-  return new OneSecBridgeImpl(setup ?? "Mainnet", addresses, config);
+export class BridgingPlan {
+  private _result?: Result;
+  private currentStepIndex: number = 0;
+
+  constructor(
+    private _steps: Step[],
+    private _fees: Amount,
+    private _receiveAmount: Amount,
+  ) {}
+
+  steps(): Step[] {
+    return this._steps;
+  }
+
+  result(): Result | undefined {
+    return this._result;
+  }
+
+  lastStep(): Step | undefined {
+    if (this.currentStepIndex === 0) {
+      return undefined;
+    }
+    return this._steps[this.currentStepIndex - 1];
+  }
+
+  skipDone() {
+    while (
+      this.currentStepIndex < this._steps.length &&
+      "Done" in this._steps[this.currentStepIndex]
+    ) {
+      this.currentStepIndex += 1;
+    }
+  }
+
+  nextStep(): Step | undefined {
+    this.skipDone();
+
+    const lastStep = this.lastStep();
+    if (lastStep) {
+      const lastStatus = lastStep.status();
+      if ("Done" in lastStatus) {
+        if ("Err" in lastStatus.Done) {
+          return undefined;
+        }
+      }
+    }
+
+    return this._steps[this.currentStepIndex];
+  }
+
+  async runAllSteps(): Promise<Result> {
+    let nextStep = this.nextStep();
+    while (nextStep) {
+      nextStep.run();
+      nextStep = this.nextStep();
+    }
+
+    const lastStep = this.lastStep();
+    if (lastStep) {
+      const lastStatus = lastStep.status();
+      if ("Done" in lastStatus) {
+        this._result = lastStatus.Done;
+      }
+    }
+
+    return this._result!;
+  }
+
+  expectedDurationMs(): number {
+    return this._steps.reduce(
+      (total, step) => total + step.expectedDurationMs(),
+      0,
+    );
+  }
+
+  expectedFees(): Amount {
+    return this._fees;
+  }
+
+  expectedReceive(): Amount {
+    return this._receiveAmount;
+  }
 }

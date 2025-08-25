@@ -11,50 +11,48 @@ import {
   idlFactory as IcrcLedgerIDL,
   type _SERVICE as IcrcLedger,
 } from "./generated/candid/icrc_ledger/icrc_ledger.did";
-import { Addresses, IcrcAccount, type Deployment, type Token } from "./types";
+import { IcrcAccount, type Deployment, type Token } from "./types";
 export { type _SERVICE as IcrcLedger } from "./generated/candid/icrc_ledger/icrc_ledger.did";
 export { type _SERVICE as OneSec } from "./generated/candid/onesec/onesec.did";
 
 export async function anonymousOneSec(
   deployment: Deployment,
-  addresses?: Addresses,
   config?: Config,
 ): Promise<OneSec> {
   const agent = await anonymousAgent(deployment, config);
-  return await oneSecWithAgent(deployment, agent, addresses, config);
+  const onesec = Principal.fromText(
+    defaultOneSecCanisterId(deployment, config),
+  );
+  return await oneSecWithAgent(onesec, agent);
 }
 
 export async function oneSecWithAgent(
-  deployment: Deployment,
+  onesec: Principal,
   agent: Agent,
-  addresses?: Addresses,
-  config?: Config,
 ): Promise<OneSec> {
   return await Actor.createActor(OneSecIDL, {
     agent,
-    canisterId: oneSecCanisterId(deployment, addresses, config),
+    canisterId: onesec.toText(),
   });
 }
 
 export async function anonymousIcrcLedger(
   token: Token,
   deployment: Deployment,
-  addresses?: Addresses,
   config?: Config,
 ): Promise<IcrcLedger> {
   const agent = await anonymousAgent(deployment, config);
-  return await icrcLedgerWithAgent(token, agent, addresses, config);
+  return await icrcLedgerWithAgent(token, agent, config);
 }
 
 export async function icrcLedgerWithAgent(
   token: Token,
   agent: Agent,
-  addresses?: Addresses,
   config?: Config,
 ): Promise<IcrcLedger> {
   return await Actor.createActor(IcrcLedgerIDL, {
     agent,
-    canisterId: icrcLedgerCanisterId(token, addresses, config),
+    canisterId: defaultIcrcLedgerCanisterId(token, config),
   });
 }
 
@@ -107,24 +105,6 @@ function defaultIcrcLedgerCanisterId(
     throw new Error(`No ICRC ledger canister configured for token: ${token}`);
   }
   return canisterId;
-}
-
-function icrcLedgerCanisterId(
-  token: Token,
-  addresses?: Addresses,
-  config: Config = DEFAULT_CONFIG,
-): string {
-  return (
-    addresses?.ledgers?.get(token) ?? defaultIcrcLedgerCanisterId(token, config)
-  );
-}
-
-function oneSecCanisterId(
-  deployment: Deployment,
-  addresses?: Addresses,
-  config: Config = DEFAULT_CONFIG,
-): string {
-  return addresses?.oneSec ?? defaultOneSecCanisterId(deployment, config);
 }
 
 const TAG_ICRC = 0;

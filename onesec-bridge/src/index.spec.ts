@@ -3,7 +3,7 @@ import { Secp256k1KeyIdentity } from "@dfinity/identity-secp256k1";
 import { Principal } from "@dfinity/principal";
 import { existsSync, readFileSync } from "fs";
 import { expect, it } from "vitest";
-import { oneSecBridge, oneSecForwarding } from "./index";
+import { IcpToEvmBridgeBuilder, oneSecForwarding } from "./index";
 
 it(
   "should bridge using a forwarding address",
@@ -32,30 +32,30 @@ it(
       receiver,
     );
 
-    expect(result.done).toBe(undefined);
-    expect(result.status).toStrictEqual({ CheckingBalance: null });
+    console.log(result);
+    expect(result.status).toStrictEqual({ CheckingBalance: { retry: 0 } });
 
-    // Step 5. If tokens were actually transferred to the forwarding address in Step 3,
-    // then they would be forwarded to the ICP receiver within 1-2 minutes.
-    // The new status of forwarding can be fetched by calling `forward_evm_to_icp`.
+    // Step 5. Poll the bridging status until it succeeds
+    for (let i = 0; i < 50; i++) {
+      result = await forwarding.forwardEvmToIcp(
+        "USDC",
+        "Base",
+        address,
+        receiver,
+      );
+      console.log(result);
 
-    result = await forwarding.forwardEvmToIcp(
-      "USDC",
-      "Base",
-      address,
-      receiver,
-    );
-
-    if (result.done !== undefined) {
-      const transfer = await forwarding.getTransfer(result.done);
-      expect(transfer.status).toStrictEqual({ Succeeded: null });
+      if ("done" in result && result.done) {
+        const transfer = await forwarding.getTransfer(result.done);
+        expect(transfer.status).toStrictEqual({ Succeeded: null });
+      }
     }
   },
   { timeout: 10_000 },
 );
 
 it(
-  "should transfer ICP to EVM using oneSecBridge",
+  "should transfer ICP to EVM using icpToEvmBridgeBuilder",
   async () => {
     if (!existsSync("test_key.pem")) {
       console.warn(
@@ -73,79 +73,42 @@ it(
       host: "https://ic0.app",
     });
 
-    console.log(`Using test principal: ${agent.getPrincipal()}`);
+    console.log(`Using test principal: ${identity.getPrincipal()}`);
 
-    const bridge = oneSecBridge("Mainnet");
+    const bridge = new IcpToEvmBridgeBuilder(agent, "Base", "ICP");
 
     const icpAccount = {
       owner: identity.getPrincipal(),
       subaccount: undefined,
     };
     const icpAmount = BigInt(100000000);
-    const evmChain = "Base" as const;
     const evmAddress = "0x1234567890123456789012345678901234567890";
 
-    const response = await bridge.transferIcpToEvm(
-      agent,
-      "ICP",
-      icpAccount,
-      icpAmount,
-      evmChain,
-      evmAddress,
+    const plan = await bridge
+      .target("Mainnet")
+      .sender(icpAccount.owner, icpAccount.subaccount)
+      .receiver(evmAddress)
+      .amountInUnits(icpAmount)
+      .build();
+
+    console.log(
+      "Plan created with steps:",
+      plan.steps().map((step: any) => step.details().summary),
     );
 
-    console.log("Transfer response:", response);
+    const result = await plan.runAllSteps();
 
-    if ("Failed" in response) {
-      console.error("Transfer failed:", response.Failed.error);
-      expect.fail(`Transfer failed: ${response.Failed.error}`);
-      return;
+    console.log("Plan execution result:", result);
+
+    if ("Err" in result) {
+      console.error("Plan execution failed:", result.Err.description);
+      expect.fail("Plan execution should not fail");
     }
 
-    if ("Accepted" in response) {
-      console.log("Transfer accepted with ID:", response.Accepted.id);
-
-      // Poll for transfer status
-      const transferId = response.Accepted;
-      let transfer = await bridge.getTransfer(transferId);
-      console.log("Initial transfer status:", transfer);
-
-      // Poll until completion (max 5 minutes)
-      const maxPolls = 30; // 5 minutes with 10 second intervals
-      let polls = 0;
-
-      while (polls < maxPolls) {
-        transfer = await bridge.getTransfer(transferId);
-        console.log(`Poll ${polls + 1}: Transfer status:`, transfer.status);
-
-        if (transfer.status && "Succeeded" in transfer.status) {
-          console.log("Transfer succeeded!");
-          expect(transfer.status).toStrictEqual({ Succeeded: null });
-          return;
-        }
-
-        if (transfer.status && "Failed" in transfer.status) {
-          console.error("Transfer failed:", transfer.status.Failed.error);
-          expect.fail(`Transfer failed: ${transfer.status.Failed.error}`);
-          return;
-        }
-
-        // Wait 10 seconds before next poll
-        await new Promise((resolve) => setTimeout(resolve, 10000));
-        polls++;
-      }
-
-      console.warn("Transfer did not complete within 5 minutes");
-      console.log("Final transfer status:", transfer);
-    } else if ("Fetching" in response) {
-      console.log(
-        "Transfer is fetching at block:",
-        response.Fetching.blockHeight,
-      );
-      console.warn(
-        "Transfer is still fetching. Manual verification may be needed.",
-      );
+    if ("Ok" in result) {
+      console.log("Plan executed successfully:", result.Ok.details.summary);
+      expect(result.Ok).toBeDefined();
     }
   },
-  { timeout: 300_000 }, // 5 minutes timeout
+  { timeout: 60_000 },
 );
