@@ -1,13 +1,11 @@
 import { Contract } from "ethers";
-import type { Details, EvmChain, StepStatus, Token } from "../../types";
+import type { Details, StepStatus, Token } from "../../types";
 import { BaseStep, err, EVM_CALL_DURATION_MS, ok } from "../shared";
 
 export class ApproveStep extends BaseStep {
   constructor(
     private erc20Contract: Contract,
-    private erc20Address: string,
     private token: Token,
-    private evmChain: EvmChain,
     private evmAmount: bigint,
     private lockerAddress: string,
   ) {

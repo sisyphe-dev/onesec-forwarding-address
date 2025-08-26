@@ -1,7 +1,6 @@
-import { Principal } from "@dfinity/principal";
 import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
-import type { Chain, Details, EvmChain, StepStatus } from "../../types";
+import type { Details, StepStatus } from "../../types";
 import {
   BaseStep,
   err,
@@ -16,8 +15,6 @@ export class WaitForIcpTx extends BaseStep {
 
   constructor(
     private oneSecActor: OneSec,
-    private oneSecId: Principal,
-    private evmChain: EvmChain,
     private getTransferId: GetTransferId,
   ) {
     super();
@@ -28,25 +25,6 @@ export class WaitForIcpTx extends BaseStep {
       summary: "Wait for ledger transaction",
       description: "Wait for OneSec to call the ledger",
     };
-  }
-
-  chain(): Chain {
-    return this.evmChain;
-  }
-
-  contract(): string {
-    return this.oneSecId.toText();
-  }
-
-  method(): string {
-    return "get_transfer";
-  }
-
-  args(): string | undefined {
-    const id = this.getTransferId.getTransferId();
-    return id == undefined
-      ? undefined
-      : JSON.stringify({ id: id.id.toString() });
   }
 
   expectedDurationMs(): number {

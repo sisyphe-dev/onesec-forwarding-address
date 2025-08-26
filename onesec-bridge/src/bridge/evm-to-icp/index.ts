@@ -122,17 +122,13 @@ export class EvmToIcpBridgeBuilder {
         );
         const approveStep = new ApproveStep(
           erc20Contract,
-          erc20Address,
           this.token,
-          this.evmChain,
           this.evmAmount,
           lockerAddress,
         );
         const lockStep = new LockStep(
           lockerContract,
-          lockerAddress,
           this.token,
-          this.evmChain,
           this.evmAmount,
           this.icpAccount,
         );
@@ -144,7 +140,6 @@ export class EvmToIcpBridgeBuilder {
         );
         const validateReceiptStep = new ValidateReceiptStep(
           oneSecActor,
-          oneSecId,
           this.token,
           this.evmChain,
           this.evmAddress,
@@ -154,8 +149,6 @@ export class EvmToIcpBridgeBuilder {
         );
         const waitForIcpTxStep = new WaitForIcpTx(
           oneSecActor,
-          oneSecId,
-          this.evmChain,
           validateReceiptStep,
         );
         steps = [
@@ -178,9 +171,7 @@ export class EvmToIcpBridgeBuilder {
         );
         const burnStep = new BurnStep(
           minterContract,
-          minterAddress,
           this.token,
-          this.evmChain,
           this.evmAmount,
           this.icpAccount,
         );
@@ -192,7 +183,6 @@ export class EvmToIcpBridgeBuilder {
         );
         const validateReceiptStep = new ValidateReceiptStep(
           oneSecActor,
-          oneSecId,
           this.token,
           this.evmChain,
           this.evmAddress,
@@ -202,8 +192,6 @@ export class EvmToIcpBridgeBuilder {
         );
         const waitForIcpTxStep = new WaitForIcpTx(
           oneSecActor,
-          oneSecId,
-          this.evmChain,
           validateReceiptStep,
         );
         steps = [
@@ -292,8 +280,6 @@ export class EvmToIcpBridgeBuilder {
 
     const waitForIcpTxStep = new WaitForIcpTx(
       oneSecActor,
-      oneSecId,
-      this.evmChain,
       validateForwardingReceiptStep,
     );
 

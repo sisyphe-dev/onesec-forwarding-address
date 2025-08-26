@@ -1,7 +1,6 @@
 import { Contract } from "ethers";
 import type {
   Details,
-  EvmChain,
   EvmTx,
   IcrcAccount,
   StepStatus,
@@ -22,9 +21,7 @@ export class LockStep extends BaseStep implements GetEvmTx {
 
   constructor(
     private lockerContract: Contract,
-    private lockerAddress: string,
     private token: Token,
-    private evmChain: EvmChain,
     private evmAmount: bigint,
     private icpAccount: IcrcAccount,
   ) {

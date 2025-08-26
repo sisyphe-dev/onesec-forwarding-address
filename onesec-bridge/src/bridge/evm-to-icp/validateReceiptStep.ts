@@ -1,4 +1,3 @@
-import { Principal } from "@dfinity/principal";
 import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
 import * as toCandid from "../../toCandid";
@@ -26,7 +25,6 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
 
   constructor(
     private oneSecActor: OneSec,
-    private oneSecId: Principal,
     private token: Token,
     private evmChain: EvmChain,
     private evmAddress: string,

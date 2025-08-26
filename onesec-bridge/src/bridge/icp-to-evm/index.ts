@@ -127,7 +127,6 @@ export class IcpToEvmBridgeBuilder {
 
     const waitForTxStep = new WaitForTxStep(
       oneSecActor,
-      oneSecId,
       this.evmChain,
       transferStep,
     );
@@ -139,7 +138,6 @@ export class IcpToEvmBridgeBuilder {
     );
     const validateReceiptStep = new ValidateReceiptStep(
       oneSecActor,
-      oneSecId,
       this.evmChain,
       transferStep,
     );

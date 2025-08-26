@@ -1,4 +1,3 @@
-import { Principal } from "@dfinity/principal";
 import * as fromCandid from "../../fromCandid";
 import {
   TraceEvent,
@@ -16,7 +15,6 @@ export class WaitForTxStep extends BaseStep {
 
   constructor(
     private oneSecActor: OneSec,
-    private oneSecId: Principal,
     private evmChain: EvmChain,
     private transferStep: TransferStep,
   ) {
