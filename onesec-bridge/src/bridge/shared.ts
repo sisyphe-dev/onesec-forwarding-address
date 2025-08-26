@@ -1,6 +1,7 @@
 import { Actor, HttpAgent, type Agent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { DEFAULT_CONFIG, type Config } from "../config";
+import * as fromCandid from "../fromCandid";
 import {
   idlFactory as OneSecIDL,
   type _SERVICE as OneSec,
@@ -17,11 +18,9 @@ import {
   Step,
   StepStatus,
   Token,
-  TransferFee,
   TransferId,
   Tx,
 } from "../types";
-import * as fromCandid from "../fromCandid";
 
 export const ICP_CALL_DURATION_MS = 5000;
 export const EVM_CALL_DURATION_MS = 5000;
@@ -124,7 +123,6 @@ export class ConfirmBlocksStep extends BaseStep {
   }
 }
 
-
 export class CheckFeesAndLimitsStep extends BaseStep {
   constructor(
     private onesec: OneSec,
@@ -173,12 +171,16 @@ export class CheckFeesAndLimitsStep extends BaseStep {
       },
     };
 
-
     const response = await this.onesec.get_transfer_fees();
     const fees = fromCandid.transferFees(response);
     const src = this.sourceChain;
     const dst = this.destinationChain;
-    const fee = fees.find(x => x.token === this.token && x.sourceChain === src && x.destinationChain == dst);
+    const fee = fees.find(
+      (x) =>
+        x.token === this.token &&
+        x.sourceChain === src &&
+        x.destinationChain == dst,
+    );
 
     if (fee === undefined) {
       this._status = {
@@ -210,7 +212,11 @@ export class CheckFeesAndLimitsStep extends BaseStep {
       return this._status;
     }
 
-    if (this.amount !== undefined && fee.available !== undefined && this.amount > fee.available) {
+    if (
+      this.amount !== undefined &&
+      fee.available !== undefined &&
+      this.amount > fee.available
+    ) {
       this._status = {
         Done: err({
           summary: "Insufficient balance on destination chain",
@@ -220,7 +226,12 @@ export class CheckFeesAndLimitsStep extends BaseStep {
       return this._status;
     }
 
-    const forwardingFee = fees.find(x => x.token === this.token && x.destinationChain === src && x.sourceChain == dst);
+    const forwardingFee = fees.find(
+      (x) =>
+        x.token === this.token &&
+        x.destinationChain === src &&
+        x.sourceChain == dst,
+    );
 
     if (forwardingFee === undefined) {
       this._status = {
@@ -232,15 +243,26 @@ export class CheckFeesAndLimitsStep extends BaseStep {
       return this._status;
     }
 
-    const expectedTransferFeeInUnits = this.isForwarding ? forwardingFee.latestTransferFee : fee.latestTransferFee;
+    const expectedTransferFeeInUnits = this.isForwarding
+      ? forwardingFee.latestTransferFee
+      : fee.latestTransferFee;
     const expectedProtocolFeeInPercent = fee.protocolFeeInPercent;
 
-    const expectedTransferFee = amountFromUnits(expectedTransferFeeInUnits, this.decimals);
+    const expectedTransferFee = amountFromUnits(
+      expectedTransferFeeInUnits,
+      this.decimals,
+    );
 
     if (this.amount !== undefined) {
       const x = bigintToNumberScaled(this.amount, this.decimals);
-      const expectedProtocolFeeInUnits = numberToBigintScaled(x * expectedProtocolFeeInPercent, this.decimals);
-      const expectedProtocolFee = amountFromUnits(expectedProtocolFeeInUnits, this.decimals);
+      const expectedProtocolFeeInUnits = numberToBigintScaled(
+        x * expectedProtocolFeeInPercent,
+        this.decimals,
+      );
+      const expectedProtocolFee = amountFromUnits(
+        expectedProtocolFeeInUnits,
+        this.decimals,
+      );
       this._status = {
         Done: ok({
           summary: "Checked fees and limits",
@@ -260,9 +282,11 @@ export class CheckFeesAndLimitsStep extends BaseStep {
 }
 
 export function numberToBigintScaled(value: number, decimals: number): bigint {
-  const [integerPart, fractionalPart = ''] = value.toFixed(decimals).split('.');
+  const [integerPart, fractionalPart = ""] = value.toFixed(decimals).split(".");
 
-  const paddedFractionalPart = fractionalPart.padEnd(decimals, '0').slice(0, decimals);
+  const paddedFractionalPart = fractionalPart
+    .padEnd(decimals, "0")
+    .slice(0, decimals);
 
   const combined = `${integerPart}${paddedFractionalPart}`;
   return BigInt(combined);
@@ -271,7 +295,9 @@ export function numberToBigintScaled(value: number, decimals: number): bigint {
 export function bigintToNumberScaled(value: bigint, decimals: number): number {
   const str = value.toString();
   const len = str.length;
-  if (decimals === 0) { return Number(str); }
+  if (decimals === 0) {
+    return Number(str);
+  }
   if (decimals >= len) {
     return Number("0." + str.padStart(decimals, "0"));
   }
@@ -283,14 +309,14 @@ export function amountFromUnits(units: bigint, decimals: number): Amount {
   return {
     inUnits: units,
     inTokens: bigintToNumberScaled(units, decimals),
-  }
+  };
 }
 
 export function amountFromTokens(tokens: number, decimals: number): Amount {
   return {
     inUnits: numberToBigintScaled(tokens, decimals),
     inTokens: tokens,
-  }
+  };
 }
 
 export function sleep(ms: number): Promise<void> {

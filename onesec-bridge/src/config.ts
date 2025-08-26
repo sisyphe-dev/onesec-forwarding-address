@@ -1,6 +1,5 @@
 import type { Deployment, EvmChain, OperatingMode, Token } from "./types";
 
-
 export interface TokenConfig {
   evmMode: OperatingMode;
   erc20?: string;
@@ -43,15 +42,14 @@ export interface IcpConfig {
 }
 
 export interface EvmConfig {
-  confirmBlocks: number,
-  blockTimeMs: Map<Deployment, number>,
+  confirmBlocks: number;
+  blockTimeMs: Map<Deployment, number>;
 }
-
 
 export interface Config {
   tokens: Map<Token, TokenConfig>;
   icp: IcpConfig;
-  evm: Map<EvmChain, EvmConfig>,
+  evm: Map<EvmChain, EvmConfig>;
   abi: {
     erc20_and_minter: string[];
     erc20: string[];
@@ -159,7 +157,6 @@ const TOKEN_CONFIGS: Map<Token, TokenConfig> = new Map([
   ],
 ]);
 
-
 export const DEFAULT_CONFIG: Config = {
   tokens: TOKEN_CONFIGS,
   icp: {
@@ -175,30 +172,39 @@ export const DEFAULT_CONFIG: Config = {
     ]),
   },
   evm: new Map([
-    ["Arbitrum", {
-      confirmBlocks: 96,
-      blockTimeMs: new Map([
-        ["Mainnet", 240],
-        ["Testnet", 240],
-        ["Local", 10],
-      ])
-    }],
-    ["Base", {
-      confirmBlocks: 12,
-      blockTimeMs: new Map([
-        ["Mainnet", 1900],
-        ["Testnet", 1900],
-        ["Local", 10],
-      ])
-    }],
-    ["Ethereum", {
-      confirmBlocks: 4,
-      blockTimeMs: new Map([
-        ["Mainnet", 12_000],
-        ["Testnet", 12_000],
-        ["Local", 10],
-      ])
-    }]
+    [
+      "Arbitrum",
+      {
+        confirmBlocks: 96,
+        blockTimeMs: new Map([
+          ["Mainnet", 240],
+          ["Testnet", 240],
+          ["Local", 10],
+        ]),
+      },
+    ],
+    [
+      "Base",
+      {
+        confirmBlocks: 12,
+        blockTimeMs: new Map([
+          ["Mainnet", 1900],
+          ["Testnet", 1900],
+          ["Local", 10],
+        ]),
+      },
+    ],
+    [
+      "Ethereum",
+      {
+        confirmBlocks: 4,
+        blockTimeMs: new Map([
+          ["Mainnet", 12_000],
+          ["Testnet", 12_000],
+          ["Local", 10],
+        ]),
+      },
+    ],
   ]),
   abi: {
     erc20_and_minter: [
@@ -218,7 +224,11 @@ export const DEFAULT_CONFIG: Config = {
   },
 };
 
-function tokenConfigFieldNames(name: string, deployment: Deployment, evmChain?: EvmChain): string[] {
+function tokenConfigFieldNames(
+  name: string,
+  deployment: Deployment,
+  evmChain?: EvmChain,
+): string[] {
   const result = [];
   if (evmChain !== undefined) {
     result.push(`${name}${deployment}${evmChain}`);
@@ -228,7 +238,12 @@ function tokenConfigFieldNames(name: string, deployment: Deployment, evmChain?: 
   return result;
 }
 
-function lookup(config: TokenConfig, name: string, deployment: Deployment, evmChain?: EvmChain): string | undefined {
+function lookup(
+  config: TokenConfig,
+  name: string,
+  deployment: Deployment,
+  evmChain?: EvmChain,
+): string | undefined {
   const keys = tokenConfigFieldNames(name, deployment, evmChain);
   for (const key of keys) {
     const value = config[key as keyof TokenConfig];
@@ -271,19 +286,13 @@ export function getTokenLedgerCanister(
   return lookup(tokenConfig, "ledger", deployment);
 }
 
-export function getTokenDecimals(
-  config: Config,
-  token: Token,
-): number {
+export function getTokenDecimals(config: Config, token: Token): number {
   const tokenConfig = config.tokens.get(token);
   if (!tokenConfig) throw new Error(`Token ${token} not found in config`);
   return tokenConfig.decimals;
 }
 
-export function getTokenEvmMode(
-  config: Config,
-  token: Token,
-): OperatingMode {
+export function getTokenEvmMode(config: Config, token: Token): OperatingMode {
   const tokenConfig = config.tokens.get(token);
   if (!tokenConfig) throw new Error(`Token ${token} not found in config`);
   return tokenConfig.evmMode;

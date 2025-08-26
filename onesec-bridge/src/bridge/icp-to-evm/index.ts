@@ -1,13 +1,22 @@
 import { Actor, Agent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { BridgingPlan } from "../..";
-import { Config, DEFAULT_CONFIG, getTokenDecimals, getTokenLedgerCanister } from "../../config";
+import {
+  Config,
+  DEFAULT_CONFIG,
+  getTokenDecimals,
+  getTokenLedgerCanister,
+} from "../../config";
 import {
   idlFactory as IcrcLedgerIDL,
   type _SERVICE as IcrcLedger,
 } from "../../generated/candid/icrc_ledger/icrc_ledger.did";
 import { Deployment, EvmChain, IcrcAccount, Token } from "../../types";
-import { CheckFeesAndLimitsStep, ConfirmBlocksStep, oneSecWithAgent } from "../shared";
+import {
+  CheckFeesAndLimitsStep,
+  ConfirmBlocksStep,
+  oneSecWithAgent,
+} from "../shared";
 import { ApproveStep } from "./approve-step";
 import { TransferStep } from "./transfer-step";
 import { ValidateReceiptStep } from "./validate-receipt-step";
@@ -25,7 +34,7 @@ export class IcpToEvmBridgeBuilder {
     private agent: Agent,
     private evmChain: EvmChain,
     private token: Token,
-  ) { }
+  ) {}
 
   target(deployment: Deployment): IcpToEvmBridgeBuilder {
     this.deployment = deployment;
@@ -71,11 +80,13 @@ export class IcpToEvmBridgeBuilder {
     const config = this.config || DEFAULT_CONFIG;
     const decimals = getTokenDecimals(config, this.token);
 
-    const oneSecId = Principal.fromText(config.icp.onesec.get(this.deployment)!);
+    const oneSecId = Principal.fromText(
+      config.icp.onesec.get(this.deployment)!,
+    );
     const oneSecActor = await oneSecWithAgent(oneSecId, this.agent);
 
     const ledgerId = Principal.fromText(
-      getTokenLedgerCanister(config, this.token, this.deployment)!
+      getTokenLedgerCanister(config, this.token, this.deployment)!,
     );
 
     const ledgerActor = await icrcLedgerWithAgent(
@@ -85,7 +96,15 @@ export class IcpToEvmBridgeBuilder {
       config,
     );
 
-    const checkFeesAndLimitsStep = new CheckFeesAndLimitsStep(oneSecActor, this.token, "ICP", this.evmChain, decimals, false, this.amount);
+    const checkFeesAndLimitsStep = new CheckFeesAndLimitsStep(
+      oneSecActor,
+      this.token,
+      "ICP",
+      this.evmChain,
+      decimals,
+      false,
+      this.amount,
+    );
 
     const approveStep = new ApproveStep(
       ledgerActor,
@@ -113,7 +132,11 @@ export class IcpToEvmBridgeBuilder {
       transferStep,
     );
     const evmConfig = config.evm.get(this.evmChain)!;
-    const confirmBlocksStep = new ConfirmBlocksStep(this.evmChain, evmConfig.confirmBlocks, evmConfig.blockTimeMs.get(this.deployment)!);
+    const confirmBlocksStep = new ConfirmBlocksStep(
+      this.evmChain,
+      evmConfig.confirmBlocks,
+      evmConfig.blockTimeMs.get(this.deployment)!,
+    );
     const validateReceiptStep = new ValidateReceiptStep(
       oneSecActor,
       oneSecId,
@@ -121,16 +144,14 @@ export class IcpToEvmBridgeBuilder {
       transferStep,
     );
 
-    return new BridgingPlan(
-      [
-        checkFeesAndLimitsStep,
-        approveStep,
-        transferStep,
-        waitForTxStep,
-        confirmBlocksStep,
-        validateReceiptStep,
-      ]
-    );
+    return new BridgingPlan([
+      checkFeesAndLimitsStep,
+      approveStep,
+      transferStep,
+      waitForTxStep,
+      confirmBlocksStep,
+      validateReceiptStep,
+    ]);
   }
 }
 

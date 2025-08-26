@@ -247,7 +247,7 @@ export type TransferFee = {
   latestTransferFee: bigint;
   averageTransferFee: bigint;
   protocolFeeInPercent: number;
-}
+};
 
 /**
  * A helper for direct bridging operations between ICP and EVM chains.
@@ -265,16 +265,16 @@ export type Details = {
 
 export type Result =
   | {
-    Ok: {
-      details: Details;
-      amount?: Amount;
-      transaction?: Tx;
-      link?: string;
-    };
-  }
+      Ok: {
+        details: Details;
+        amount?: Amount;
+        transaction?: Tx;
+        link?: string;
+      };
+    }
   | {
-    Err: Details;
-  };
+      Err: Details;
+    };
 
 export type StepStatus =
   | { Planned: null }

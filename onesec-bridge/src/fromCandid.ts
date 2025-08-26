@@ -244,7 +244,9 @@ export function transferResponse(
   }
 }
 
-export function transferFee(response: candid.TransferFee): TransferFee | undefined {
+export function transferFee(
+  response: candid.TransferFee,
+): TransferFee | undefined {
   const maybeToken = token(response.source_token[0]);
   const maybeSourceChain = chain(response.source_chain[0]);
   const maybeDestinationChain = chain(response.destination_chain[0]);
@@ -267,5 +269,5 @@ export function transferFee(response: candid.TransferFee): TransferFee | undefin
 }
 
 export function transferFees(response: candid.TransferFee[]): TransferFee[] {
-  return response.map(transferFee).filter(x => x !== undefined);
-} 
+  return response.map(transferFee).filter((x) => x !== undefined);
+}

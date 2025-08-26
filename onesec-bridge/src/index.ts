@@ -1,11 +1,5 @@
 import { OneSecForwardingImpl } from "./forwarding";
-import type {
-  Amount,
-  Deployment,
-  OneSecForwarding,
-  Result,
-  Step,
-} from "./types";
+import type { Deployment, OneSecForwarding, Result, Step } from "./types";
 
 export { EvmToIcpBridgeBuilder, IcpToEvmBridgeBuilder } from "./bridge";
 export {
@@ -14,7 +8,7 @@ export {
   getTokenDecimals,
   getTokenErc20Address,
   getTokenLedgerCanister,
-  getTokenLockerAddress
+  getTokenLockerAddress,
 } from "./config";
 export type { Config, IcpConfig, TokenConfig } from "./config";
 export type {
@@ -45,9 +39,7 @@ export class BridgingPlan {
   private _result?: Result;
   private currentStepIndex: number = 0;
 
-  constructor(
-    private _steps: Step[],
-  ) { }
+  constructor(private _steps: Step[]) {}
 
   steps(): Step[] {
     return this._steps;
