@@ -2,8 +2,14 @@ import { Principal } from "@dfinity/principal";
 import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
 import type { Chain, Details, EvmChain, StepStatus } from "../../types";
-import { BaseStep, err, GetTransferId, ICP_CALL_DURATION_MS, ok, sleep } from "../shared";
-import { ValidateReceiptStep } from "./validate-receipt-step";
+import {
+  BaseStep,
+  err,
+  GetTransferId,
+  ICP_CALL_DURATION_MS,
+  ok,
+  sleep,
+} from "../shared";
 
 export class WaitForIcpTx extends BaseStep {
   private delayMs: number = 1_000;

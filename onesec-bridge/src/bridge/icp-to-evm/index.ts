@@ -25,7 +25,7 @@ export class IcpToEvmBridgeBuilder {
     private agent: Agent,
     private evmChain: EvmChain,
     private token: Token,
-  ) { }
+  ) {}
 
   target(deployment: Deployment): IcpToEvmBridgeBuilder {
     this.deployment = deployment;
@@ -72,13 +72,13 @@ export class IcpToEvmBridgeBuilder {
 
     const oneSecId = Principal.fromText(
       this.config?.icp.oneSecCanisters.get(this.deployment) ??
-      "5okwm-giaaa-aaaar-qbn6a-cai",
+        "5okwm-giaaa-aaaar-qbn6a-cai",
     );
     const oneSecActor = await oneSecWithAgent(oneSecId, this.agent);
 
     const ledgerId = Principal.fromText(
       this.config?.icp.ledgerCanisters.get(this.token) ??
-      "mxzaz-hqaaa-aaaar-qaada-cai",
+        "mxzaz-hqaaa-aaaar-qaada-cai",
     );
     const ledgerActor = await icrcLedgerWithAgent(
       this.token,

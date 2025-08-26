@@ -1,5 +1,4 @@
 import { Contract } from "ethers";
-import { encodeIcrcAccount } from "../shared";
 import type {
   Chain,
   Details,
@@ -9,7 +8,14 @@ import type {
   StepStatus,
   Token,
 } from "../../types";
-import { BaseStep, err, EVM_CALL_DURATION_MS, GetEvmTx, ok } from "../shared";
+import {
+  BaseStep,
+  encodeIcrcAccount,
+  err,
+  EVM_CALL_DURATION_MS,
+  GetEvmTx,
+  ok,
+} from "../shared";
 
 export class BurnStep extends BaseStep implements GetEvmTx {
   private data1: Uint8Array;

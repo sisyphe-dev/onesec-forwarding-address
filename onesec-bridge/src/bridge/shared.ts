@@ -47,7 +47,6 @@ export interface GetTransferId {
   getTransferId(): TransferId | undefined;
 }
 
-
 export class ConfirmBlocksStep extends BaseStep {
   private startTime?: Date;
   constructor(
@@ -241,4 +240,3 @@ function defaultOneSecCanisterId(
   }
   return canisterId;
 }
-

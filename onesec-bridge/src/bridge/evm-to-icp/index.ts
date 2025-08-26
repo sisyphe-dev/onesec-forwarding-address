@@ -12,13 +12,13 @@ import type {
 import { anonymousAgent, ConfirmBlocksStep, oneSecWithAgent } from "../shared";
 import { ApproveStep } from "./approve-step";
 import { BurnStep } from "./burn-step";
+import { ComputeForwardingAddressStep } from "./forwarding/computeForwardingAddressStep";
+import { NotifyPaymentToForwardingAddressStep } from "./forwarding/notifyPaymentToForwardingAddressStep";
+import { ValidateForwardingReceiptStep } from "./forwarding/validateForwardingReceiptStep";
+import { WaitForForwardingTxStep } from "./forwarding/waitForForwardingTxStep";
 import { LockStep } from "./lock-step";
 import { ValidateReceiptStep } from "./validate-receipt-step";
 import { WaitForIcpTx } from "./wait-for-icp-tx";
-import { ComputeForwardingAddressStep } from "./forwarding/computeForwardingAddressStep";
-import { NotifyPaymentToForwardingAddressStep } from "./forwarding/notifyPaymentToForwardingAddressStep";
-import { WaitForForwardingTxStep } from "./forwarding/waitForForwardingTxStep";
-import { ValidateForwardingReceiptStep } from "./forwarding/validateForwardingReceiptStep";
 
 type OperatingMode = "minter" | "locker";
 
@@ -33,7 +33,7 @@ export class EvmToIcpBridgeBuilder {
   constructor(
     private evmChain: EvmChain,
     private token: Token,
-  ) { }
+  ) {}
 
   target(deployment: Deployment): EvmToIcpBridgeBuilder {
     this.deployment = deployment;
@@ -75,7 +75,9 @@ export class EvmToIcpBridgeBuilder {
 
     const mode = operatingMode(this.evmChain, this.token, config);
 
-    const oneSecId = Principal.fromText(this.config?.icp.oneSecCanisters.get(this.deployment)!);
+    const oneSecId = Principal.fromText(
+      this.config?.icp.oneSecCanisters.get(this.deployment)!,
+    );
     const agent = await anonymousAgent(this.deployment, config);
     const oneSecActor = await oneSecWithAgent(oneSecId, agent);
 
@@ -208,17 +210,43 @@ export class EvmToIcpBridgeBuilder {
 
     const onesec = oneSecForwarding(this.deployment);
 
-    const computeForwardingAddressStep = new ComputeForwardingAddressStep(onesec, this.token, this.icpAccount, this.evmChain);
+    const computeForwardingAddressStep = new ComputeForwardingAddressStep(
+      onesec,
+      this.token,
+      this.icpAccount,
+      this.evmChain,
+    );
 
-    const notifyPaymentToForwardingAddressStep = new NotifyPaymentToForwardingAddressStep(onesec, this.token, this.icpAccount, this.evmChain, computeForwardingAddressStep);
+    const notifyPaymentToForwardingAddressStep =
+      new NotifyPaymentToForwardingAddressStep(
+        onesec,
+        this.token,
+        this.icpAccount,
+        this.evmChain,
+        computeForwardingAddressStep,
+      );
 
-    const waitForForwardingTxStep = new WaitForForwardingTxStep(onesec, this.token, this.icpAccount, this.evmChain, computeForwardingAddressStep);
+    const waitForForwardingTxStep = new WaitForForwardingTxStep(
+      onesec,
+      this.token,
+      this.icpAccount,
+      this.evmChain,
+      computeForwardingAddressStep,
+    );
 
     const confirmBlocksStep = new ConfirmBlocksStep(this.evmChain, 10, 10);
 
-    const validateForwardingReceiptStep = new ValidateForwardingReceiptStep(onesec, this.token, this.icpAccount, this.evmChain, computeForwardingAddressStep);
+    const validateForwardingReceiptStep = new ValidateForwardingReceiptStep(
+      onesec,
+      this.token,
+      this.icpAccount,
+      this.evmChain,
+      computeForwardingAddressStep,
+    );
 
-    const oneSecId = Principal.fromText(this.config?.icp.oneSecCanisters.get(this.deployment)!);
+    const oneSecId = Principal.fromText(
+      this.config?.icp.oneSecCanisters.get(this.deployment)!,
+    );
     const agent = await anonymousAgent(this.deployment, config);
     const oneSecActor = await oneSecWithAgent(oneSecId, agent);
 
@@ -230,7 +258,14 @@ export class EvmToIcpBridgeBuilder {
     );
 
     return new BridgingPlan(
-      [computeForwardingAddressStep, notifyPaymentToForwardingAddressStep, waitForForwardingTxStep, confirmBlocksStep, validateForwardingReceiptStep, waitForIcpTxStep],
+      [
+        computeForwardingAddressStep,
+        notifyPaymentToForwardingAddressStep,
+        waitForForwardingTxStep,
+        confirmBlocksStep,
+        validateForwardingReceiptStep,
+        waitForIcpTxStep,
+      ],
       {
         inTokens: 0,
         inUnits: 0n,
@@ -240,7 +275,6 @@ export class EvmToIcpBridgeBuilder {
         inUnits: 0n,
       },
     );
-
   }
 }
 

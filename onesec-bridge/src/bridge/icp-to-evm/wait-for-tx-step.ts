@@ -1,7 +1,9 @@
 import { Principal } from "@dfinity/principal";
 import * as fromCandid from "../../fromCandid";
-import { TraceEvent } from "../../generated/candid/onesec/onesec.did";
-import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
+import {
+  TraceEvent,
+  type _SERVICE as OneSec,
+} from "../../generated/candid/onesec/onesec.did";
 import type { Chain, Details, EvmChain, StepStatus } from "../../types";
 import { BaseStep, err, ICP_CALL_DURATION_MS, ok, sleep } from "../shared";
 import { TransferStep } from "./transfer-step";
