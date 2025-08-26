@@ -1,11 +1,5 @@
 import { Contract } from "ethers";
-import type {
-  Details,
-  EvmTx,
-  IcrcAccount,
-  StepStatus,
-  Token,
-} from "../../types";
+import type { About, EvmTx, IcrcAccount, StepStatus, Token } from "../../types";
 import {
   BaseStep,
   encodeIcrcAccount,
@@ -31,10 +25,10 @@ export class LockStep extends BaseStep implements GetEvmTx {
     this.data2 = data2;
   }
 
-  details(): Details {
+  about(): About {
     return {
-      summary: `Transfer ${this.token}`,
-      description: `Transfer ${this.token} to OneSec`,
+      concise: `Transfer ${this.token}`,
+      verbose: `Transfer ${this.token} to OneSec`,
     };
   }
 
@@ -58,8 +52,8 @@ export class LockStep extends BaseStep implements GetEvmTx {
     if (lockReceipt.status !== 1) {
       this._status = {
         Done: err({
-          summary: `Failed to transfer ${this.token}`,
-          description: `Failed to transfer ${this.token} to OneSec: transaction ${lockReceipt.hash} failed`,
+          concise: `Failed to transfer ${this.token}`,
+          verbose: `Failed to transfer ${this.token} to OneSec: transaction ${lockReceipt.hash} failed`,
         }),
       };
       return this._status;

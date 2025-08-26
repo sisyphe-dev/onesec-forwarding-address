@@ -1,5 +1,5 @@
 import type {
-  Details,
+  About,
   EvmChain,
   EvmTx,
   IcrcAccount,
@@ -33,10 +33,10 @@ export class WaitForForwardingTxStep extends BaseStep {
     super();
   }
 
-  details(): Details {
+  about(): About {
     return {
-      summary: "Wait for forwarding transaction",
-      description:
+      concise: "Wait for forwarding transaction",
+      verbose:
         "Wait for transaction that moves tokens from the forwarding address to the bridge",
     };
   }
@@ -70,9 +70,8 @@ export class WaitForForwardingTxStep extends BaseStep {
     if (forwardingAddress === undefined) {
       this._status = {
         Done: err({
-          summary: "Missing forwarding address",
-          description:
-            "Compute forwarding address step must run before this step",
+          concise: "Missing forwarding address",
+          verbose: "Compute forwarding address step must run before this step",
         }),
       };
       return this._status;
@@ -134,8 +133,8 @@ export class WaitForForwardingTxStep extends BaseStep {
         if (status.LowBalance.balance) {
           this._status = {
             Done: err({
-              summary: "Balance is too low",
-              description: `Balance of the forwarding address is too low: ${status.LowBalance.balance}, required at least ${status.LowBalance.minAmount}`,
+              concise: "Balance is too low",
+              verbose: `Balance of the forwarding address is too low: ${status.LowBalance.balance}, required at least ${status.LowBalance.minAmount}`,
             }),
           };
         } else {

@@ -2,7 +2,7 @@ import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
 import * as toCandid from "../../toCandid";
 import type {
-  Details,
+  About,
   EvmChain,
   IcrcAccount,
   StepStatus,
@@ -36,10 +36,10 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
     super();
   }
 
-  details(): Details {
+  about(): About {
     return {
-      summary: "Validate receipt",
-      description: `Wait for OneSec to validate the receipt of the ${this.evmChain} transaction`,
+      concise: "Validate receipt",
+      verbose: `Wait for OneSec to validate the receipt of the ${this.evmChain} transaction`,
     };
   }
 
@@ -91,8 +91,8 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
     } else if ("Failed" in response) {
       this._status = {
         Done: err({
-          summary: "Failed to validate",
-          description: `Failed to validate receipt: ${response.Failed.error}`,
+          concise: "Failed to validate",
+          verbose: `Failed to validate receipt: ${response.Failed.error}`,
         }),
       };
     } else {

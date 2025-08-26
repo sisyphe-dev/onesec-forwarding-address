@@ -101,12 +101,12 @@ it(
     console.log("Plan execution result:", result);
 
     if ("Err" in result) {
-      console.error("Plan execution failed:", result.Err.description);
+      console.error("Plan execution failed:", result.Err.verbose);
       expect.fail("Plan execution should not fail");
     }
 
     if ("Ok" in result) {
-      console.log("Plan executed successfully:", result.Ok.details.summary);
+      console.log("Plan executed successfully:", result.Ok.about.concise);
       expect(result.Ok).toBeDefined();
     }
   },

@@ -1,5 +1,5 @@
 import type {
-  Details,
+  About,
   EvmChain,
   IcrcAccount,
   OneSecForwarding,
@@ -22,10 +22,10 @@ export class ComputeForwardingAddressStep extends BaseStep {
     super();
   }
 
-  details(): Details {
+  about(): About {
     return {
-      summary: `Compute forwarding address`,
-      description: `Compute forwarding address on ${this.evmChain} for receiving ${this.token} to ${this.icpAccount.owner}`,
+      concise: `Compute forwarding address`,
+      verbose: `Compute forwarding address on ${this.evmChain} for receiving ${this.token} to ${this.icpAccount.owner}`,
     };
   }
 

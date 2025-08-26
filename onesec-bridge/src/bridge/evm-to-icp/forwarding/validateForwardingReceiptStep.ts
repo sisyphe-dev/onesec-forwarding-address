@@ -1,5 +1,5 @@
 import type {
-  Details,
+  About,
   EvmChain,
   IcrcAccount,
   OneSecForwarding,
@@ -35,10 +35,10 @@ export class ValidateForwardingReceiptStep
     super();
   }
 
-  details(): Details {
+  about(): About {
     return {
-      summary: "Validate receipt",
-      description: `Wait for OneSec to validate the receipt of the ${this.evmChain} transaction`,
+      concise: "Validate receipt",
+      verbose: `Wait for OneSec to validate the receipt of the ${this.evmChain} transaction`,
     };
   }
 
@@ -66,9 +66,8 @@ export class ValidateForwardingReceiptStep
     if (forwardingAddress === undefined) {
       this._status = {
         Done: err({
-          summary: "Missing forwarding address",
-          description:
-            "Compute forwarding address step must run before this step",
+          concise: "Missing forwarding address",
+          verbose: "Compute forwarding address step must run before this step",
         }),
       };
       return this._status;

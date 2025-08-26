@@ -1,6 +1,6 @@
 import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
-import type { Details, StepStatus } from "../../types";
+import type { About, StepStatus } from "../../types";
 import {
   BaseStep,
   err,
@@ -20,10 +20,10 @@ export class WaitForIcpTx extends BaseStep {
     super();
   }
 
-  details(): Details {
+  about(): About {
     return {
-      summary: "Wait for ledger transaction",
-      description: "Wait for OneSec to call the ledger",
+      concise: "Wait for ledger transaction",
+      verbose: "Wait for OneSec to call the ledger",
     };
   }
 
@@ -53,8 +53,8 @@ export class WaitForIcpTx extends BaseStep {
     if ("Err" in result) {
       this._status = {
         Done: err({
-          summary: "Transaction failed",
-          description: `Ledger transaction failed: ${result.Err}`,
+          concise: "Transaction failed",
+          verbose: `Ledger transaction failed: ${result.Err}`,
         }),
       };
       return this._status;
@@ -75,8 +75,8 @@ export class WaitForIcpTx extends BaseStep {
       } else if ("Failed" in transfer.status) {
         this._status = {
           Done: err({
-            summary: "Transaction failed",
-            description: `Ledger transaction failed: ${transfer.status.Failed.error}`,
+            concise: "Transaction failed",
+            verbose: `Ledger transaction failed: ${transfer.status.Failed.error}`,
           }),
         };
         return this._status;

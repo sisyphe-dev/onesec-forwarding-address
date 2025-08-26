@@ -7,10 +7,10 @@ import {
   type _SERVICE as OneSec,
 } from "../generated/candid/onesec/onesec.did";
 import {
+  About,
   Amount,
   Chain,
   Deployment,
-  Details,
   EvmChain,
   EvmTx,
   ExpectedFee,
@@ -29,7 +29,7 @@ export const EVM_CALL_DURATION_MS = 5000;
 export abstract class BaseStep implements Step {
   protected _status: StepStatus = { Planned: null };
 
-  abstract details(): Details;
+  abstract about(): About;
   abstract run(): Promise<StepStatus>;
   abstract expectedDurationMs(): number;
 
@@ -56,10 +56,10 @@ export class ConfirmBlocksStep extends BaseStep {
     super();
   }
 
-  details(): Details {
+  about(): About {
     return {
-      summary: "Confirm blocks",
-      description: `Confirm ${this.blockCount} blocks on ${this.evmChain}`,
+      concise: "Confirm blocks",
+      verbose: `Confirm ${this.blockCount} blocks on ${this.evmChain}`,
     };
   }
 
@@ -117,10 +117,10 @@ export class CheckFeesAndLimitsStep extends BaseStep {
     super();
   }
 
-  details(): Details {
+  about(): About {
     return {
-      summary: "Check fees and limits",
-      description: "Check fees and limits",
+      concise: "Check fees and limits",
+      verbose: "Check fees and limits",
     };
   }
 
@@ -150,8 +150,8 @@ export class CheckFeesAndLimitsStep extends BaseStep {
     if (fee === undefined) {
       this._status = {
         Done: err({
-          summary: "Bridging not supported",
-          description: `Bridging of ${this.token} from ${this.sourceChain} to ${this.destinationChain} is not supported`,
+          concise: "Bridging not supported",
+          verbose: `Bridging of ${this.token} from ${this.sourceChain} to ${this.destinationChain} is not supported`,
         }),
       };
       return this._status;
@@ -160,8 +160,8 @@ export class CheckFeesAndLimitsStep extends BaseStep {
     if (this.amount !== undefined && this.amount < fee.minAmount) {
       this._status = {
         Done: err({
-          summary: "Amount is too low",
-          description: `Amount of tokens is too low: ${this.amount} < ${fee.minAmount}`,
+          concise: "Amount is too low",
+          verbose: `Amount of tokens is too low: ${this.amount} < ${fee.minAmount}`,
         }),
       };
       return this._status;
@@ -170,8 +170,8 @@ export class CheckFeesAndLimitsStep extends BaseStep {
     if (this.amount !== undefined && this.amount > fee.maxAmount) {
       this._status = {
         Done: err({
-          summary: "Amount is too high",
-          description: `Amount of tokens is too high: ${this.amount} > ${fee.maxAmount}`,
+          concise: "Amount is too high",
+          verbose: `Amount of tokens is too high: ${this.amount} > ${fee.maxAmount}`,
         }),
       };
       return this._status;
@@ -184,8 +184,8 @@ export class CheckFeesAndLimitsStep extends BaseStep {
     ) {
       this._status = {
         Done: err({
-          summary: "Insufficient balance on destination chain",
-          description: `There are only ${fee.available} tokens on ${this.destinationChain}`,
+          concise: "Insufficient balance on destination chain",
+          verbose: `There are only ${fee.available} tokens on ${this.destinationChain}`,
         }),
       };
       return this._status;
@@ -201,8 +201,8 @@ export class CheckFeesAndLimitsStep extends BaseStep {
     if (forwardingFee === undefined) {
       this._status = {
         Done: err({
-          summary: "Bridging not supported",
-          description: `Bridging of ${this.token} from ${this.sourceChain} to ${this.destinationChain} is not supported`,
+          concise: "Bridging not supported",
+          verbose: `Bridging of ${this.token} from ${this.sourceChain} to ${this.destinationChain} is not supported`,
         }),
       };
       return this._status;
@@ -335,9 +335,9 @@ export function ok(params: {
 }): Result {
   return {
     Ok: {
-      details: {
-        summary: params.summary,
-        description: params.description,
+      about: {
+        concise: params.summary,
+        verbose: params.description,
       },
       transaction: params.transaction,
       amount: params.amount,
@@ -347,7 +347,7 @@ export function ok(params: {
   };
 }
 
-export function err(details: Details): Result {
+export function err(details: About): Result {
   return {
     Err: details,
   };

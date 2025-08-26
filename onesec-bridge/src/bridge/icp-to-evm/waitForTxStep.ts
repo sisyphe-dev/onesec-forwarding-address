@@ -3,7 +3,7 @@ import {
   TraceEvent,
   type _SERVICE as OneSec,
 } from "../../generated/candid/onesec/onesec.did";
-import type { Details, EvmChain, StepStatus } from "../../types";
+import type { About, EvmChain, StepStatus } from "../../types";
 import {
   BaseStep,
   err,
@@ -28,10 +28,10 @@ export class WaitForTxStep extends BaseStep {
     super();
   }
 
-  details(): Details {
+  about(): About {
     return {
-      summary: "Wait for transaction",
-      description: `Wait for OneSec to submit a transaction on ${this.evmChain}`,
+      concise: "Wait for transaction",
+      verbose: `Wait for OneSec to submit a transaction on ${this.evmChain}`,
     };
   }
 
@@ -65,8 +65,8 @@ export class WaitForTxStep extends BaseStep {
     if ("Err" in result) {
       this._status = {
         Done: err({
-          summary: "Transaction failed",
-          description: `Transaction failed: ${result.Err}`,
+          concise: "Transaction failed",
+          verbose: `Transaction failed: ${result.Err}`,
         }),
       };
       return this._status;
@@ -86,8 +86,8 @@ export class WaitForTxStep extends BaseStep {
       } else if ("Failed" in transfer.status) {
         this._status = {
           Done: err({
-            summary: "Transaction failed",
-            description: `Transaction failed: ${transfer.status.Failed.error}`,
+            concise: "Transaction failed",
+            verbose: `Transaction failed: ${transfer.status.Failed.error}`,
           }),
         };
       } else if ("Refunded" in transfer.status) {
@@ -159,27 +159,27 @@ function traceEventToTxStatus(event: TraceEvent): TxStatus {
   return "unknown";
 }
 
-function txStatusDetails(ts: TxStatus, evmChain: EvmChain): Details {
+function txStatusDetails(ts: TxStatus, evmChain: EvmChain): About {
   switch (ts) {
     case "unknown":
       return {
-        summary: "Waiting for transaction",
-        description: `Waiting for OneSec to submit a transaction on ${evmChain}`,
+        concise: "Waiting for transaction",
+        verbose: `Waiting for OneSec to submit a transaction on ${evmChain}`,
       };
     case "signed":
       return {
-        summary: "Signing transaction",
-        description: `Signing transaction on ${evmChain}`,
+        concise: "Signing transaction",
+        verbose: `Signing transaction on ${evmChain}`,
       };
     case "sent":
       return {
-        summary: "Sending transaction",
-        description: `Sending transaction on ${evmChain}`,
+        concise: "Sending transaction",
+        verbose: `Sending transaction on ${evmChain}`,
       };
     case "executed":
       return {
-        summary: "Executed transaction",
-        description: `Executed transaction on ${evmChain}`,
+        concise: "Executed transaction",
+        verbose: `Executed transaction on ${evmChain}`,
       };
   }
 }

@@ -3,7 +3,7 @@ import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
 import * as toCandid from "../../toCandid";
 import type {
-  Details,
+  About,
   EvmChain,
   IcrcAccount,
   StepStatus,
@@ -27,10 +27,10 @@ export class TransferStep extends BaseStep {
     super();
   }
 
-  details(): Details {
+  about(): About {
     return {
-      summary: `Transfer ${this.token}`,
-      description: `Transfer ${this.token} to OneSec`,
+      concise: `Transfer ${this.token}`,
+      verbose: `Transfer ${this.token} to OneSec`,
     };
   }
 
@@ -64,8 +64,8 @@ export class TransferStep extends BaseStep {
     if ("Failed" in response) {
       this._status = {
         Done: err({
-          summary: `Failed to transfer ${this.token}`,
-          description: `Failed to transfer ${this.token}: ${response.Failed.error}`,
+          concise: `Failed to transfer ${this.token}`,
+          verbose: `Failed to transfer ${this.token}: ${response.Failed.error}`,
         }),
       };
     } else if ("Accepted" in response) {

@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import type { Details, StepStatus, Token } from "../../types";
+import type { About, StepStatus, Token } from "../../types";
 import { BaseStep, err, EVM_CALL_DURATION_MS, ok } from "../shared";
 
 export class ApproveStep extends BaseStep {
@@ -12,10 +12,10 @@ export class ApproveStep extends BaseStep {
     super();
   }
 
-  details(): Details {
+  about(): About {
     return {
-      summary: "Approve transaction",
-      description: `Approve transfer of ${this.token} to OneSec`,
+      concise: "Approve transaction",
+      verbose: `Approve transfer of ${this.token} to OneSec`,
     };
   }
 
@@ -40,8 +40,8 @@ export class ApproveStep extends BaseStep {
     if (approveReceipt.status !== 1) {
       this._status = {
         Done: err({
-          summary: "Failed to approve",
-          description: `Failed to approve transaction: ${approveReceipt.hash}`,
+          concise: "Failed to approve",
+          verbose: `Failed to approve transaction: ${approveReceipt.hash}`,
         }),
       };
     } else {

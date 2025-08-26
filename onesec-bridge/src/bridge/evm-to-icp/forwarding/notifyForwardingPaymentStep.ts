@@ -1,5 +1,5 @@
 import type {
-  Details,
+  About,
   EvmChain,
   IcrcAccount,
   OneSecForwarding,
@@ -20,10 +20,10 @@ export class NotifyForwardingPaymentStep extends BaseStep {
     super();
   }
 
-  details(): Details {
+  about(): About {
     return {
-      summary: "Notify forwarding payment",
-      description: "Notify forwarding payment",
+      concise: "Notify forwarding payment",
+      verbose: "Notify forwarding payment",
     };
   }
 

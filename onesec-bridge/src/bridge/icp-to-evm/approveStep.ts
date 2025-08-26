@@ -1,6 +1,6 @@
 import { Principal } from "@dfinity/principal";
 import { type _SERVICE as IcrcLedger } from "../../generated/candid/icrc_ledger/icrc_ledger.did";
-import type { Details, IcrcAccount, StepStatus, Token } from "../../types";
+import type { About, IcrcAccount, StepStatus, Token } from "../../types";
 import { BaseStep, err, ICP_CALL_DURATION_MS, ok } from "../shared";
 
 export class ApproveStep extends BaseStep {
@@ -15,10 +15,10 @@ export class ApproveStep extends BaseStep {
     super();
   }
 
-  details(): Details {
+  about(): About {
     return {
-      summary: "Approve transaction",
-      description: `Approve transfer of ${this.token} to OneSec`,
+      concise: "Approve transaction",
+      verbose: `Approve transfer of ${this.token} to OneSec`,
     };
   }
 
@@ -48,8 +48,8 @@ export class ApproveStep extends BaseStep {
     if ("Err" in approvalResult) {
       this._status = {
         Done: err({
-          summary: "Failed to approve",
-          description: `Failed to approve transfer of ${this.token} to OneSec: ${JSON.stringify(approvalResult.Err)}`,
+          concise: "Failed to approve",
+          verbose: `Failed to approve transfer of ${this.token} to OneSec: ${JSON.stringify(approvalResult.Err)}`,
         }),
       };
     } else {

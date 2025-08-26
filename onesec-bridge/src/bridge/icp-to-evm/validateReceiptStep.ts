@@ -1,6 +1,6 @@
 import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
-import type { Details, EvmChain, StepStatus } from "../../types";
+import type { About, EvmChain, StepStatus } from "../../types";
 import {
   BaseStep,
   err,
@@ -21,10 +21,10 @@ export class ValidateReceiptStep extends BaseStep {
     super();
   }
 
-  details(): Details {
+  about(): About {
     return {
-      summary: "Validate receipt",
-      description: `Wait for OneSec to validate the receipt of ${this.evmChain} transaction`,
+      concise: "Validate receipt",
+      verbose: `Wait for OneSec to validate the receipt of ${this.evmChain} transaction`,
     };
   }
 
@@ -54,8 +54,8 @@ export class ValidateReceiptStep extends BaseStep {
     if ("Err" in result) {
       this._status = {
         Done: err({
-          summary: "Validation failed",
-          description: `Validation failed: ${result.Err}`,
+          concise: "Validation failed",
+          verbose: `Validation failed: ${result.Err}`,
         }),
       };
       return this._status;
@@ -75,8 +75,8 @@ export class ValidateReceiptStep extends BaseStep {
       } else if ("Failed" in transfer.status) {
         this._status = {
           Done: err({
-            summary: "Validation failed",
-            description: `Validation failed: ${transfer.status.Failed.error}`,
+            concise: "Validation failed",
+            verbose: `Validation failed: ${transfer.status.Failed.error}`,
           }),
         };
       } else if ("Refunded" in transfer.status) {

@@ -12,8 +12,8 @@ export {
 } from "./config";
 export type { Config, IcpConfig, TokenConfig } from "./config";
 export type {
+  About,
   Amount,
-  Details,
   OneSecForwarding,
   Result,
   Step,

@@ -254,9 +254,9 @@ export interface Amount {
   inUnits: bigint;
 }
 
-export interface Details {
-  summary: string;
-  description: string;
+export interface About {
+  concise: string;
+  verbose: string;
 }
 
 export interface ExpectedFee {
@@ -269,7 +269,7 @@ export interface ExpectedFee {
 export type Result =
   | {
       Ok: {
-        details: Details;
+        about: About;
         amount?: Amount;
         transaction?: Tx;
         link?: string;
@@ -277,7 +277,7 @@ export type Result =
       };
     }
   | {
-      Err: Details;
+      Err: About;
     };
 
 export type StepStatus =
@@ -286,7 +286,7 @@ export type StepStatus =
   | { Done: Result };
 
 export interface Step {
-  details: () => Details;
+  about: () => About;
 
   status: () => StepStatus;
 
