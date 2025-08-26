@@ -1,7 +1,14 @@
 import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
 import type { Details, EvmChain, StepStatus } from "../../types";
-import { BaseStep, err, exponentialBackoff, ICP_CALL_DURATION_MS, ok, sleep } from "../shared";
+import {
+  BaseStep,
+  err,
+  exponentialBackoff,
+  ICP_CALL_DURATION_MS,
+  ok,
+  sleep,
+} from "../shared";
 import { TransferStep } from "./transferStep";
 
 export class ValidateReceiptStep extends BaseStep {

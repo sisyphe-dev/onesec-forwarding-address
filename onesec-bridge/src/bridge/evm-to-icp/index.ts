@@ -246,14 +246,13 @@ export class EvmToIcpBridgeBuilder {
       this.evmChain,
     );
 
-    const notifyForwardingPaymentStep =
-      new NotifyForwardingPaymentStep(
-        onesec,
-        this.token,
-        this.icpAccount,
-        this.evmChain,
-        computeForwardingAddressStep,
-      );
+    const notifyForwardingPaymentStep = new NotifyForwardingPaymentStep(
+      onesec,
+      this.token,
+      this.icpAccount,
+      this.evmChain,
+      computeForwardingAddressStep,
+    );
 
     const waitForForwardingTxStep = new WaitForForwardingTxStep(
       onesec,

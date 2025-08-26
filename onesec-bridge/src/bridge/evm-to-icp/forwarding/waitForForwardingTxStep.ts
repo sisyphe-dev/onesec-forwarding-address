@@ -8,7 +8,14 @@ import type {
   Token,
   TransferId,
 } from "../../../types";
-import { BaseStep, err, exponentialBackoff, ICP_CALL_DURATION_MS, ok, sleep } from "../../shared";
+import {
+  BaseStep,
+  err,
+  exponentialBackoff,
+  ICP_CALL_DURATION_MS,
+  ok,
+  sleep,
+} from "../../shared";
 import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
 
 export class WaitForForwardingTxStep extends BaseStep {
