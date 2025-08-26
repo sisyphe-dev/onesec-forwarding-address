@@ -25,7 +25,7 @@ export class IcpToEvmBridgeBuilder {
     private agent: Agent,
     private evmChain: EvmChain,
     private token: Token,
-  ) {}
+  ) { }
 
   target(deployment: Deployment): IcpToEvmBridgeBuilder {
     this.deployment = deployment;
@@ -70,19 +70,17 @@ export class IcpToEvmBridgeBuilder {
 
     const config = this.config || DEFAULT_CONFIG;
 
-    const oneSecId = Principal.fromText(
-      this.config?.icp.oneSecCanisters.get(this.deployment) ??
-        "5okwm-giaaa-aaaar-qbn6a-cai",
-    );
+    const oneSecId = Principal.fromText(config.icp.onesec.get(this.deployment)!);
     const oneSecActor = await oneSecWithAgent(oneSecId, this.agent);
 
     const ledgerId = Principal.fromText(
-      getTokenLedgerCanister(this.token, this.deployment)
+      getTokenLedgerCanister(config, this.token, this.deployment)!
     );
     const ledgerActor = await icrcLedgerWithAgent(
       this.token,
       this.agent,
       this.deployment,
+      config,
     );
 
     const approveStep = new ApproveStep(
@@ -142,9 +140,10 @@ async function icrcLedgerWithAgent(
   token: Token,
   agent: Agent,
   deployment: Deployment,
+  config: Config = DEFAULT_CONFIG,
 ): Promise<IcrcLedger> {
   return await Actor.createActor(IcrcLedgerIDL, {
     agent,
-    canisterId: getTokenLedgerCanister(token, deployment),
+    canisterId: getTokenLedgerCanister(config, token, deployment)!,
   });
 }

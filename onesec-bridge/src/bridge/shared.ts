@@ -232,7 +232,7 @@ function defaultOneSecCanisterId(
   deployment: Deployment,
   config: Config = DEFAULT_CONFIG,
 ): string {
-  const canisterId = config.icp.oneSecCanisters.get(deployment);
+  const canisterId = config.icp.onesec.get(deployment);
   if (!canisterId) {
     throw new Error(
       `No OneSec canister configured for deployment: ${deployment}`,

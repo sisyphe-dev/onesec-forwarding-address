@@ -27,6 +27,8 @@ export type Token =
  */
 export type Deployment = "Mainnet" | "Testnet" | "Local";
 
+export type OperatingMode = "minter" | "locker";
+
 /**
  * An EVM transaction hash with an optional log index.
  */
@@ -248,16 +250,16 @@ export type Details = {
 
 export type Result =
   | {
-      Ok: {
-        details: Details;
-        amount?: Amount;
-        transaction?: Tx;
-        link?: string;
-      };
-    }
-  | {
-      Err: Details;
+    Ok: {
+      details: Details;
+      amount?: Amount;
+      transaction?: Tx;
+      link?: string;
     };
+  }
+  | {
+    Err: Details;
+  };
 
 export type StepStatus =
   | { Planned: null }

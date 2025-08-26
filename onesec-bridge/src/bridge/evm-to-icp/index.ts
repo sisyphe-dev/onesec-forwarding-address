@@ -1,7 +1,7 @@
 import { Principal } from "@dfinity/principal";
 import { Contract, Signer } from "ethers";
 import { BridgingPlan, oneSecForwarding } from "../..";
-import { DEFAULT_CONFIG, type Config, getTokenConfig, getTokenErc20Address, getTokenLockerAddress } from "../../config";
+import { DEFAULT_CONFIG, type Config, getTokenConfig, getTokenErc20Address, getTokenLockerAddress, getTokenEvmMode } from "../../config";
 import type {
   Deployment,
   EvmChain,
@@ -20,7 +20,6 @@ import { LockStep } from "./lock-step";
 import { ValidateReceiptStep } from "./validate-receipt-step";
 import { WaitForIcpTx } from "./wait-for-icp-tx";
 
-type OperatingMode = "minter" | "locker";
 
 // EVM to ICP Bridge Builder
 export class EvmToIcpBridgeBuilder {
@@ -33,7 +32,7 @@ export class EvmToIcpBridgeBuilder {
   constructor(
     private evmChain: EvmChain,
     private token: Token,
-  ) {}
+  ) { }
 
   target(deployment: Deployment): EvmToIcpBridgeBuilder {
     this.deployment = deployment;
@@ -73,11 +72,9 @@ export class EvmToIcpBridgeBuilder {
 
     const config = this.config || DEFAULT_CONFIG;
 
-    const mode = operatingMode(this.evmChain, this.token, config);
+    const mode = getTokenEvmMode(config, this.token);
 
-    const oneSecId = Principal.fromText(
-      this.config?.icp.oneSecCanisters.get(this.deployment)!,
-    );
+    const oneSecId = Principal.fromText(config.icp.onesec.get(this.deployment)!);
     const agent = await anonymousAgent(this.deployment, config);
     const oneSecActor = await oneSecWithAgent(oneSecId, agent);
 
@@ -209,8 +206,6 @@ export class EvmToIcpBridgeBuilder {
 
     const config = this.config || DEFAULT_CONFIG;
 
-    const mode = operatingMode(this.evmChain, this.token, config);
-
     const onesec = oneSecForwarding(this.deployment);
 
     const computeForwardingAddressStep = new ComputeForwardingAddressStep(
@@ -248,7 +243,7 @@ export class EvmToIcpBridgeBuilder {
     );
 
     const oneSecId = Principal.fromText(
-      this.config?.icp.oneSecCanisters.get(this.deployment)!,
+      this.config?.icp.onesec.get(this.deployment)!,
     );
     const agent = await anonymousAgent(this.deployment, config);
     const oneSecActor = await oneSecWithAgent(oneSecId, agent);
@@ -281,18 +276,6 @@ export class EvmToIcpBridgeBuilder {
   }
 }
 
-function operatingMode(
-  chain: EvmChain,
-  token: Token,
-  config: Config = DEFAULT_CONFIG,
-): OperatingMode {
-  const tokenConfig = getTokenConfig(token);
-  if (!tokenConfig) {
-    throw Error(`no token config for ${token}`);
-  }
-  return tokenConfig.evmMode;
-}
-
 function erc20(
   signer: Signer,
   chain: EvmChain,
@@ -300,8 +283,8 @@ function erc20(
   config: Config = DEFAULT_CONFIG,
   deployment: Deployment = "Mainnet",
 ): [Contract, string] {
-  const tokenConfig = getTokenConfig(token);
-  const erc20Address = getTokenErc20Address(token, deployment, chain);
+  const tokenConfig = getTokenConfig(config, token);
+  const erc20Address = getTokenErc20Address(config, token, deployment, chain);
   if (!tokenConfig || !erc20Address) {
     throw Error(`no ERC20 address config for ${chain} and ${token} on ${deployment}`);
   }
@@ -319,7 +302,7 @@ function locker(
   config: Config = DEFAULT_CONFIG,
   deployment: Deployment = "Mainnet",
 ): [Contract, string] {
-  const lockerAddress = getTokenLockerAddress(token, deployment, chain);
+  const lockerAddress = getTokenLockerAddress(config, token, deployment, chain);
   if (!lockerAddress) {
     throw Error(`no EVM locker config for ${chain} and ${token} on ${deployment}`);
   }
