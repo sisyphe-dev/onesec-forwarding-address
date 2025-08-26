@@ -90,13 +90,11 @@ export class ValidateReceiptStep extends BaseStep {
       if (transfer.status) {
         if ("Succeeded" in transfer.status) {
           this._status = {
-            Done: ok(
-              {
-                summary: "Validated receipt",
-                description: `Validated receipt of the ${this.evmChain} transaction`,
-              },
-              transfer.destination.tx,
-            ),
+            Done: ok({
+              summary: "Validated receipt",
+              description: `Validated receipt of the ${this.evmChain} transaction`,
+              transaction: transfer.destination.tx,
+            }),
           };
           return this._status;
         } else if ("Failed" in transfer.status) {
@@ -109,13 +107,11 @@ export class ValidateReceiptStep extends BaseStep {
           return this._status;
         } else if ("Refunded" in transfer.status) {
           this._status = {
-            Done: ok(
-              {
-                summary: "Refunded tokens",
-                description: "Refunded tokens due to a bridging issue",
-              },
-              transfer.source.tx,
-            ),
+            Done: ok({
+              summary: "Refunded tokens",
+              description: "Refunded tokens due to a bridging issue",
+              transaction: transfer.source.tx,
+            }),
           };
           return this._status;
         } else if ("PendingRefund" in transfer.status) {

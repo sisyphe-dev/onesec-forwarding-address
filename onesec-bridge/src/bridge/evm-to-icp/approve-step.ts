@@ -68,13 +68,11 @@ export class ApproveStep extends BaseStep {
         };
       } else {
         this._status = {
-          Done: ok(
-            {
-              summary: "Approved transaction",
-              description: `Approved transfer of ${this.token} to OneSec`,
-            },
-            { Evm: { hash: approveReceipt.hash } },
-          ),
+          Done: ok({
+            summary: "Approved transaction",
+            description: `Approved transfer of ${this.token} to OneSec`,
+            transaction: { Evm: { hash: approveReceipt.hash } },
+          }),
         };
       }
 

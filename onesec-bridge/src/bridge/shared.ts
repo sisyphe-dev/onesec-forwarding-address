@@ -259,6 +259,7 @@ export class CheckFeesAndLimitsStep extends BaseStep {
         Done: ok({
           summary: "Checked fees and limits",
           description: "Checked fees and limits",
+          expectedFee: new ExpectedFeeImpl(expectedTransferFee, expectedProtocolFeeInPercent, this.decimals),
         }),
       };
     } else {
@@ -278,7 +279,7 @@ class ExpectedFeeImpl implements ExpectedFee {
     private _transferFee: Amount,
     private _protocolFeeInPercent: number,
     private decimals: number,
-  ) {}
+  ) { }
 
   transferFee(): Amount {
     return this._transferFee;
@@ -349,18 +350,24 @@ export function sleep(ms: number): Promise<void> {
 }
 
 // Helper functions for constructing Result::Done
-export function ok(
-  details: Details,
-  transaction?: Tx,
-  amount?: Amount,
-  link?: string,
-): Result {
+export function ok(params: {
+  summary: string;
+  description: string;
+  transaction?: Tx;
+  amount?: Amount;
+  link?: string;
+  expectedFee?: ExpectedFee;
+}): Result {
   return {
     Ok: {
-      details,
-      transaction,
-      amount,
-      link,
+      details: {
+        summary: params.summary,
+        description: params.description,
+      },
+      transaction: params.transaction,
+      amount: params.amount,
+      link: params.link,
+      expectedFee: params.expectedFee,
     },
   };
 }

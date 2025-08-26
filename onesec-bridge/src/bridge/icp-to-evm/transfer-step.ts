@@ -95,18 +95,16 @@ export class TransferStep extends BaseStep {
       } else if ("Accepted" in response) {
         this.transferId = response.Accepted;
         this._status = {
-          Done: ok(
-            {
-              summary: `Transferred ${this.token}`,
-              description: `Transferred ${this.token} to OneSec`,
-            },
-            {
+          Done: ok({
+            summary: `Transferred ${this.token}`,
+            description: `Transferred ${this.token} to OneSec`,
+            transaction: {
               Icp: {
                 blockIndex: response.Accepted.id,
                 ledger: this.oneSecId,
               },
             },
-          ),
+          }),
         };
       } else if ("Fetching" in response) {
         throw Error(

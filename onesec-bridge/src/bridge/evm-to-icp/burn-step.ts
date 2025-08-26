@@ -102,13 +102,11 @@ export class BurnStep extends BaseStep implements GetEvmTx {
       }
 
       this._status = {
-        Done: ok(
-          {
-            summary: `Transferred ${this.token}`,
-            description: `Transferred ${this.token} to OneSec`,
-          },
-          { Evm: { hash: burnReceipt.hash } },
-        ),
+        Done: ok({
+          summary: `Transferred ${this.token}`,
+          description: `Transferred ${this.token} to OneSec`,
+          transaction: { Evm: { hash: burnReceipt.hash } },
+        }),
       };
       return this._status;
     } catch (error) {

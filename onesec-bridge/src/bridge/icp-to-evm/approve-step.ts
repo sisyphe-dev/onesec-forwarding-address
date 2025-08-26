@@ -82,18 +82,16 @@ export class ApproveStep extends BaseStep {
         };
       } else {
         this._status = {
-          Done: ok(
-            {
-              summary: "Approved transaction",
-              description: `Approved transfer of ${this.token} to OneSec`,
-            },
-            {
+          Done: ok({
+            summary: "Approved transaction",
+            description: `Approved transfer of ${this.token} to OneSec`,
+            transaction: {
               Icp: {
                 blockIndex: approvalResult.Ok,
                 ledger: this.ledgerId,
               },
             },
-          ),
+          }),
         };
       }
     } catch (error) {

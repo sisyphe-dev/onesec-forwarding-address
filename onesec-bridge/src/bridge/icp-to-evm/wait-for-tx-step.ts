@@ -100,13 +100,11 @@ export class WaitForTxStep extends BaseStep {
       if (transfer.status) {
         if ("Succeeded" in transfer.status) {
           this._status = {
-            Done: ok(
-              {
-                summary: "Executed transaction",
-                description: `Executed transaction on ${this.evmChain}`,
-              },
-              transfer.destination.tx,
-            ),
+            Done: ok({
+              summary: "Executed transaction",
+              description: `Executed transaction on ${this.evmChain}`,
+              transaction: transfer.destination.tx,
+            }),
           };
           return this._status;
         } else if ("Failed" in transfer.status) {
@@ -119,13 +117,11 @@ export class WaitForTxStep extends BaseStep {
           return this._status;
         } else if ("Refunded" in transfer.status) {
           this._status = {
-            Done: ok(
-              {
-                summary: "Refunded tokens",
-                description: "Refunded tokens due to a bridging issue",
-              },
-              transfer.source.tx,
-            ),
+            Done: ok({
+              summary: "Refunded tokens",
+              description: "Refunded tokens due to a bridging issue",
+              transaction: transfer.source.tx,
+            }),
           };
           return this._status;
         } else if ("PendingRefund" in transfer.status) {

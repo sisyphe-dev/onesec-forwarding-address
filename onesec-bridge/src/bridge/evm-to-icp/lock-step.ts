@@ -102,13 +102,11 @@ export class LockStep extends BaseStep implements GetEvmTx {
       }
 
       this._status = {
-        Done: ok(
-          {
-            summary: `Transferred ${this.token}`,
-            description: `Transferred ${this.token} to OneSec`,
-          },
-          { Evm: { hash: lockReceipt.hash } },
-        ),
+        Done: ok({
+          summary: `Transferred ${this.token}`,
+          description: `Transferred ${this.token} to OneSec`,
+          transaction: { Evm: { hash: lockReceipt.hash } },
+        }),
       };
       return this._status;
     } catch (error) {
