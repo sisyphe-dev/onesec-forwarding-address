@@ -39,9 +39,7 @@ export class ApproveStep extends BaseStep {
       spender: { owner: this.oneSecId, subaccount: [] },
       fee: [],
       memo: [],
-      from_subaccount: this.account.subaccount
-        ? [this.account.subaccount]
-        : [],
+      from_subaccount: this.account.subaccount ? [this.account.subaccount] : [],
       created_at_time: [],
       expected_allowance: [],
       expires_at: [],

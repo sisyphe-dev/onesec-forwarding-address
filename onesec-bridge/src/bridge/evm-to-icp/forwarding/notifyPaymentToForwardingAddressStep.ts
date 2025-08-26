@@ -6,7 +6,7 @@ import type {
   StepStatus,
   Token,
 } from "../../../types";
-import { BaseStep, err, ICP_CALL_DURATION_MS, ok } from "../../shared";
+import { BaseStep, ICP_CALL_DURATION_MS, ok } from "../../shared";
 import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
 
 export class NotifyPaymentToForwardingAddressStep extends BaseStep {
@@ -43,7 +43,9 @@ export class NotifyPaymentToForwardingAddressStep extends BaseStep {
       this.computeForwardingAddressStep.getForwardingAddress();
 
     if (forwardingAddress === undefined) {
-      throw Error("Missing forwarding address: the compute forwarding address step did not run");
+      throw Error(
+        "Missing forwarding address: the compute forwarding address step did not run",
+      );
     }
 
     await this.onesec.forwardEvmToIcp(

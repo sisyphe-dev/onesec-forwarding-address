@@ -51,11 +51,7 @@ export class BurnStep extends BaseStep implements GetEvmTx {
     };
 
     const burnTx = this.data2
-      ? await this.minterContract.burn2(
-        this.evmAmount,
-        this.data1,
-        this.data2,
-      )
+      ? await this.minterContract.burn2(this.evmAmount, this.data1, this.data2)
       : await this.minterContract.burn1(this.evmAmount, this.data1);
     const burnReceipt = await burnTx.wait();
 

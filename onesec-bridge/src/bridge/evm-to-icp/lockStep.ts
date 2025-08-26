@@ -51,11 +51,7 @@ export class LockStep extends BaseStep implements GetEvmTx {
     };
 
     const lockTx = this.data2
-      ? await this.lockerContract.lock2(
-        this.evmAmount,
-        this.data1,
-        this.data2,
-      )
+      ? await this.lockerContract.lock2(this.evmAmount, this.data1, this.data2)
       : await this.lockerContract.lock1(this.evmAmount, this.data1);
     const lockReceipt = await lockTx.wait();
 
