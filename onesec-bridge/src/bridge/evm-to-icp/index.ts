@@ -23,15 +23,15 @@ import {
   ConfirmBlocksStep,
   oneSecWithAgent,
 } from "../shared";
-import { ApproveStep } from "./approve-step";
-import { BurnStep } from "./burn-step";
+import { ApproveStep } from "./approveStep";
+import { BurnStep } from "./burnStep";
 import { ComputeForwardingAddressStep } from "./forwarding/computeForwardingAddressStep";
 import { NotifyPaymentToForwardingAddressStep } from "./forwarding/notifyPaymentToForwardingAddressStep";
 import { ValidateForwardingReceiptStep } from "./forwarding/validateForwardingReceiptStep";
 import { WaitForForwardingTxStep } from "./forwarding/waitForForwardingTxStep";
-import { LockStep } from "./lock-step";
-import { ValidateReceiptStep } from "./validate-receipt-step";
-import { WaitForIcpTx } from "./wait-for-icp-tx";
+import { LockStep } from "./lockStep";
+import { ValidateReceiptStep } from "./validateReceiptStep";
+import { WaitForIcpTx } from "./waitForIcpTx";
 
 // EVM to ICP Bridge Builder
 export class EvmToIcpBridgeBuilder {

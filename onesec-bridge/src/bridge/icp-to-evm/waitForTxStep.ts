@@ -6,7 +6,7 @@ import {
 } from "../../generated/candid/onesec/onesec.did";
 import type { Details, EvmChain, StepStatus } from "../../types";
 import { BaseStep, err, ICP_CALL_DURATION_MS, ok, sleep } from "../shared";
-import { TransferStep } from "./transfer-step";
+import { TransferStep } from "./transferStep";
 
 type TxStatus = "unknown" | "signed" | "sent" | "executed";
 

@@ -17,10 +17,10 @@ import {
   ConfirmBlocksStep,
   oneSecWithAgent,
 } from "../shared";
-import { ApproveStep } from "./approve-step";
-import { TransferStep } from "./transfer-step";
-import { ValidateReceiptStep } from "./validate-receipt-step";
-import { WaitForTxStep } from "./wait-for-tx-step";
+import { ApproveStep } from "./approveStep";
+import { TransferStep } from "./transferStep";
+import { ValidateReceiptStep } from "./validateReceiptStep";
+import { WaitForTxStep } from "./waitForTxStep";
 
 // ICP to EVM Bridge Builder
 export class IcpToEvmBridgeBuilder {
