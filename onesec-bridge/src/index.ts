@@ -8,8 +8,15 @@ import type {
 } from "./types";
 
 export { EvmToIcpBridgeBuilder, IcpToEvmBridgeBuilder } from "./bridge";
-export { DEFAULT_CONFIG } from "./config";
-export type { Config, EvmConfig, EvmTokenConfig, IcpConfig } from "./config";
+export { 
+  DEFAULT_CONFIG,
+  getTokenConfig,
+  getTokenDecimals,
+  getTokenErc20Address,
+  getTokenLedgerCanister,
+  getTokenLockerAddress
+} from "./config";
+export type { Config, IcpConfig, TokenConfig } from "./config";
 export type {
   Amount,
   Details,

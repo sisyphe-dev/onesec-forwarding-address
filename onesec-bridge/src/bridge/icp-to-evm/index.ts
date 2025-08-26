@@ -1,7 +1,7 @@
 import { Actor, Agent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { BridgingPlan } from "../..";
-import { Config, DEFAULT_CONFIG } from "../../config";
+import { Config, DEFAULT_CONFIG, getTokenLedgerCanister } from "../../config";
 import {
   idlFactory as IcrcLedgerIDL,
   type _SERVICE as IcrcLedger,
@@ -77,13 +77,12 @@ export class IcpToEvmBridgeBuilder {
     const oneSecActor = await oneSecWithAgent(oneSecId, this.agent);
 
     const ledgerId = Principal.fromText(
-      this.config?.icp.ledgerCanisters.get(this.token) ??
-        "mxzaz-hqaaa-aaaar-qaada-cai",
+      getTokenLedgerCanister(this.token, this.deployment)
     );
     const ledgerActor = await icrcLedgerWithAgent(
       this.token,
       this.agent,
-      config,
+      this.deployment,
     );
 
     const approveStep = new ApproveStep(
@@ -142,21 +141,10 @@ export class IcpToEvmBridgeBuilder {
 async function icrcLedgerWithAgent(
   token: Token,
   agent: Agent,
-  config?: Config,
+  deployment: Deployment,
 ): Promise<IcrcLedger> {
   return await Actor.createActor(IcrcLedgerIDL, {
     agent,
-    canisterId: defaultIcrcLedgerCanisterId(token, config),
+    canisterId: getTokenLedgerCanister(token, deployment),
   });
-}
-
-function defaultIcrcLedgerCanisterId(
-  token: Token,
-  config: Config = DEFAULT_CONFIG,
-): string {
-  const canisterId = config.icp.ledgerCanisters.get(token);
-  if (!canisterId) {
-    throw new Error(`No ICRC ledger canister configured for token: ${token}`);
-  }
-  return canisterId;
 }

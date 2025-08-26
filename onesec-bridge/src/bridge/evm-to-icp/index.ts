@@ -1,7 +1,7 @@
 import { Principal } from "@dfinity/principal";
 import { Contract, Signer } from "ethers";
 import { BridgingPlan, oneSecForwarding } from "../..";
-import { DEFAULT_CONFIG, type Config } from "../../config";
+import { DEFAULT_CONFIG, type Config, getTokenConfig, getTokenErc20Address, getTokenLockerAddress } from "../../config";
 import type {
   Deployment,
   EvmChain,
@@ -89,12 +89,14 @@ export class EvmToIcpBridgeBuilder {
           this.evmChain,
           this.token,
           config,
+          this.deployment,
         );
         const [erc20Contract, erc20Address] = erc20(
           signer,
           this.evmChain,
           this.token,
           config,
+          this.deployment,
         );
         const approveStep = new ApproveStep(
           erc20Contract,
@@ -144,6 +146,7 @@ export class EvmToIcpBridgeBuilder {
           this.evmChain,
           this.token,
           config,
+          this.deployment,
         );
         const burnStep = new BurnStep(
           minterContract,
@@ -283,11 +286,11 @@ function operatingMode(
   token: Token,
   config: Config = DEFAULT_CONFIG,
 ): OperatingMode {
-  const mode = config.evm.get(chain)?.tokens.get(token)?.mode;
-  if (!mode) {
-    throw Error(`no EVM config for ${chain} and ${token}`);
+  const tokenConfig = getTokenConfig(token);
+  if (!tokenConfig) {
+    throw Error(`no token config for ${token}`);
   }
-  return mode;
+  return tokenConfig.evmMode;
 }
 
 function erc20(
@@ -295,16 +298,18 @@ function erc20(
   chain: EvmChain,
   token: Token,
   config: Config = DEFAULT_CONFIG,
+  deployment: Deployment = "Mainnet",
 ): [Contract, string] {
-  const tokenConfig = config.evm.get(chain)?.tokens.get(token);
-  if (!tokenConfig) {
-    throw Error(`no EVM config for ${chain} and ${token}`);
+  const tokenConfig = getTokenConfig(token);
+  const erc20Address = getTokenErc20Address(token, deployment, chain);
+  if (!tokenConfig || !erc20Address) {
+    throw Error(`no ERC20 address config for ${chain} and ${token} on ${deployment}`);
   }
   const abi =
-    tokenConfig.mode === "minter"
+    tokenConfig.evmMode === "minter"
       ? config.abi.erc20_and_minter
       : config.abi.erc20;
-  return [new Contract(tokenConfig.erc20, abi, signer), tokenConfig.erc20];
+  return [new Contract(erc20Address, abi, signer), erc20Address];
 }
 
 function locker(
@@ -312,13 +317,14 @@ function locker(
   chain: EvmChain,
   token: Token,
   config: Config = DEFAULT_CONFIG,
+  deployment: Deployment = "Mainnet",
 ): [Contract, string] {
-  const tokenConfig = config.evm.get(chain)?.tokens.get(token);
-  if (!tokenConfig || !tokenConfig.locker) {
-    throw Error(`no EVM locker config for ${chain} and ${token}`);
+  const lockerAddress = getTokenLockerAddress(token, deployment, chain);
+  if (!lockerAddress) {
+    throw Error(`no EVM locker config for ${chain} and ${token} on ${deployment}`);
   }
   return [
-    new Contract(tokenConfig.locker, config.abi.locker, signer),
-    tokenConfig.locker,
+    new Contract(lockerAddress, config.abi.locker, signer),
+    lockerAddress,
   ];
 }
