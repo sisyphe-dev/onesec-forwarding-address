@@ -16,9 +16,12 @@ import {
   Result,
   Step,
   StepStatus,
+  Token,
+  TransferFee,
   TransferId,
   Tx,
 } from "../types";
+import * as fromCandid from "../fromCandid";
 
 export const ICP_CALL_DURATION_MS = 5000;
 export const EVM_CALL_DURATION_MS = 5000;
@@ -239,4 +242,18 @@ function defaultOneSecCanisterId(
     );
   }
   return canisterId;
+}
+
+export async function fetchTransferFees(onesec: OneSec): Promise<TransferFee[]> {
+  const response = await onesec.get_transfer_fees();
+  return fromCandid.transferFees(response);
+}
+
+export function lookupTransferFee(fees: TransferFee[], token: Token, sourceChain: Chain, destinationChain: Chain): TransferFee | undefined {
+  for (const fee of fees) {
+    if (fee.token === token && fee.sourceChain === sourceChain && fee.destinationChain === destinationChain) {
+      return fee;
+    }
+  }
+  return undefined;
 }

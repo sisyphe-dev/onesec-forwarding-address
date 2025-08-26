@@ -7,7 +7,7 @@ import {
   type _SERVICE as IcrcLedger,
 } from "../../generated/candid/icrc_ledger/icrc_ledger.did";
 import { Deployment, EvmChain, IcrcAccount, Token } from "../../types";
-import { ConfirmBlocksStep, oneSecWithAgent } from "../shared";
+import { ConfirmBlocksStep, fetchTransferFees, lookupTransferFee, oneSecWithAgent } from "../shared";
 import { ApproveStep } from "./approve-step";
 import { TransferStep } from "./transfer-step";
 import { ValidateReceiptStep } from "./validate-receipt-step";
@@ -76,12 +76,19 @@ export class IcpToEvmBridgeBuilder {
     const ledgerId = Principal.fromText(
       getTokenLedgerCanister(config, this.token, this.deployment)!
     );
+
     const ledgerActor = await icrcLedgerWithAgent(
       this.token,
       this.agent,
       this.deployment,
       config,
     );
+
+    const fetchedFees = await fetchTransferFees(oneSecActor);
+    const fee = lookupTransferFee(fetchedFees, this.token, "ICP", this.evmChain);
+    if (fee === undefined) {
+      throw new Error(`Couldn't find transfer fees for bridging ${this.token} from ICP to ${this.evmChain}`);
+    }
 
     const approveStep = new ApproveStep(
       ledgerActor,

@@ -235,6 +235,21 @@ export interface OneSecForwarding {
 }
 
 /**
+ * The response of a get transfer fee query.
+ */
+export type TransferFee = {
+  token: Token;
+  sourceChain: Chain;
+  destinationChain: Chain;
+  minAmount: bigint;
+  maxAmount: bigint;
+  available?: bigint;
+  latestTransferFee: bigint;
+  averageTransferFee: bigint;
+  protocolFeeInPercent: number;
+}
+
+/**
  * A helper for direct bridging operations between ICP and EVM chains.
  */
 
