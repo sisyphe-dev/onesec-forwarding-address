@@ -46,8 +46,8 @@ export class WaitForTxStep extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        summary: "Waiting for transaction",
-        description: `Waiting for OneSec to submit a transaction on ${this.evmChain}`,
+        concise: "Waiting for transaction",
+        verbose: `Waiting for OneSec to submit a transaction on ${this.evmChain}`,
       },
     };
 
@@ -78,8 +78,8 @@ export class WaitForTxStep extends BaseStep {
       if ("Succeeded" in transfer.status) {
         this._status = {
           Done: ok({
-            summary: "Executed transaction",
-            description: `Executed transaction on ${this.evmChain}`,
+            concise: "Executed transaction",
+            verbose: `Executed transaction on ${this.evmChain}`,
             transaction: transfer.destination.tx,
           }),
         };
@@ -93,16 +93,16 @@ export class WaitForTxStep extends BaseStep {
       } else if ("Refunded" in transfer.status) {
         this._status = {
           Done: ok({
-            summary: "Refunded tokens",
-            description: "Refunded tokens due to a bridging issue",
+            concise: "Refunded tokens",
+            verbose: "Refunded tokens due to a bridging issue",
             transaction: transfer.source.tx,
           }),
         };
       } else if ("PendingRefund" in transfer.status) {
         this._status = {
           Pending: {
-            summary: "Refunding tokens",
-            description: "Refunding tokens due to a bridging issue",
+            concise: "Refunding tokens",
+            verbose: "Refunding tokens due to a bridging issue",
           },
         };
       } else if ("PendingDestinationTx" in transfer.status) {

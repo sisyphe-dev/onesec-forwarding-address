@@ -35,8 +35,8 @@ export class ValidateReceiptStep extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        summary: "Validating receipt",
-        description: `Waiting for OneSec to validate the receipt of ${this.evmChain} transaction`,
+        concise: "Validating receipt",
+        verbose: `Waiting for OneSec to validate the receipt of ${this.evmChain} transaction`,
       },
     };
 
@@ -67,8 +67,8 @@ export class ValidateReceiptStep extends BaseStep {
       if ("Succeeded" in transfer.status) {
         this._status = {
           Done: ok({
-            summary: "Validated receipt",
-            description: `Validated receipt of the ${this.evmChain} transaction`,
+            concise: "Validated receipt",
+            verbose: `Validated receipt of the ${this.evmChain} transaction`,
             transaction: transfer.destination.tx,
           }),
         };
@@ -82,16 +82,16 @@ export class ValidateReceiptStep extends BaseStep {
       } else if ("Refunded" in transfer.status) {
         this._status = {
           Done: ok({
-            summary: "Refunded tokens",
-            description: "Refunded tokens due to a bridging issue",
+            concise: "Refunded tokens",
+            verbose: "Refunded tokens due to a bridging issue",
             transaction: transfer.source.tx,
           }),
         };
       } else if ("PendingRefund" in transfer.status) {
         this._status = {
           Pending: {
-            summary: "Refunding tokens",
-            description: "Refunding tokens due to a bridging issue",
+            concise: "Refunding tokens",
+            verbose: "Refunding tokens due to a bridging issue",
           },
         };
       }

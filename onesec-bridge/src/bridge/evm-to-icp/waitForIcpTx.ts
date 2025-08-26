@@ -34,8 +34,8 @@ export class WaitForIcpTx extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        summary: "Waiting for ledger transaction",
-        description: "Waiting for OneSec to call the ledger",
+        concise: "Waiting for ledger transaction",
+        verbose: "Waiting for OneSec to call the ledger",
       },
     };
 
@@ -66,8 +66,8 @@ export class WaitForIcpTx extends BaseStep {
       if ("Succeeded" in transfer.status) {
         this._status = {
           Done: ok({
-            summary: "Executed transaction",
-            description: "Executed ledger transaction",
+            concise: "Executed transaction",
+            verbose: "Executed ledger transaction",
             transaction: transfer.destination.tx,
           }),
         };
@@ -83,8 +83,8 @@ export class WaitForIcpTx extends BaseStep {
       } else if ("Refunded" in transfer.status) {
         this._status = {
           Done: ok({
-            summary: "Refunded tokens",
-            description: "Refunded tokens due to a bridging issue",
+            concise: "Refunded tokens",
+            verbose: "Refunded tokens due to a bridging issue",
             transaction: transfer.source.tx,
           }),
         };
@@ -92,8 +92,8 @@ export class WaitForIcpTx extends BaseStep {
       } else if ("PendingRefund" in transfer.status) {
         this._status = {
           Pending: {
-            summary: "Refunding tokens",
-            description: "Refunding tokens due to a bridging issue",
+            concise: "Refunding tokens",
+            verbose: "Refunding tokens due to a bridging issue",
           },
         };
       }

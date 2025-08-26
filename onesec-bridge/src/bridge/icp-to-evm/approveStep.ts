@@ -29,8 +29,8 @@ export class ApproveStep extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        summary: "Approving transaction",
-        description: `Approving transfer of ${this.token} to OneSec`,
+        concise: "Approving transaction",
+        verbose: `Approving transfer of ${this.token} to OneSec`,
       },
     };
 
@@ -55,8 +55,8 @@ export class ApproveStep extends BaseStep {
     } else {
       this._status = {
         Done: ok({
-          summary: "Approved transaction",
-          description: `Approved transfer of ${this.token} to OneSec`,
+          concise: "Approved transaction",
+          verbose: `Approved transfer of ${this.token} to OneSec`,
           transaction: {
             Icp: {
               blockIndex: approvalResult.Ok,

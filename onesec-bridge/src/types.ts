@@ -266,23 +266,25 @@ export interface ExpectedFee {
   totalFee: (amount: Amount) => Amount;
 }
 
+export interface Details {
+  about: About;
+  amount?: Amount;
+  transaction?: Tx;
+  link?: string;
+  expectedFee?: ExpectedFee;
+}
+
 export type Result =
   | {
-      Ok: {
-        about: About;
-        amount?: Amount;
-        transaction?: Tx;
-        link?: string;
-        expectedFee?: ExpectedFee;
-      };
+      Ok: Details;
     }
   | {
-      Err: About;
+      Err: Details;
     };
 
 export type StepStatus =
   | { Planned: null }
-  | { Pending: { summary: string; description: string } }
+  | { Pending: About }
   | { Done: Result };
 
 export interface Step {

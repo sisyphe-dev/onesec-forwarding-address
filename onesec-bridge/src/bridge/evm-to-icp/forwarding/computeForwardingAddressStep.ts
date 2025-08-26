@@ -44,8 +44,8 @@ export class ComputeForwardingAddressStep extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        summary: `Computing forwarding address`,
-        description: `Computing forwarding address on ${this.evmChain} for receiving ${this.token} to ${this.icpAccount.owner}`,
+        concise: `Computing forwarding address`,
+        verbose: `Computing forwarding address on ${this.evmChain} for receiving ${this.token} to ${this.icpAccount.owner}`,
       },
     };
 
@@ -60,8 +60,8 @@ export class ComputeForwardingAddressStep extends BaseStep {
     this.lastTransferId = response.done;
     this._status = {
       Done: ok({
-        summary: "Computed forwarding address",
-        description: `User can now send ${this.token} to ${this.forwardingAddress} on ${this.evmChain}`,
+        concise: "Computed forwarding address",
+        verbose: `User can now send ${this.token} to ${this.forwardingAddress} on ${this.evmChain}`,
       }),
     };
     return this._status;

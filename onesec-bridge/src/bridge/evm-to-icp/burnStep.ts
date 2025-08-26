@@ -39,8 +39,8 @@ export class BurnStep extends BaseStep implements GetEvmTx {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        summary: `Transferring ${this.token}`,
-        description: `Transferring ${this.token} to OneSec`,
+        concise: `Transferring ${this.token}`,
+        verbose: `Transferring ${this.token} to OneSec`,
       },
     };
 
@@ -61,8 +61,8 @@ export class BurnStep extends BaseStep implements GetEvmTx {
 
     this._status = {
       Done: ok({
-        summary: `Transferred ${this.token}`,
-        description: `Transferred ${this.token} to OneSec`,
+        concise: `Transferred ${this.token}`,
+        verbose: `Transferred ${this.token} to OneSec`,
         transaction: { Evm: { hash: burnReceipt.hash } },
       }),
     };

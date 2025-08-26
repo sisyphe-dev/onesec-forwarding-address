@@ -45,8 +45,8 @@ export class TransferStep extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        summary: `Transferring ${this.token}`,
-        description: `Transferring ${this.token} to OneSec`,
+        concise: `Transferring ${this.token}`,
+        verbose: `Transferring ${this.token} to OneSec`,
       },
     };
 
@@ -72,8 +72,8 @@ export class TransferStep extends BaseStep {
       this.transferId = response.Accepted;
       this._status = {
         Done: ok({
-          summary: `Transferred ${this.token}`,
-          description: `Transferred ${this.token} to OneSec`,
+          concise: `Transferred ${this.token}`,
+          verbose: `Transferred ${this.token} to OneSec`,
           transaction: {
             Icp: {
               blockIndex: response.Accepted.id,

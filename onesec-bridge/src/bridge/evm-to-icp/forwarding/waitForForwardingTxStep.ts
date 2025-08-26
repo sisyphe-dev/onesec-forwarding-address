@@ -56,8 +56,8 @@ export class WaitForForwardingTxStep extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        summary: "Waiting for forwarding transaction",
-        description:
+        concise: "Waiting for forwarding transaction",
+        verbose:
           "Waiting for transaction that moves tokens from the forwarding address to the bridge",
       },
     };
@@ -97,8 +97,8 @@ export class WaitForForwardingTxStep extends BaseStep {
       this.transferId = transferId;
       this._status = {
         Done: ok({
-          summary: "Forwarded tokens to bridge",
-          description: "Forwarded tokens to bridge",
+          concise: "Forwarded tokens to bridge",
+          verbose: "Forwarded tokens to bridge",
         }),
       };
       return this._status;
@@ -109,23 +109,22 @@ export class WaitForForwardingTxStep extends BaseStep {
         this.forwardingTx = status.Forwarded;
         this._status = {
           Done: ok({
-            summary: "Forwarded tokens to bridge",
-            description: "Forwarded tokens to bridge",
+            concise: "Forwarded tokens to bridge",
+            verbose: "Forwarded tokens to bridge",
           }),
         };
       } else if ("CheckingBalance" in status) {
         this._status = {
           Pending: {
-            summary: "Checking balance of the forwarding address",
-            description:
-              "OneSec is checking the balance of the forwarding address",
+            concise: "Checking balance of the forwarding address",
+            verbose: "OneSec is checking the balance of the forwarding address",
           },
         };
       } else if ("Forwarding" in status) {
         this._status = {
           Pending: {
-            summary: "Submitting forwarding transaction",
-            description:
+            concise: "Submitting forwarding transaction",
+            verbose:
               "OneSec is moving tokens from the forwarding address to the bridge",
           },
         };
@@ -140,8 +139,8 @@ export class WaitForForwardingTxStep extends BaseStep {
         } else {
           this._status = {
             Pending: {
-              summary: "Checking balance of the forwarding address",
-              description:
+              concise: "Checking balance of the forwarding address",
+              verbose:
                 "OneSec is checking the balance of the forwarding address",
             },
           };

@@ -72,8 +72,8 @@ export class ConfirmBlocksStep extends BaseStep {
       this.startTime = new Date();
       this._status = {
         Pending: {
-          summary: "Confirming blocks",
-          description: `Confirming ${this.blockCount} blocks on ${this.evmChain}`,
+          concise: "Confirming blocks",
+          verbose: `Confirming ${this.blockCount} blocks on ${this.evmChain}`,
         },
       };
     }
@@ -87,15 +87,15 @@ export class ConfirmBlocksStep extends BaseStep {
     if (blocks >= this.blockCount) {
       this._status = {
         Done: ok({
-          summary: "Confirmed blocks",
-          description: `Confirmed ${this.blockCount} blocks on ${this.evmChain}`,
+          concise: "Confirmed blocks",
+          verbose: `Confirmed ${this.blockCount} blocks on ${this.evmChain}`,
         }),
       };
     } else {
       this._status = {
         Pending: {
-          summary: "Confirming blocks",
-          description: `Confirming ${blocks}/${this.blockCount} blocks on ${this.evmChain}`,
+          concise: "Confirming blocks",
+          verbose: `Confirming ${blocks}/${this.blockCount} blocks on ${this.evmChain}`,
         },
       };
     }
@@ -131,8 +131,8 @@ export class CheckFeesAndLimitsStep extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        summary: "Fetching fees and limits",
-        description: "Fetching fees and limits",
+        concise: "Fetching fees and limits",
+        verbose: "Fetching fees and limits",
       },
     };
 
@@ -221,8 +221,8 @@ export class CheckFeesAndLimitsStep extends BaseStep {
     if (this.amount !== undefined) {
       this._status = {
         Done: ok({
-          summary: "Checked fees and limits",
-          description: "Checked fees and limits",
+          concise: "Checked fees and limits",
+          verbose: "Checked fees and limits",
           expectedFee: new ExpectedFeeImpl(
             expectedTransferFee,
             expectedProtocolFeeInPercent,
@@ -233,8 +233,8 @@ export class CheckFeesAndLimitsStep extends BaseStep {
     } else {
       this._status = {
         Done: ok({
-          summary: "Checked fees and limits",
-          description: "Checked fees and limits",
+          concise: "Checked fees and limits",
+          verbose: "Checked fees and limits",
         }),
       };
     }
@@ -326,8 +326,8 @@ export function exponentialBackoff(
 
 // Helper functions for constructing Result::Done
 export function ok(params: {
-  summary: string;
-  description: string;
+  concise: string;
+  verbose: string;
   transaction?: Tx;
   amount?: Amount;
   link?: string;
@@ -336,8 +336,8 @@ export function ok(params: {
   return {
     Ok: {
       about: {
-        concise: params.summary,
-        verbose: params.description,
+        concise: params.concise,
+        verbose: params.verbose,
       },
       transaction: params.transaction,
       amount: params.amount,
@@ -347,9 +347,21 @@ export function ok(params: {
   };
 }
 
-export function err(details: About): Result {
+export function err(params: {
+  concise: string;
+  verbose: string;
+  transaction?: Tx;
+  link?: string;
+}): Result {
   return {
-    Err: details,
+    Err: {
+      about: {
+        concise: params.concise,
+        verbose: params.verbose,
+      },
+      transaction: params.transaction,
+      link: params.link,
+    },
   };
 }
 
@@ -444,4 +456,14 @@ function defaultOneSecCanisterId(
     );
   }
   return canisterId;
+}
+
+export function format(amount: bigint, decimals: number): string {
+  const tokens = bigintToNumberScaled(amount, decimals);
+  const str = tokens.toFixed(6);
+  let end = str.length;
+  while (end > 2 && str[end - 1] === "0") {
+    --end;
+  }
+  return str.slice(0, end);
 }

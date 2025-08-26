@@ -225,10 +225,10 @@ export const idlFactory = () => {
     metadata: ConsentMessageMetadata,
     consent_message: ConsentMessage,
   });
-  const ErrorInfo = IDL.Record({ description: IDL.Text });
+  const ErrorInfo = IDL.Record({ verbose: IDL.Text });
   const Icrc21Error = IDL.Variant({
     GenericError: IDL.Record({
-      description: IDL.Text,
+      verbose: IDL.Text,
       error_code: IDL.Nat,
     }),
     InsufficientPayment: ErrorInfo,

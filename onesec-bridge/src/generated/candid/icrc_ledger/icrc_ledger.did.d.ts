@@ -135,7 +135,7 @@ export type DisplayMessageType =
       };
     };
 export interface ErrorInfo {
-  description: string;
+  verbose: string;
 }
 export interface FeatureFlags {
   icrc2: boolean;
@@ -183,7 +183,7 @@ export type ICRC3Value =
   | { Array: Array<ICRC3Value> };
 export type Icrc21Error =
   | {
-      GenericError: { description: string; error_code: bigint };
+      GenericError: { verbose: string; error_code: bigint };
     }
   | { InsufficientPayment: ErrorInfo }
   | { UnsupportedCanisterCall: ErrorInfo }

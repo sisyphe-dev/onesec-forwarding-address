@@ -34,8 +34,8 @@ export class NotifyForwardingPaymentStep extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        summary: "Notifying forwarding payment",
-        description: "Notifying forwarding payment",
+        concise: "Notifying forwarding payment",
+        verbose: "Notifying forwarding payment",
       },
     };
 
@@ -57,8 +57,8 @@ export class NotifyForwardingPaymentStep extends BaseStep {
 
     this._status = {
       Done: ok({
-        summary: "Notified forwarding payment",
-        description: "Notified forwarding payment",
+        concise: "Notified forwarding payment",
+        verbose: "Notified forwarding payment",
       }),
     };
 

@@ -54,8 +54,8 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        summary: "Validating receipt",
-        description: `Waiting for OneSec to validate the receipt of the ${this.evmChain} transaction`,
+        concise: "Validating receipt",
+        verbose: `Waiting for OneSec to validate the receipt of the ${this.evmChain} transaction`,
       },
     };
 
@@ -84,8 +84,8 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
       this.transferId = { id: response.Accepted.id };
       this._status = {
         Done: ok({
-          summary: "Validated receipt",
-          description: `Validated receipt of the ${this.evmChain} transaction`,
+          concise: "Validated receipt",
+          verbose: `Validated receipt of the ${this.evmChain} transaction`,
         }),
       };
     } else if ("Failed" in response) {
@@ -98,8 +98,8 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
     } else {
       this._status = {
         Pending: {
-          summary: "Validating receipt",
-          description: `Waiting for OneSec to validate the receipt of the ${this.evmChain} transaction`,
+          concise: "Validating receipt",
+          verbose: `Waiting for OneSec to validate the receipt of the ${this.evmChain} transaction`,
         },
       };
     }

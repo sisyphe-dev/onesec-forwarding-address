@@ -53,8 +53,8 @@ export class ValidateForwardingReceiptStep
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        summary: "Validating receipt",
-        description: `Waiting for OneSec to validate the receipt of the ${this.evmChain} transaction`,
+        concise: "Validating receipt",
+        verbose: `Waiting for OneSec to validate the receipt of the ${this.evmChain} transaction`,
       },
     };
 
@@ -92,8 +92,8 @@ export class ValidateForwardingReceiptStep
       this.transferId = transferId;
       this._status = {
         Done: ok({
-          summary: "Validated receipt",
-          description: `Validated receipt of the ${this.evmChain} transaction`,
+          concise: "Validated receipt",
+          verbose: `Validated receipt of the ${this.evmChain} transaction`,
         }),
       };
       return this._status;
