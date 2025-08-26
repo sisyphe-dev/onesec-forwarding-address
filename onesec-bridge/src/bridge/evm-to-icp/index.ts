@@ -111,7 +111,8 @@ export class EvmToIcpBridgeBuilder {
           this.evmAmount,
           this.icpAccount,
         );
-        const confirmBlocksStep = new ConfirmBlocksStep(this.evmChain, 10, 10);
+        const evmConfig = config.evm.get(this.evmChain)!;
+        const confirmBlocksStep = new ConfirmBlocksStep(this.evmChain, evmConfig.confirmBlocks, evmConfig.blockTimeMs.get(this.deployment)!);
         const validateReceiptStep = new ValidateReceiptStep(
           oneSecActor,
           oneSecId,
@@ -153,7 +154,8 @@ export class EvmToIcpBridgeBuilder {
           this.evmAmount,
           this.icpAccount,
         );
-        const confirmBlocksStep = new ConfirmBlocksStep(this.evmChain, 10, 10);
+        const evmConfig = config.evm.get(this.evmChain)!;
+        const confirmBlocksStep = new ConfirmBlocksStep(this.evmChain, evmConfig.confirmBlocks, evmConfig.blockTimeMs.get(this.deployment)!);
         const validateReceiptStep = new ValidateReceiptStep(
           oneSecActor,
           oneSecId,
@@ -232,7 +234,8 @@ export class EvmToIcpBridgeBuilder {
       computeForwardingAddressStep,
     );
 
-    const confirmBlocksStep = new ConfirmBlocksStep(this.evmChain, 10, 10);
+    const evmConfig = config.evm.get(this.evmChain)!;
+    const confirmBlocksStep = new ConfirmBlocksStep(this.evmChain, evmConfig.confirmBlocks, evmConfig.blockTimeMs.get(this.deployment)!);
 
     const validateForwardingReceiptStep = new ValidateForwardingReceiptStep(
       onesec,

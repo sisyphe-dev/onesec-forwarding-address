@@ -108,7 +108,8 @@ export class IcpToEvmBridgeBuilder {
       this.evmChain,
       transferStep,
     );
-    const confirmBlocksStep = new ConfirmBlocksStep(this.evmChain, 10, 10);
+    const evmConfig = config.evm.get(this.evmChain)!;
+    const confirmBlocksStep = new ConfirmBlocksStep(this.evmChain, evmConfig.confirmBlocks, evmConfig.blockTimeMs.get(this.deployment)!);
     const validateReceiptStep = new ValidateReceiptStep(
       oneSecActor,
       oneSecId,

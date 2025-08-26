@@ -41,9 +41,16 @@ export interface IcpConfig {
   onesec: Map<Deployment, string>;
 }
 
+export interface EvmConfig {
+  confirmBlocks: number,
+  blockTimeMs: Map<Deployment, number>,
+}
+
+
 export interface Config {
   tokens: Map<Token, TokenConfig>;
   icp: IcpConfig;
+  evm: Map<EvmChain, EvmConfig>,
   abi: {
     erc20_and_minter: string[];
     erc20: string[];
@@ -159,6 +166,32 @@ export const DEFAULT_CONFIG: Config = {
       ["Local", "5okwm-giaaa-aaaar-qbn6a-cai"],
     ]),
   },
+  evm: new Map([
+    ["Arbitrum", {
+      confirmBlocks: 96,
+      blockTimeMs: new Map([
+        ["Mainnet", 240],
+        ["Testnet", 240],
+        ["Local", 10],
+      ])
+    }],
+    ["Base", {
+      confirmBlocks: 12,
+      blockTimeMs: new Map([
+        ["Mainnet", 1900],
+        ["Testnet", 1900],
+        ["Local", 10],
+      ])
+    }],
+    ["Ethereum", {
+      confirmBlocks: 4,
+      blockTimeMs: new Map([
+        ["Mainnet", 12_000],
+        ["Testnet", 12_000],
+        ["Local", 10],
+      ])
+    }]
+  ]),
   abi: {
     erc20_and_minter: [
       "function balanceOf(address account) view returns (uint256)",
