@@ -21,25 +21,6 @@ export class ApproveStep extends BaseStep {
     };
   }
 
-  chain(): Chain {
-    return this.evmChain;
-  }
-
-  contract(): string | undefined {
-    return this.erc20Address;
-  }
-
-  method(): string | undefined {
-    return "approve";
-  }
-
-  args(): string | undefined {
-    return JSON.stringify({
-      spender: this.lockerAddress,
-      amount: this.evmAmount,
-    });
-  }
-
   expectedDurationMs(): number {
     return EVM_CALL_DURATION_MS;
   }

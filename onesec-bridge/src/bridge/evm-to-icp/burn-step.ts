@@ -42,33 +42,6 @@ export class BurnStep extends BaseStep implements GetEvmTx {
     };
   }
 
-  chain(): Chain {
-    return this.evmChain;
-  }
-
-  contract(): string | undefined {
-    return this.minterAddress;
-  }
-
-  method(): string | undefined {
-    return this.data2 ? "burn2" : "burn1";
-  }
-
-  args(): string | undefined {
-    if (this.data2) {
-      return JSON.stringify({
-        amount: this.evmAmount.toString(),
-        data1: this.data1,
-        data2: this.data2,
-      });
-    } else {
-      return JSON.stringify({
-        amount: this.evmAmount.toString(),
-        data1: this.data1,
-      });
-    }
-  }
-
   expectedDurationMs(): number {
     return EVM_CALL_DURATION_MS;
   }

@@ -35,28 +35,6 @@ export class TransferStep extends BaseStep {
     };
   }
 
-  chain(): Chain {
-    return "ICP";
-  }
-
-  contract(): string | undefined {
-    return this.oneSecId.toText();
-  }
-
-  method(): string | undefined {
-    return "transfer_icp_to_evm";
-  }
-
-  args(): string | undefined {
-    return JSON.stringify({
-      token: this.token,
-      icp_account: this.icpAccount.owner.toText(),
-      icp_amount: this.icpAmount.toString(),
-      evm_chain: this.evmChain,
-      evm_address: this.evmAddress,
-    });
-  }
-
   expectedDurationMs(): number {
     return ICP_CALL_DURATION_MS;
   }

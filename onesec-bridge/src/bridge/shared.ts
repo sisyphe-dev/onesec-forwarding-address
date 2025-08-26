@@ -30,10 +30,6 @@ export abstract class BaseStep implements Step {
   protected _status: StepStatus = { Planned: null };
 
   abstract details(): Details;
-  abstract chain(): Chain;
-  abstract contract(): string | undefined;
-  abstract method(): string | undefined;
-  abstract args(): string | undefined;
   abstract run(): Promise<StepStatus>;
   abstract expectedDurationMs(): number;
 
@@ -65,22 +61,6 @@ export class ConfirmBlocksStep extends BaseStep {
       summary: "Confirm blocks",
       description: `Confirm ${this.blockCount} blocks on ${this.evmChain}`,
     };
-  }
-
-  chain(): Chain {
-    return this.evmChain;
-  }
-
-  contract(): string | undefined {
-    return undefined;
-  }
-
-  method(): string | undefined {
-    return undefined;
-  }
-
-  args(): string | undefined {
-    return undefined;
   }
 
   expectedDurationMs(): number {
@@ -142,22 +122,6 @@ export class CheckFeesAndLimitsStep extends BaseStep {
       summary: "Check fees and limits",
       description: "Check fees and limits",
     };
-  }
-
-  chain(): Chain {
-    return "ICP";
-  }
-
-  contract(): string | undefined {
-    return undefined;
-  }
-
-  method(): string | undefined {
-    return undefined;
-  }
-
-  args(): string | undefined {
-    return undefined;
   }
 
   expectedDurationMs(): number {

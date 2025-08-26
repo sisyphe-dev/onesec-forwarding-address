@@ -28,25 +28,6 @@ export class ApproveStep extends BaseStep {
     };
   }
 
-  chain(): Chain {
-    return "ICP";
-  }
-
-  contract(): string | undefined {
-    return this.ledgerId.toText();
-  }
-
-  method(): string | undefined {
-    return "icrc2_approve";
-  }
-
-  args(): string | undefined {
-    return JSON.stringify({
-      amount: this.amount.toString(),
-      spender: this.oneSecId.toText(),
-    });
-  }
-
   expectedDurationMs(): number {
     return ICP_CALL_DURATION_MS;
   }

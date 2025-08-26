@@ -24,24 +24,9 @@ export class ValidateReceiptStep extends BaseStep {
     };
   }
 
-  chain(): Chain {
-    return this.evmChain;
-  }
 
-  contract(): string {
-    return this.oneSecId.toText();
-  }
 
-  method(): string {
-    return "get_transfer";
-  }
 
-  args(): string | undefined {
-    const id = this.transferStep.getTransferId();
-    return id == undefined
-      ? undefined
-      : JSON.stringify({ id: id.id.toString() });
-  }
 
   expectedDurationMs(): number {
     return ICP_CALL_DURATION_MS;

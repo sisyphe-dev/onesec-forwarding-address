@@ -45,22 +45,9 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
     };
   }
 
-  chain(): Chain {
-    return this.evmChain;
-  }
 
-  contract(): string {
-    return this.oneSecId.toText();
-  }
 
-  method(): string {
-    return "get_transfer";
-  }
 
-  args(): string | undefined {
-    const evmTx = this.getEvmTx.getEvmTx();
-    return evmTx == undefined ? undefined : JSON.stringify({ evmTx });
-  }
 
   expectedDurationMs(): number {
     return ICP_CALL_DURATION_MS;

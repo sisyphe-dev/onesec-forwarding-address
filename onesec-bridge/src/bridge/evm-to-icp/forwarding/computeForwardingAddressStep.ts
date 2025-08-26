@@ -30,22 +30,6 @@ export class ComputeForwardingAddressStep extends BaseStep {
     };
   }
 
-  chain(): Chain {
-    return this.evmChain;
-  }
-
-  contract(): string | undefined {
-    return undefined;
-  }
-
-  method(): string | undefined {
-    return undefined;
-  }
-
-  args(): string | undefined {
-    return undefined;
-  }
-
   expectedDurationMs(): number {
     return ICP_CALL_DURATION_MS;
   }

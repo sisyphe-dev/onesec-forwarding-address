@@ -288,11 +288,6 @@ export type StepStatus =
 export interface Step {
   details: () => Details;
 
-  chain: () => Chain;
-  contract: () => string | undefined;
-  method: () => string | undefined;
-  args: () => string | undefined;
-
   status: () => StepStatus;
 
   run: () => Promise<StepStatus>;
