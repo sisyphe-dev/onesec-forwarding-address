@@ -1,6 +1,6 @@
 import { Principal } from "@dfinity/principal";
 import * as fromCandid from "../../fromCandid";
-import { OneSec } from "../../icp";
+import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
 import * as toCandid from "../../toCandid";
 import type {
   Chain,
@@ -15,12 +15,13 @@ import {
   BaseStep,
   err,
   GetEvmTx,
+  GetTransferId,
   ICP_CALL_DURATION_MS,
   ok,
   sleep,
 } from "../shared";
 
-export class ValidateReceiptStep extends BaseStep {
+export class ValidateReceiptStep extends BaseStep implements GetTransferId {
   private delayMs: number = 1_000;
   private transferId?: TransferId;
 

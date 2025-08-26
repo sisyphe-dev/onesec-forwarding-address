@@ -1,9 +1,7 @@
 import { Principal } from "@dfinity/principal";
-import { Signer } from "ethers";
-import { BridgingPlan } from "../..";
+import { Contract, Signer } from "ethers";
+import { BridgingPlan, oneSecForwarding } from "../..";
 import { DEFAULT_CONFIG, type Config } from "../../config";
-import { erc20, locker, operatingMode } from "../../evm";
-import { anonymousAgent, oneSecWithAgent } from "../../icp";
 import type {
   Deployment,
   EvmChain,
@@ -11,12 +9,18 @@ import type {
   Step,
   Token,
 } from "../../types";
-import { ConfirmBlocksStep } from "../shared";
+import { anonymousAgent, ConfirmBlocksStep, oneSecWithAgent } from "../shared";
 import { ApproveStep } from "./approve-step";
 import { BurnStep } from "./burn-step";
 import { LockStep } from "./lock-step";
 import { ValidateReceiptStep } from "./validate-receipt-step";
 import { WaitForIcpTx } from "./wait-for-icp-tx";
+import { ComputeForwardingAddressStep } from "./forwarding/computeForwardingAddressStep";
+import { NotifyPaymentToForwardingAddressStep } from "./forwarding/notifyPaymentToForwardingAddressStep";
+import { WaitForForwardingTxStep } from "./forwarding/waitForForwardingTxStep";
+import { ValidateForwardingReceiptStep } from "./forwarding/validateForwardingReceiptStep";
+
+type OperatingMode = "minter" | "locker";
 
 // EVM to ICP Bridge Builder
 export class EvmToIcpBridgeBuilder {
@@ -27,10 +31,9 @@ export class EvmToIcpBridgeBuilder {
   private config?: Config;
 
   constructor(
-    private signer: Signer,
     private evmChain: EvmChain,
     private token: Token,
-  ) {}
+  ) { }
 
   target(deployment: Deployment): EvmToIcpBridgeBuilder {
     this.deployment = deployment;
@@ -57,7 +60,7 @@ export class EvmToIcpBridgeBuilder {
     return this;
   }
 
-  async build(): Promise<BridgingPlan> {
+  async build(signer: Signer): Promise<BridgingPlan> {
     if (!this.evmAddress) {
       throw new Error("EVM address is required");
     }
@@ -72,25 +75,21 @@ export class EvmToIcpBridgeBuilder {
 
     const mode = operatingMode(this.evmChain, this.token, config);
 
-    const oneSecId = Principal.fromText(
-      this.config?.icp.oneSecCanisters.get(this.deployment) ??
-        "5okwm-giaaa-aaaar-qbn6a-cai",
-    );
+    const oneSecId = Principal.fromText(this.config?.icp.oneSecCanisters.get(this.deployment)!);
     const agent = await anonymousAgent(this.deployment, config);
     const oneSecActor = await oneSecWithAgent(oneSecId, agent);
 
     let steps: Step[];
-
     switch (mode) {
       case "locker": {
         const [lockerContract, lockerAddress] = locker(
-          this.signer,
+          signer,
           this.evmChain,
           this.token,
           config,
         );
         const [erc20Contract, erc20Address] = erc20(
-          this.signer,
+          signer,
           this.evmChain,
           this.token,
           config,
@@ -139,7 +138,7 @@ export class EvmToIcpBridgeBuilder {
       }
       case "minter": {
         const [minterContract, minterAddress] = erc20(
-          this.signer,
+          signer,
           this.evmChain,
           this.token,
           config,
@@ -191,4 +190,101 @@ export class EvmToIcpBridgeBuilder {
       },
     );
   }
+
+  async forward(): Promise<BridgingPlan> {
+    if (!this.evmAddress) {
+      throw new Error("EVM address is required");
+    }
+    if (!this.evmAmount) {
+      throw new Error("EVM amount is required");
+    }
+    if (!this.icpAccount) {
+      throw new Error("ICP account is required");
+    }
+
+    const config = this.config || DEFAULT_CONFIG;
+
+    const mode = operatingMode(this.evmChain, this.token, config);
+
+    const onesec = oneSecForwarding(this.deployment);
+
+    const computeForwardingAddressStep = new ComputeForwardingAddressStep(onesec, this.token, this.icpAccount, this.evmChain);
+
+    const notifyPaymentToForwardingAddressStep = new NotifyPaymentToForwardingAddressStep(onesec, this.token, this.icpAccount, this.evmChain, computeForwardingAddressStep);
+
+    const waitForForwardingTxStep = new WaitForForwardingTxStep(onesec, this.token, this.icpAccount, this.evmChain, computeForwardingAddressStep);
+
+    const confirmBlocksStep = new ConfirmBlocksStep(this.evmChain, 10, 10);
+
+    const validateForwardingReceiptStep = new ValidateForwardingReceiptStep(onesec, this.token, this.icpAccount, this.evmChain, computeForwardingAddressStep);
+
+    const oneSecId = Principal.fromText(this.config?.icp.oneSecCanisters.get(this.deployment)!);
+    const agent = await anonymousAgent(this.deployment, config);
+    const oneSecActor = await oneSecWithAgent(oneSecId, agent);
+
+    const waitForIcpTxStep = new WaitForIcpTx(
+      oneSecActor,
+      oneSecId,
+      this.evmChain,
+      validateForwardingReceiptStep,
+    );
+
+    return new BridgingPlan(
+      [computeForwardingAddressStep, notifyPaymentToForwardingAddressStep, waitForForwardingTxStep, confirmBlocksStep, validateForwardingReceiptStep, waitForIcpTxStep],
+      {
+        inTokens: 0,
+        inUnits: 0n,
+      },
+      {
+        inTokens: 0,
+        inUnits: 0n,
+      },
+    );
+
+  }
+}
+
+function operatingMode(
+  chain: EvmChain,
+  token: Token,
+  config: Config = DEFAULT_CONFIG,
+): OperatingMode {
+  const mode = config.evm.get(chain)?.tokens.get(token)?.mode;
+  if (!mode) {
+    throw Error(`no EVM config for ${chain} and ${token}`);
+  }
+  return mode;
+}
+
+function erc20(
+  signer: Signer,
+  chain: EvmChain,
+  token: Token,
+  config: Config = DEFAULT_CONFIG,
+): [Contract, string] {
+  const tokenConfig = config.evm.get(chain)?.tokens.get(token);
+  if (!tokenConfig) {
+    throw Error(`no EVM config for ${chain} and ${token}`);
+  }
+  const abi =
+    tokenConfig.mode === "minter"
+      ? config.abi.erc20_and_minter
+      : config.abi.erc20;
+  return [new Contract(tokenConfig.erc20, abi, signer), tokenConfig.erc20];
+}
+
+function locker(
+  signer: Signer,
+  chain: EvmChain,
+  token: Token,
+  config: Config = DEFAULT_CONFIG,
+): [Contract, string] {
+  const tokenConfig = config.evm.get(chain)?.tokens.get(token);
+  if (!tokenConfig || !tokenConfig.locker) {
+    throw Error(`no EVM locker config for ${chain} and ${token}`);
+  }
+  return [
+    new Contract(tokenConfig.locker, config.abi.locker, signer),
+    tokenConfig.locker,
+  ];
 }

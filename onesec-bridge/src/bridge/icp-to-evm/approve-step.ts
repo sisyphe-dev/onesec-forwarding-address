@@ -1,5 +1,5 @@
 import { Principal } from "@dfinity/principal";
-import { IcrcLedger } from "../../icp";
+import { type _SERVICE as IcrcLedger } from "../../generated/candid/icrc_ledger/icrc_ledger.did";
 import type {
   Chain,
   Details,

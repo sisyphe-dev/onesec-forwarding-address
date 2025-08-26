@@ -1,6 +1,6 @@
 import { Principal } from "@dfinity/principal";
 import * as fromCandid from "../../fromCandid";
-import { OneSec } from "../../icp";
+import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
 import * as toCandid from "../../toCandid";
 import type {
   Chain,

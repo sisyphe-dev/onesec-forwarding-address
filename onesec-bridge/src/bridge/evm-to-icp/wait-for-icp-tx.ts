@@ -1,8 +1,8 @@
 import { Principal } from "@dfinity/principal";
 import * as fromCandid from "../../fromCandid";
-import { OneSec } from "../../icp";
+import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
 import type { Chain, Details, EvmChain, StepStatus } from "../../types";
-import { BaseStep, err, ICP_CALL_DURATION_MS, ok, sleep } from "../shared";
+import { BaseStep, err, GetTransferId, ICP_CALL_DURATION_MS, ok, sleep } from "../shared";
 import { ValidateReceiptStep } from "./validate-receipt-step";
 
 export class WaitForIcpTx extends BaseStep {
@@ -12,7 +12,7 @@ export class WaitForIcpTx extends BaseStep {
     private oneSecActor: OneSec,
     private oneSecId: Principal,
     private evmChain: EvmChain,
-    private validateReceiptStep: ValidateReceiptStep,
+    private getTransferId: GetTransferId,
   ) {
     super();
   }
@@ -37,7 +37,7 @@ export class WaitForIcpTx extends BaseStep {
   }
 
   args(): string | undefined {
-    const id = this.validateReceiptStep.getTransferId();
+    const id = this.getTransferId.getTransferId();
     return id == undefined
       ? undefined
       : JSON.stringify({ id: id.id.toString() });
@@ -55,7 +55,7 @@ export class WaitForIcpTx extends BaseStep {
       },
     };
 
-    const transferId = this.validateReceiptStep.getTransferId();
+    const transferId = this.getTransferId.getTransferId();
 
     if (transferId === undefined) {
       this._status = {

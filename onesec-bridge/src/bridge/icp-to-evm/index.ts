@@ -1,10 +1,13 @@
-import { Agent } from "@dfinity/agent";
+import { Actor, Agent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { BridgingPlan } from "../..";
 import { Config, DEFAULT_CONFIG } from "../../config";
-import { icrcLedgerWithAgent, oneSecWithAgent } from "../../icp";
+import {
+  idlFactory as IcrcLedgerIDL,
+  type _SERVICE as IcrcLedger,
+} from "../../generated/candid/icrc_ledger/icrc_ledger.did";
 import { Deployment, EvmChain, IcrcAccount, Token } from "../../types";
-import { ConfirmBlocksStep } from "../shared";
+import { ConfirmBlocksStep, oneSecWithAgent } from "../shared";
 import { ApproveStep } from "./approve-step";
 import { TransferStep } from "./transfer-step";
 import { ValidateReceiptStep } from "./validate-receipt-step";
@@ -22,7 +25,7 @@ export class IcpToEvmBridgeBuilder {
     private agent: Agent,
     private evmChain: EvmChain,
     private token: Token,
-  ) {}
+  ) { }
 
   target(deployment: Deployment): IcpToEvmBridgeBuilder {
     this.deployment = deployment;
@@ -69,13 +72,13 @@ export class IcpToEvmBridgeBuilder {
 
     const oneSecId = Principal.fromText(
       this.config?.icp.oneSecCanisters.get(this.deployment) ??
-        "5okwm-giaaa-aaaar-qbn6a-cai",
+      "5okwm-giaaa-aaaar-qbn6a-cai",
     );
     const oneSecActor = await oneSecWithAgent(oneSecId, this.agent);
 
     const ledgerId = Principal.fromText(
       this.config?.icp.ledgerCanisters.get(this.token) ??
-        "mxzaz-hqaaa-aaaar-qaada-cai",
+      "mxzaz-hqaaa-aaaar-qaada-cai",
     );
     const ledgerActor = await icrcLedgerWithAgent(
       this.token,
@@ -134,4 +137,26 @@ export class IcpToEvmBridgeBuilder {
       },
     );
   }
+}
+
+async function icrcLedgerWithAgent(
+  token: Token,
+  agent: Agent,
+  config?: Config,
+): Promise<IcrcLedger> {
+  return await Actor.createActor(IcrcLedgerIDL, {
+    agent,
+    canisterId: defaultIcrcLedgerCanisterId(token, config),
+  });
+}
+
+function defaultIcrcLedgerCanisterId(
+  token: Token,
+  config: Config = DEFAULT_CONFIG,
+): string {
+  const canisterId = config.icp.ledgerCanisters.get(token);
+  if (!canisterId) {
+    throw new Error(`No ICRC ledger canister configured for token: ${token}`);
+  }
+  return canisterId;
 }

@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import { encodeIcrcAccount } from "../../icp";
+import { encodeIcrcAccount } from "../shared";
 import type {
   Chain,
   Details,
