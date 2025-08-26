@@ -278,7 +278,7 @@ class ExpectedFeeImpl implements ExpectedFee {
     private _transferFee: Amount,
     private _protocolFeeInPercent: number,
     private decimals: number,
-  ) { }
+  ) {}
 
   transferFee(): Amount {
     return this._transferFee;
@@ -289,10 +289,7 @@ class ExpectedFeeImpl implements ExpectedFee {
       amount.inTokens * this._protocolFeeInPercent,
       this.decimals,
     );
-    return amountFromUnits(
-      expectedProtocolFeeInUnits,
-      this.decimals,
-    );
+    return amountFromUnits(expectedProtocolFeeInUnits, this.decimals);
   }
 
   protocolFeeInPercent(): number {
@@ -305,7 +302,7 @@ class ExpectedFeeImpl implements ExpectedFee {
     return {
       inTokens: a.inTokens + b.inTokens,
       inUnits: a.inUnits + b.inUnits,
-    }
+    };
   }
 }
 

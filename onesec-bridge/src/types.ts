@@ -247,17 +247,17 @@ export interface TransferFee {
   latestTransferFee: bigint;
   averageTransferFee: bigint;
   protocolFeeInPercent: number;
-};
+}
 
 export interface Amount {
   inTokens: number;
   inUnits: bigint;
-};
+}
 
 export interface Details {
   summary: string;
   description: string;
-};
+}
 
 export interface ExpectedFee {
   transferFee: () => Amount;
@@ -268,17 +268,17 @@ export interface ExpectedFee {
 
 export type Result =
   | {
-    Ok: {
-      details: Details;
-      amount?: Amount;
-      transaction?: Tx;
-      link?: string;
-      expectedFee?: ExpectedFee,
-    };
-  }
+      Ok: {
+        details: Details;
+        amount?: Amount;
+        transaction?: Tx;
+        link?: string;
+        expectedFee?: ExpectedFee;
+      };
+    }
   | {
-    Err: Details;
-  };
+      Err: Details;
+    };
 
 export type StepStatus =
   | { Planned: null }
