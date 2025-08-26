@@ -21,7 +21,6 @@ import {
 } from "../shared";
 
 export class ValidateReceiptStep extends BaseStep implements GetTransferId {
-  private delayMs: number = 1_000;
   private transferId?: TransferId;
 
   constructor(
@@ -32,6 +31,7 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
     private evmAmount: bigint,
     private icpAccount: IcrcAccount,
     private getEvmTx: GetEvmTx,
+    private delayMs: number,
   ) {
     super();
   }

@@ -23,7 +23,6 @@ export class ValidateForwardingReceiptStep
   implements GetTransferId
 {
   private transferId?: TransferId;
-  private delayMs: number = 1_000;
 
   constructor(
     private onesec: OneSecForwarding,
@@ -31,6 +30,7 @@ export class ValidateForwardingReceiptStep
     private icpAccount: IcrcAccount,
     private evmChain: EvmChain,
     private computeForwardingAddressStep: ComputeForwardingAddressStep,
+    private delayMs: number,
   ) {
     super();
   }

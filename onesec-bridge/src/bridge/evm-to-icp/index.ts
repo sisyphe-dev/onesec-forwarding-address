@@ -3,6 +3,7 @@ import { Contract, Signer } from "ethers";
 import { BridgingPlan, oneSecForwarding } from "../..";
 import {
   DEFAULT_CONFIG,
+  getIcpPollDelayMs,
   getTokenConfig,
   getTokenDecimals,
   getTokenErc20Address,
@@ -146,10 +147,12 @@ export class EvmToIcpBridgeBuilder {
           this.evmAmount,
           this.icpAccount,
           lockStep,
+          getIcpPollDelayMs(config, this.deployment),
         );
         const waitForIcpTxStep = new WaitForIcpTx(
           oneSecActor,
           validateReceiptStep,
+          getIcpPollDelayMs(config, this.deployment),
         );
         steps = [
           checkFeesAndLimitsStep,
@@ -189,10 +192,12 @@ export class EvmToIcpBridgeBuilder {
           this.evmAmount,
           this.icpAccount,
           burnStep,
+          getIcpPollDelayMs(config, this.deployment),
         );
         const waitForIcpTxStep = new WaitForIcpTx(
           oneSecActor,
           validateReceiptStep,
+          getIcpPollDelayMs(config, this.deployment),
         );
         steps = [
           checkFeesAndLimitsStep,
@@ -260,6 +265,7 @@ export class EvmToIcpBridgeBuilder {
       this.icpAccount,
       this.evmChain,
       computeForwardingAddressStep,
+      getIcpPollDelayMs(config, this.deployment),
     );
 
     const evmConfig = config.evm.get(this.evmChain)!;
@@ -275,11 +281,13 @@ export class EvmToIcpBridgeBuilder {
       this.icpAccount,
       this.evmChain,
       computeForwardingAddressStep,
+      getIcpPollDelayMs(config, this.deployment),
     );
 
     const waitForIcpTxStep = new WaitForIcpTx(
       oneSecActor,
       validateForwardingReceiptStep,
+      getIcpPollDelayMs(config, this.deployment),
     );
 
     return new BridgingPlan([

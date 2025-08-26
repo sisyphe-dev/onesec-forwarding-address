@@ -12,11 +12,10 @@ import {
 } from "../shared";
 
 export class WaitForIcpTx extends BaseStep {
-  private delayMs: number = 1_000;
-
   constructor(
     private oneSecActor: OneSec,
     private getTransferId: GetTransferId,
+    private delayMs: number,
   ) {
     super();
   }

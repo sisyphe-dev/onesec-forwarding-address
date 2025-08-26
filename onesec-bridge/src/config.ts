@@ -39,6 +39,7 @@ export interface TokenConfig {
 export interface IcpConfig {
   hosts: Map<Deployment, string>;
   onesec: Map<Deployment, string>;
+  pollDelayMs: Map<Deployment, number>;
 }
 
 export interface EvmConfig {
@@ -169,6 +170,11 @@ export const DEFAULT_CONFIG: Config = {
       ["Mainnet", "5okwm-giaaa-aaaar-qbn6a-cai"],
       ["Testnet", "zvjow-lyaaa-aaaar-qap7q-cai"],
       ["Local", "5okwm-giaaa-aaaar-qbn6a-cai"],
+    ]),
+    pollDelayMs: new Map([
+      ["Mainnet", 1_000],
+      ["Testnet", 1_000],
+      ["Local", 10],
     ]),
   },
   evm: new Map([
@@ -303,4 +309,15 @@ export function getTokenConfig(
   token: Token,
 ): TokenConfig | undefined {
   return config.tokens.get(token);
+}
+
+export function getIcpPollDelayMs(
+  config: Config,
+  deployment: Deployment,
+): number {
+  const pollDelayMs = config.icp.pollDelayMs.get(deployment);
+  if (pollDelayMs === undefined) {
+    throw new Error(`Poll delay not found for deployment: ${deployment}`);
+  }
+  return pollDelayMs;
 }

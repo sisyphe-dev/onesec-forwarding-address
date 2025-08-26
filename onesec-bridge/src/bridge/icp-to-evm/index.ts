@@ -4,6 +4,7 @@ import { BridgingPlan } from "../..";
 import {
   Config,
   DEFAULT_CONFIG,
+  getIcpPollDelayMs,
   getTokenDecimals,
   getTokenLedgerCanister,
 } from "../../config";
@@ -129,6 +130,7 @@ export class IcpToEvmBridgeBuilder {
       oneSecActor,
       this.evmChain,
       transferStep,
+      getIcpPollDelayMs(config, this.deployment),
     );
     const evmConfig = config.evm.get(this.evmChain)!;
     const confirmBlocksStep = new ConfirmBlocksStep(
@@ -140,6 +142,7 @@ export class IcpToEvmBridgeBuilder {
       oneSecActor,
       this.evmChain,
       transferStep,
+      getIcpPollDelayMs(config, this.deployment),
     );
 
     return new BridgingPlan([

@@ -321,7 +321,7 @@ export function exponentialBackoff(
   currentDelayMs: number,
   maxDelayMs: number = 10_000,
 ): number {
-  return Math.min(maxDelayMs, currentDelayMs * 1.2);
+  return Math.min(maxDelayMs, Math.max(currentDelayMs, 10) * 1.2);
 }
 
 // Helper functions for constructing Result::Done

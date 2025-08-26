@@ -12,12 +12,11 @@ import {
 import { TransferStep } from "./transferStep";
 
 export class ValidateReceiptStep extends BaseStep {
-  private delayMs: number = 1_000;
-
   constructor(
     private oneSecActor: OneSec,
     private evmChain: EvmChain,
     private transferStep: TransferStep,
+    private delayMs: number,
   ) {
     super();
   }

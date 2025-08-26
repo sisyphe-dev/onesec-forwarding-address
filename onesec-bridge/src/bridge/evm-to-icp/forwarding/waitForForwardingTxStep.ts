@@ -21,7 +21,6 @@ import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
 export class WaitForForwardingTxStep extends BaseStep {
   private transferId?: TransferId;
   private forwardingTx?: EvmTx;
-  private delayMs: number = 1_000;
 
   constructor(
     private onesec: OneSecForwarding,
@@ -29,6 +28,7 @@ export class WaitForForwardingTxStep extends BaseStep {
     private icpAccount: IcrcAccount,
     private evmChain: EvmChain,
     private computeForwardingAddressStep: ComputeForwardingAddressStep,
+    private delayMs: number,
   ) {
     super();
   }

@@ -17,13 +17,13 @@ import { TransferStep } from "./transferStep";
 type TxStatus = "unknown" | "signed" | "sent" | "executed";
 
 export class WaitForTxStep extends BaseStep {
-  private delayMs: number = 1_000;
   private txStatus: TxStatus = "unknown";
 
   constructor(
     private oneSecActor: OneSec,
     private evmChain: EvmChain,
     private transferStep: TransferStep,
+    private delayMs: number,
   ) {
     super();
   }
