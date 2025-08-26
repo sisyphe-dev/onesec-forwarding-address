@@ -23,7 +23,7 @@ export class NotifyForwardingPaymentStep extends BaseStep {
   about(): About {
     return {
       concise: "Notify forwarding payment",
-      verbose: "Notify forwarding payment",
+      verbose: `Notify OneSec canister about ${this.token} payment to the forwarding address on ${this.evmChain}`,
     };
   }
 

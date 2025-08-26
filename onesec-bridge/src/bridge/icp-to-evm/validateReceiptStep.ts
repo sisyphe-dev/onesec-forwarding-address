@@ -17,6 +17,7 @@ export class ValidateReceiptStep extends BaseStep {
     private evmChain: EvmChain,
     private transferStep: TransferStep,
     private delayMs: number,
+    private evmAddress: string,
   ) {
     super();
   }
@@ -24,7 +25,7 @@ export class ValidateReceiptStep extends BaseStep {
   about(): About {
     return {
       concise: "Validate receipt",
-      verbose: `Wait for OneSec to validate the receipt of ${this.evmChain} transaction`,
+      verbose: `Wait for OneSec canister validate the ${this.evmChain} transaction receipt`,
     };
   }
 

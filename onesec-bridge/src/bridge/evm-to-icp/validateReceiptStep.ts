@@ -39,7 +39,7 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
   about(): About {
     return {
       concise: "Validate receipt",
-      verbose: `Wait for OneSec to validate the receipt of the ${this.evmChain} transaction`,
+      verbose: `Wait for OneSec canister to validate the ${this.evmChain} transaction receipt`,
     };
   }
 

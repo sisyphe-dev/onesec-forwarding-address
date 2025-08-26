@@ -124,14 +124,17 @@ export class EvmToIcpBridgeBuilder {
         const approveStep = new ApproveStep(
           erc20Contract,
           this.token,
+          this.evmChain,
           this.evmAmount,
           lockerAddress,
+          decimals,
         );
         const lockStep = new LockStep(
           lockerContract,
           this.token,
           this.evmAmount,
           this.icpAccount,
+          decimals,
         );
         const evmConfig = config.evm.get(this.evmChain)!;
         const confirmBlocksStep = new ConfirmBlocksStep(
@@ -151,6 +154,7 @@ export class EvmToIcpBridgeBuilder {
         );
         const waitForIcpTxStep = new WaitForIcpTx(
           oneSecActor,
+          this.token,
           validateReceiptStep,
           getIcpPollDelayMs(config, this.deployment),
         );
@@ -177,6 +181,7 @@ export class EvmToIcpBridgeBuilder {
           this.token,
           this.evmAmount,
           this.icpAccount,
+          decimals,
         );
         const evmConfig = config.evm.get(this.evmChain)!;
         const confirmBlocksStep = new ConfirmBlocksStep(
@@ -196,6 +201,7 @@ export class EvmToIcpBridgeBuilder {
         );
         const waitForIcpTxStep = new WaitForIcpTx(
           oneSecActor,
+          this.token,
           validateReceiptStep,
           getIcpPollDelayMs(config, this.deployment),
         );
@@ -286,6 +292,7 @@ export class EvmToIcpBridgeBuilder {
 
     const waitForIcpTxStep = new WaitForIcpTx(
       oneSecActor,
+      this.token,
       validateForwardingReceiptStep,
       getIcpPollDelayMs(config, this.deployment),
     );

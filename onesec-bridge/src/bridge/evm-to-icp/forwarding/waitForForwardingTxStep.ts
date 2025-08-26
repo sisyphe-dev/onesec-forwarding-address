@@ -36,8 +36,7 @@ export class WaitForForwardingTxStep extends BaseStep {
   about(): About {
     return {
       concise: "Wait for forwarding transaction",
-      verbose:
-        "Wait for transaction that moves tokens from the forwarding address to the bridge",
+      verbose: `Wait for OneSec to detect ${this.token} payment to the forwarding address and move tokens to the bridge on ${this.evmChain}`,
     };
   }
 

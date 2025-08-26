@@ -5,6 +5,7 @@ import {
   encodeIcrcAccount,
   err,
   EVM_CALL_DURATION_MS,
+  format,
   GetEvmTx,
   ok,
 } from "../shared";
@@ -18,6 +19,7 @@ export class BurnStep extends BaseStep implements GetEvmTx {
     private token: Token,
     private evmAmount: bigint,
     private icpAccount: IcrcAccount,
+    private decimals: number,
   ) {
     super();
     const [data1, data2] = encodeIcrcAccount(this.icpAccount);
@@ -27,8 +29,8 @@ export class BurnStep extends BaseStep implements GetEvmTx {
 
   about(): About {
     return {
-      concise: `Transfer ${this.token}`,
-      verbose: `Transfer ${this.token} to OneSec`,
+      concise: `Burn ${this.token}`,
+      verbose: `Burn ${format(this.evmAmount, this.decimals)} ${this.token} tokens and send them to ${this.icpAccount.owner.toText()} on ICP`,
     };
   }
 

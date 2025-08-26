@@ -37,8 +37,8 @@ export class ValidateForwardingReceiptStep
 
   about(): About {
     return {
-      concise: "Validate receipt",
-      verbose: `Wait for OneSec to validate the receipt of the ${this.evmChain} transaction`,
+      concise: "Validate forwarding receipt",
+      verbose: `Wait for OneSec canister to validate the forwarding transaction receipt on ${this.evmChain} and initiate the transfer to ${this.icpAccount.owner.toText()} on ICP`,
     };
   }
 

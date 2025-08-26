@@ -31,7 +31,7 @@ export class WaitForTxStep extends BaseStep {
   about(): About {
     return {
       concise: "Wait for transaction",
-      verbose: `Wait for OneSec to submit a transaction on ${this.evmChain}`,
+      verbose: `Wait for OneSec canister to sign and submit the transaction on ${this.evmChain}`,
     };
   }
 

@@ -101,7 +101,7 @@ it(
     console.log("Plan execution result:", result);
 
     if ("Err" in result) {
-      console.error("Plan execution failed:", result.Err.verbose);
+      console.error("Plan execution failed:", result.Err.about.verbose);
       expect.fail("Plan execution should not fail");
     }
 

@@ -1,6 +1,6 @@
 import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
-import type { About, StepStatus } from "../../types";
+import type { About, StepStatus, Token } from "../../types";
 import {
   BaseStep,
   err,
@@ -14,6 +14,7 @@ import {
 export class WaitForIcpTx extends BaseStep {
   constructor(
     private oneSecActor: OneSec,
+    private token: Token,
     private getTransferId: GetTransferId,
     private delayMs: number,
   ) {
@@ -23,7 +24,7 @@ export class WaitForIcpTx extends BaseStep {
   about(): About {
     return {
       concise: "Wait for ledger transaction",
-      verbose: "Wait for OneSec to call the ledger",
+      verbose: `Wait for OneSec canister to submit the transaction to the ${this.token} ledger canister`,
     };
   }
 

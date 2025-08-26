@@ -114,6 +114,7 @@ export class IcpToEvmBridgeBuilder {
       this.token,
       this.amount,
       oneSecId,
+      decimals,
     );
 
     const transferStep = new TransferStep(
@@ -124,6 +125,7 @@ export class IcpToEvmBridgeBuilder {
       this.amount,
       this.evmChain,
       this.evmAddress,
+      decimals,
     );
 
     const waitForTxStep = new WaitForTxStep(
@@ -143,6 +145,7 @@ export class IcpToEvmBridgeBuilder {
       this.evmChain,
       transferStep,
       getIcpPollDelayMs(config, this.deployment),
+      this.evmAddress,
     );
 
     return new BridgingPlan([

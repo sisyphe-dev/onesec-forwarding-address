@@ -1,7 +1,7 @@
 import { Principal } from "@dfinity/principal";
 import { type _SERVICE as IcrcLedger } from "../../generated/candid/icrc_ledger/icrc_ledger.did";
 import type { About, IcrcAccount, StepStatus, Token } from "../../types";
-import { BaseStep, err, ICP_CALL_DURATION_MS, ok } from "../shared";
+import { BaseStep, err, format, ICP_CALL_DURATION_MS, ok } from "../shared";
 
 export class ApproveStep extends BaseStep {
   constructor(
@@ -11,6 +11,7 @@ export class ApproveStep extends BaseStep {
     private token: Token,
     private amount: bigint,
     private oneSecId: Principal,
+    private decimals: number,
   ) {
     super();
   }
@@ -18,7 +19,7 @@ export class ApproveStep extends BaseStep {
   about(): About {
     return {
       concise: "Approve transaction",
-      verbose: `Approve transfer of ${this.token} to OneSec`,
+      verbose: `Approve a transfer of ${format(this.amount, this.decimals)} ${this.token} to the OneSec bridge on the ${this.token} ledger`,
     };
   }
 

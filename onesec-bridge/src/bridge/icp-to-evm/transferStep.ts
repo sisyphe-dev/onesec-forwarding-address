@@ -10,7 +10,7 @@ import type {
   Token,
   TransferId,
 } from "../../types";
-import { BaseStep, err, ICP_CALL_DURATION_MS, ok } from "../shared";
+import { BaseStep, err, format, ICP_CALL_DURATION_MS, ok } from "../shared";
 
 export class TransferStep extends BaseStep {
   private transferId?: TransferId;
@@ -23,6 +23,7 @@ export class TransferStep extends BaseStep {
     private icpAmount: bigint,
     private evmChain: EvmChain,
     private evmAddress: string,
+    private decimals: number,
   ) {
     super();
   }
@@ -30,7 +31,7 @@ export class TransferStep extends BaseStep {
   about(): About {
     return {
       concise: `Transfer ${this.token}`,
-      verbose: `Transfer ${this.token} to OneSec`,
+      verbose: `Transfer ${format(this.icpAmount, this.decimals)} ${this.token} from ${this.icpAccount.owner.toText()} to OneSec canister ${this.oneSecId.toText()} for bridging to ${this.evmAddress} on ${this.evmChain}`,
     };
   }
 
