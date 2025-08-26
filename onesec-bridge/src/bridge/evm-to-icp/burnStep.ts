@@ -50,43 +50,33 @@ export class BurnStep extends BaseStep implements GetEvmTx {
       },
     };
 
-    try {
-      const burnTx = this.data2
-        ? await this.minterContract.burn2(
-            this.evmAmount,
-            this.data1,
-            this.data2,
-          )
-        : await this.minterContract.burn1(this.evmAmount, this.data1);
-      const burnReceipt = await burnTx.wait();
+    const burnTx = this.data2
+      ? await this.minterContract.burn2(
+        this.evmAmount,
+        this.data1,
+        this.data2,
+      )
+      : await this.minterContract.burn1(this.evmAmount, this.data1);
+    const burnReceipt = await burnTx.wait();
 
-      if (burnReceipt.status !== 1) {
-        this._status = {
-          Done: err({
-            summary: `Failed to transfer ${this.token}`,
-            description: `Failed to transfer ${this.token} to OneSec: transaction ${burnReceipt.hash} failed`,
-          }),
-        };
-        return this._status;
-      }
-
-      this._status = {
-        Done: ok({
-          summary: `Transferred ${this.token}`,
-          description: `Transferred ${this.token} to OneSec`,
-          transaction: { Evm: { hash: burnReceipt.hash } },
-        }),
-      };
-      return this._status;
-    } catch (error) {
+    if (burnReceipt.status !== 1) {
       this._status = {
         Done: err({
           summary: `Failed to transfer ${this.token}`,
-          description: `Failed to transfer ${this.token} to OneSec: ${error}`,
+          description: `Failed to transfer ${this.token} to OneSec: transaction ${burnReceipt.hash} failed`,
         }),
       };
       return this._status;
     }
+
+    this._status = {
+      Done: ok({
+        summary: `Transferred ${this.token}`,
+        description: `Transferred ${this.token} to OneSec`,
+        transaction: { Evm: { hash: burnReceipt.hash } },
+      }),
+    };
+    return this._status;
   }
 
   getEvmTx(): EvmTx | undefined {

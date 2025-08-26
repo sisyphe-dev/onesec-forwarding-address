@@ -49,30 +49,21 @@ export class ComputeForwardingAddressStep extends BaseStep {
       },
     };
 
-    try {
-      this.forwardingAddress = await this.onesec.addressFor(this.icpAccount);
-      const response = await this.onesec.getForwardingStatus(
-        this.token,
-        this.evmChain,
-        this.forwardingAddress,
-        this.icpAccount,
-      );
-      this.lastTransferId = response.done;
-      this._status = {
-        Done: ok({
-          summary: "Computed forwarding address",
-          description: `User can now send ${this.token} to ${this.forwardingAddress} on ${this.evmChain}`,
-        }),
-      };
-    } catch (error) {
-      this._status = {
-        Pending: {
-          summary: `Failed to compute forwarding address`,
-          description: `Failed to compute forwarding address: ${error}`,
-        },
-      };
-    }
+    this.forwardingAddress = await this.onesec.addressFor(this.icpAccount);
+    const response = await this.onesec.getForwardingStatus(
+      this.token,
+      this.evmChain,
+      this.forwardingAddress,
+      this.icpAccount,
+    );
 
+    this.lastTransferId = response.done;
+    this._status = {
+      Done: ok({
+        summary: "Computed forwarding address",
+        description: `User can now send ${this.token} to ${this.forwardingAddress} on ${this.evmChain}`,
+      }),
+    };
     return this._status;
   }
 }

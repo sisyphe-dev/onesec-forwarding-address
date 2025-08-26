@@ -50,43 +50,33 @@ export class LockStep extends BaseStep implements GetEvmTx {
       },
     };
 
-    try {
-      const lockTx = this.data2
-        ? await this.lockerContract.lock2(
-            this.evmAmount,
-            this.data1,
-            this.data2,
-          )
-        : await this.lockerContract.lock1(this.evmAmount, this.data1);
-      const lockReceipt = await lockTx.wait();
+    const lockTx = this.data2
+      ? await this.lockerContract.lock2(
+        this.evmAmount,
+        this.data1,
+        this.data2,
+      )
+      : await this.lockerContract.lock1(this.evmAmount, this.data1);
+    const lockReceipt = await lockTx.wait();
 
-      if (lockReceipt.status !== 1) {
-        this._status = {
-          Done: err({
-            summary: `Failed to transfer ${this.token}`,
-            description: `Failed to transfer ${this.token} to OneSec: transaction ${lockReceipt.hash} failed`,
-          }),
-        };
-        return this._status;
-      }
-
-      this._status = {
-        Done: ok({
-          summary: `Transferred ${this.token}`,
-          description: `Transferred ${this.token} to OneSec`,
-          transaction: { Evm: { hash: lockReceipt.hash } },
-        }),
-      };
-      return this._status;
-    } catch (error) {
+    if (lockReceipt.status !== 1) {
       this._status = {
         Done: err({
           summary: `Failed to transfer ${this.token}`,
-          description: `Failed to transfer ${this.token} to OneSec: ${error}`,
+          description: `Failed to transfer ${this.token} to OneSec: transaction ${lockReceipt.hash} failed`,
         }),
       };
       return this._status;
     }
+
+    this._status = {
+      Done: ok({
+        summary: `Transferred ${this.token}`,
+        description: `Transferred ${this.token} to OneSec`,
+        transaction: { Evm: { hash: lockReceipt.hash } },
+      }),
+    };
+    return this._status;
   }
 
   getEvmTx(): EvmTx | undefined {

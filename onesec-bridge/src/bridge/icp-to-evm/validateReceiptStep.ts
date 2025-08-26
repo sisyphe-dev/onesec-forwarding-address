@@ -37,78 +37,59 @@ export class ValidateReceiptStep extends BaseStep {
     const transferId = this.transferStep.getTransferId();
 
     if (transferId === undefined) {
+      throw Error("Missing transfer step");
+    }
+
+    const maxDelayMs = 10_000;
+    await sleep(this.delayMs);
+    this.delayMs = Math.min(maxDelayMs, this.delayMs * 1.2); // Exponential backoff
+
+    const result = await this.oneSecActor.get_transfer(transferId);
+
+    if ("Err" in result) {
       this._status = {
         Done: err({
-          summary: "Missing the transfer step",
-          description:
-            "The transfer step must succeed before running this step",
+          summary: "Validation failed",
+          description: `Validation failed: ${result.Err}`,
         }),
       };
       return this._status;
     }
 
-    try {
-      const maxDelayMs = 10_000;
-      await sleep(this.delayMs);
-      this.delayMs = Math.min(maxDelayMs, this.delayMs * 1.2); // Exponential backoff
+    const transfer = fromCandid.transfer(result.Ok);
 
-      const result = await this.oneSecActor.get_transfer(transferId);
-
-      if ("Err" in result) {
+    if (transfer.status) {
+      if ("Succeeded" in transfer.status) {
+        this._status = {
+          Done: ok({
+            summary: "Validated receipt",
+            description: `Validated receipt of the ${this.evmChain} transaction`,
+            transaction: transfer.destination.tx,
+          }),
+        };
+      } else if ("Failed" in transfer.status) {
         this._status = {
           Done: err({
             summary: "Validation failed",
-            description: `Validation failed: ${result.Err}`,
+            description: `Validation failed: ${transfer.status.Failed.error}`,
           }),
         };
-        return this._status;
+      } else if ("Refunded" in transfer.status) {
+        this._status = {
+          Done: ok({
+            summary: "Refunded tokens",
+            description: "Refunded tokens due to a bridging issue",
+            transaction: transfer.source.tx,
+          }),
+        };
+      } else if ("PendingRefund" in transfer.status) {
+        this._status = {
+          Pending: {
+            summary: "Refunding tokens",
+            description: "Refunding tokens due to a bridging issue",
+          },
+        };
       }
-
-      const transfer = fromCandid.transfer(result.Ok);
-
-      if (transfer.status) {
-        if ("Succeeded" in transfer.status) {
-          this._status = {
-            Done: ok({
-              summary: "Validated receipt",
-              description: `Validated receipt of the ${this.evmChain} transaction`,
-              transaction: transfer.destination.tx,
-            }),
-          };
-          return this._status;
-        } else if ("Failed" in transfer.status) {
-          this._status = {
-            Done: err({
-              summary: "Validation failed",
-              description: `Validation failed: ${transfer.status.Failed.error}`,
-            }),
-          };
-          return this._status;
-        } else if ("Refunded" in transfer.status) {
-          this._status = {
-            Done: ok({
-              summary: "Refunded tokens",
-              description: "Refunded tokens due to a bridging issue",
-              transaction: transfer.source.tx,
-            }),
-          };
-          return this._status;
-        } else if ("PendingRefund" in transfer.status) {
-          this._status = {
-            Pending: {
-              summary: "Refunding tokens",
-              description: "Refunding tokens due to a bridging issue",
-            },
-          };
-        }
-      }
-    } catch (error) {
-      this._status = {
-        Done: err({
-          summary: "Validation failed",
-          description: `Validation failed: ${error}`,
-        }),
-      };
     }
 
     return this._status;

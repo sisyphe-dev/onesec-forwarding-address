@@ -47,96 +47,77 @@ export class WaitForTxStep extends BaseStep {
     const transferId = this.transferStep.getTransferId();
 
     if (transferId === undefined) {
+      throw Error("Missing transfer step");
+    }
+
+    const maxDelayMs = 10_000;
+    await sleep(this.delayMs);
+    this.delayMs = Math.min(maxDelayMs, this.delayMs * 1.2); // Exponential backoff
+
+    const result = await this.oneSecActor.get_transfer(transferId);
+
+    if ("Err" in result) {
       this._status = {
         Done: err({
-          summary: "Missing the transfer step",
-          description:
-            "The transfer step must succeed before running this step",
+          summary: "Transaction failed",
+          description: `Transaction failed: ${result.Err}`,
         }),
       };
       return this._status;
     }
 
-    try {
-      const maxDelayMs = 10_000;
-      await sleep(this.delayMs);
-      this.delayMs = Math.min(maxDelayMs, this.delayMs * 1.2); // Exponential backoff
+    const transfer = fromCandid.transfer(result.Ok);
 
-      const result = await this.oneSecActor.get_transfer(transferId);
-
-      if ("Err" in result) {
+    if (transfer.status) {
+      if ("Succeeded" in transfer.status) {
+        this._status = {
+          Done: ok({
+            summary: "Executed transaction",
+            description: `Executed transaction on ${this.evmChain}`,
+            transaction: transfer.destination.tx,
+          }),
+        };
+      } else if ("Failed" in transfer.status) {
         this._status = {
           Done: err({
             summary: "Transaction failed",
-            description: `Transaction failed: ${result.Err}`,
+            description: `Transaction failed: ${transfer.status.Failed.error}`,
           }),
         };
-        return this._status;
-      }
-
-      const transfer = fromCandid.transfer(result.Ok);
-
-      if (transfer.status) {
-        if ("Succeeded" in transfer.status) {
-          this._status = {
-            Done: ok({
-              summary: "Executed transaction",
-              description: `Executed transaction on ${this.evmChain}`,
-              transaction: transfer.destination.tx,
-            }),
-          };
-          return this._status;
-        } else if ("Failed" in transfer.status) {
-          this._status = {
-            Done: err({
-              summary: "Transaction failed",
-              description: `Transaction failed: ${transfer.status.Failed.error}`,
-            }),
-          };
-          return this._status;
-        } else if ("Refunded" in transfer.status) {
-          this._status = {
-            Done: ok({
-              summary: "Refunded tokens",
-              description: "Refunded tokens due to a bridging issue",
-              transaction: transfer.source.tx,
-            }),
-          };
-          return this._status;
-        } else if ("PendingRefund" in transfer.status) {
-          this._status = {
-            Pending: {
-              summary: "Refunding tokens",
-              description: "Refunding tokens due to a bridging issue",
-            },
-          };
-        } else if ("PendingDestinationTx" in transfer.status) {
-          for (let entry of result.Ok.trace.entries) {
-            if (this.evmChain in entry.chain) {
-              if (entry.result[0] && "Ok" in entry.result[0]) {
-                const event = entry.event[0];
-                if (event === undefined) {
-                  continue;
-                }
-                const ts = traceEventToTxStatus(event);
-                if (order(this.txStatus) < order(ts)) {
-                  this.txStatus = ts;
-                  this._status = {
-                    Pending: txStatusDetails(ts, this.evmChain),
-                  };
-                }
+      } else if ("Refunded" in transfer.status) {
+        this._status = {
+          Done: ok({
+            summary: "Refunded tokens",
+            description: "Refunded tokens due to a bridging issue",
+            transaction: transfer.source.tx,
+          }),
+        };
+      } else if ("PendingRefund" in transfer.status) {
+        this._status = {
+          Pending: {
+            summary: "Refunding tokens",
+            description: "Refunding tokens due to a bridging issue",
+          },
+        };
+      } else if ("PendingDestinationTx" in transfer.status) {
+        for (let entry of result.Ok.trace.entries) {
+          if (this.evmChain in entry.chain) {
+            if (entry.result[0] && "Ok" in entry.result[0]) {
+              const event = entry.event[0];
+              if (event === undefined) {
+                continue;
+              }
+              const ts = traceEventToTxStatus(event);
+              if (order(this.txStatus) < order(ts)) {
+                this.txStatus = ts;
+                this._status = {
+                  Pending: txStatusDetails(ts, this.evmChain),
+                };
               }
             }
           }
         }
       }
-    } catch (error) {
-      this._status = {
-        Done: err({
-          summary: "Transaction failed",
-          description: `Transaction failed: ${error}`,
-        }),
-      };
     }
 
     return this._status;

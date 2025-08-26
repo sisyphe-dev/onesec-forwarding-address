@@ -34,46 +34,37 @@ export class ApproveStep extends BaseStep {
       },
     };
 
-    try {
-      const approvalResult = await this.ledgerActor.icrc2_approve({
-        amount: this.amount,
-        spender: { owner: this.oneSecId, subaccount: [] },
-        fee: [],
-        memo: [],
-        from_subaccount: this.account.subaccount
-          ? [this.account.subaccount]
-          : [],
-        created_at_time: [],
-        expected_allowance: [],
-        expires_at: [],
-      });
+    const approvalResult = await this.ledgerActor.icrc2_approve({
+      amount: this.amount,
+      spender: { owner: this.oneSecId, subaccount: [] },
+      fee: [],
+      memo: [],
+      from_subaccount: this.account.subaccount
+        ? [this.account.subaccount]
+        : [],
+      created_at_time: [],
+      expected_allowance: [],
+      expires_at: [],
+    });
 
-      if ("Err" in approvalResult) {
-        this._status = {
-          Done: err({
-            summary: "Failed to approve",
-            description: `Failed to approve transfer of ${this.token} to OneSec: ${JSON.stringify(approvalResult.Err)}`,
-          }),
-        };
-      } else {
-        this._status = {
-          Done: ok({
-            summary: "Approved transaction",
-            description: `Approved transfer of ${this.token} to OneSec`,
-            transaction: {
-              Icp: {
-                blockIndex: approvalResult.Ok,
-                ledger: this.ledgerId,
-              },
-            },
-          }),
-        };
-      }
-    } catch (error) {
+    if ("Err" in approvalResult) {
       this._status = {
         Done: err({
           summary: "Failed to approve",
-          description: `Failed to approve transfer of ${this.token} to OneSec: ${error}`,
+          description: `Failed to approve transfer of ${this.token} to OneSec: ${JSON.stringify(approvalResult.Err)}`,
+        }),
+      };
+    } else {
+      this._status = {
+        Done: ok({
+          summary: "Approved transaction",
+          description: `Approved transfer of ${this.token} to OneSec`,
+          transaction: {
+            Icp: {
+              blockIndex: approvalResult.Ok,
+              ledger: this.ledgerId,
+            },
+          },
         }),
       };
     }

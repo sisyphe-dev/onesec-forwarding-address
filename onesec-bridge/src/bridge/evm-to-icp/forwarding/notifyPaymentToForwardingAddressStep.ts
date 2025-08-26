@@ -43,38 +43,22 @@ export class NotifyPaymentToForwardingAddressStep extends BaseStep {
       this.computeForwardingAddressStep.getForwardingAddress();
 
     if (forwardingAddress === undefined) {
-      this._status = {
-        Done: err({
-          summary: "Missing forwarding address",
-          description:
-            "Compute forwarding address step must run before this step",
-        }),
-      };
-      return this._status;
+      throw Error("Missing forwarding address: the compute forwarding address step did not run");
     }
 
-    try {
-      await this.onesec.forwardEvmToIcp(
-        this.token,
-        this.evmChain,
-        forwardingAddress,
-        this.icpAccount,
-      );
+    await this.onesec.forwardEvmToIcp(
+      this.token,
+      this.evmChain,
+      forwardingAddress,
+      this.icpAccount,
+    );
 
-      this._status = {
-        Done: ok({
-          summary: "Notified payment to forwarding address",
-          description: "Notified payment to forwarding address",
-        }),
-      };
-    } catch (error) {
-      this._status = {
-        Pending: {
-          summary: `Failed to notify payment`,
-          description: `Failed to notify payment: ${error}`,
-        },
-      };
-    }
+    this._status = {
+      Done: ok({
+        summary: "Notified payment to forwarding address",
+        description: "Notified payment to forwarding address",
+      }),
+    };
 
     return this._status;
   }

@@ -31,39 +31,29 @@ export class ApproveStep extends BaseStep {
       },
     };
 
-    try {
-      const approveTx = await this.erc20Contract.approve(
-        this.lockerAddress,
-        this.evmAmount,
-      );
-      const approveReceipt = await approveTx.wait();
+    const approveTx = await this.erc20Contract.approve(
+      this.lockerAddress,
+      this.evmAmount,
+    );
+    const approveReceipt = await approveTx.wait();
 
-      if (approveReceipt.status !== 1) {
-        this._status = {
-          Done: err({
-            summary: "Failed to approve",
-            description: `Failed to approve transaction: ${approveReceipt.hash}`,
-          }),
-        };
-      } else {
-        this._status = {
-          Done: ok({
-            summary: "Approved transaction",
-            description: `Approved transfer of ${this.token} to OneSec`,
-            transaction: { Evm: { hash: approveReceipt.hash } },
-          }),
-        };
-      }
-
-      return this._status;
-    } catch (error) {
+    if (approveReceipt.status !== 1) {
       this._status = {
         Done: err({
           summary: "Failed to approve",
-          description: `Failed to approve transaction: ${error}`,
+          description: `Failed to approve transaction: ${approveReceipt.hash}`,
         }),
       };
-      return this._status;
+    } else {
+      this._status = {
+        Done: ok({
+          summary: "Approved transaction",
+          description: `Approved transfer of ${this.token} to OneSec`,
+          transaction: { Evm: { hash: approveReceipt.hash } },
+        }),
+      };
     }
+
+    return this._status;
   }
 }

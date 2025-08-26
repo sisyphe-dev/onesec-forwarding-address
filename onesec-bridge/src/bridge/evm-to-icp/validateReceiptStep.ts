@@ -61,62 +61,46 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
     const evmTx = this.getEvmTx.getEvmTx();
 
     if (evmTx === undefined) {
-      this._status = {
-        Done: err({
-          summary: "Missing the EVM transaction",
-          description:
-            "The EVM transaction must succeed before running this step",
-        }),
-      };
-      return this._status;
+      throw Error("Missing EVM transaction");
     }
 
-    try {
-      const maxDelayMs = 10_000;
-      await sleep(this.delayMs);
-      this.delayMs = Math.min(maxDelayMs, this.delayMs * 1.2); // Exponential backoff
+    const maxDelayMs = 10_000;
+    await sleep(this.delayMs);
+    this.delayMs = Math.min(maxDelayMs, this.delayMs * 1.2); // Exponential backoff
 
-      const result = await this.oneSecActor.transfer_evm_to_icp({
-        token: toCandid.token(this.token),
-        evm_chain: toCandid.chain(this.evmChain),
-        evm_account: toCandid.evmAccount(this.evmAddress),
-        evm_tx: toCandid.evmTx(evmTx),
-        icp_account: toCandid.icpAccount(this.icpAccount),
-        evm_amount: this.evmAmount,
-        icp_amount: [],
-      });
+    const result = await this.oneSecActor.transfer_evm_to_icp({
+      token: toCandid.token(this.token),
+      evm_chain: toCandid.chain(this.evmChain),
+      evm_account: toCandid.evmAccount(this.evmAddress),
+      evm_tx: toCandid.evmTx(evmTx),
+      icp_account: toCandid.icpAccount(this.icpAccount),
+      evm_amount: this.evmAmount,
+      icp_amount: [],
+    });
 
-      const response = fromCandid.transferResponse(result);
+    const response = fromCandid.transferResponse(result);
 
-      if ("Accepted" in response) {
-        this.transferId = { id: response.Accepted.id };
-        this._status = {
-          Done: ok({
-            summary: "Validated receipt",
-            description: `Validated receipt of the ${this.evmChain} transaction`,
-          }),
-        };
-      } else if ("Failed" in response) {
-        this._status = {
-          Done: err({
-            summary: "Failed to validate",
-            description: `Failed to validate receipt: ${response.Failed.error}`,
-          }),
-        };
-      } else {
-        this._status = {
-          Pending: {
-            summary: "Validating receipt",
-            description: `Waiting for OneSec to validate the receipt of the ${this.evmChain} transaction`,
-          },
-        };
-      }
-    } catch (error) {
+    if ("Accepted" in response) {
+      this.transferId = { id: response.Accepted.id };
+      this._status = {
+        Done: ok({
+          summary: "Validated receipt",
+          description: `Validated receipt of the ${this.evmChain} transaction`,
+        }),
+      };
+    } else if ("Failed" in response) {
       this._status = {
         Done: err({
           summary: "Failed to validate",
-          description: `Failed to validate receipt: ${error}`,
+          description: `Failed to validate receipt: ${response.Failed.error}`,
         }),
+      };
+    } else {
+      this._status = {
+        Pending: {
+          summary: "Validating receipt",
+          description: `Waiting for OneSec to validate the receipt of the ${this.evmChain} transaction`,
+        },
       };
     }
 

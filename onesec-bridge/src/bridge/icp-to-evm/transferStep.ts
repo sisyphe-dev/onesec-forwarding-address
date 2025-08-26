@@ -50,51 +50,42 @@ export class TransferStep extends BaseStep {
       },
     };
 
-    try {
-      const result = await this.oneSecActor.transfer_icp_to_evm({
-        token: toCandid.token(this.token),
-        evm_chain: toCandid.chain(this.evmChain),
-        evm_account: { address: this.evmAddress },
-        icp_account: toCandid.icpAccount(this.icpAccount),
-        icp_amount: this.icpAmount,
-        evm_amount: [],
-      });
+    const result = await this.oneSecActor.transfer_icp_to_evm({
+      token: toCandid.token(this.token),
+      evm_chain: toCandid.chain(this.evmChain),
+      evm_account: { address: this.evmAddress },
+      icp_account: toCandid.icpAccount(this.icpAccount),
+      icp_amount: this.icpAmount,
+      evm_amount: [],
+    });
 
-      const response = fromCandid.transferResponse(result);
+    const response = fromCandid.transferResponse(result);
 
-      if ("Failed" in response) {
-        this._status = {
-          Done: err({
-            summary: `Failed to transfer ${this.token}`,
-            description: `Failed to transfer ${this.token}: ${response.Failed.error}`,
-          }),
-        };
-      } else if ("Accepted" in response) {
-        this.transferId = response.Accepted;
-        this._status = {
-          Done: ok({
-            summary: `Transferred ${this.token}`,
-            description: `Transferred ${this.token} to OneSec`,
-            transaction: {
-              Icp: {
-                blockIndex: response.Accepted.id,
-                ledger: this.oneSecId,
-              },
-            },
-          }),
-        };
-      } else if ("Fetching" in response) {
-        throw Error(
-          `unexpected response from transfer_icp_to_evm: ${JSON.stringify(response)}`,
-        );
-      }
-    } catch (error) {
+    if ("Failed" in response) {
       this._status = {
         Done: err({
           summary: `Failed to transfer ${this.token}`,
-          description: `Failed to transfer ${this.token}: ${error}`,
+          description: `Failed to transfer ${this.token}: ${response.Failed.error}`,
         }),
       };
+    } else if ("Accepted" in response) {
+      this.transferId = response.Accepted;
+      this._status = {
+        Done: ok({
+          summary: `Transferred ${this.token}`,
+          description: `Transferred ${this.token} to OneSec`,
+          transaction: {
+            Icp: {
+              blockIndex: response.Accepted.id,
+              ledger: this.oneSecId,
+            },
+          },
+        }),
+      };
+    } else if ("Fetching" in response) {
+      throw Error(
+        `unexpected response from transfer_icp_to_evm: ${JSON.stringify(response)}`,
+      );
     }
 
     return this._status;
