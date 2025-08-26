@@ -237,7 +237,7 @@ export interface OneSecForwarding {
 /**
  * The response of a get transfer fee query.
  */
-export type TransferFee = {
+export interface TransferFee {
   token: Token;
   sourceChain: Chain;
   destinationChain: Chain;
@@ -249,32 +249,36 @@ export type TransferFee = {
   protocolFeeInPercent: number;
 };
 
-/**
- * A helper for direct bridging operations between ICP and EVM chains.
- */
-
-export type Amount = {
+export interface Amount {
   inTokens: number;
   inUnits: bigint;
 };
 
-export type Details = {
+export interface Details {
   summary: string;
   description: string;
 };
 
+export interface ExpectedFee {
+  transferFee: () => Amount;
+  protocolFee: (amount: Amount) => Amount;
+  protocolFeeInPercent: () => number;
+  totalFee: (amount: Amount) => Amount;
+}
+
 export type Result =
   | {
-      Ok: {
-        details: Details;
-        amount?: Amount;
-        transaction?: Tx;
-        link?: string;
-      };
-    }
-  | {
-      Err: Details;
+    Ok: {
+      details: Details;
+      amount?: Amount;
+      transaction?: Tx;
+      link?: string;
+      expectedFee?: ExpectedFee,
     };
+  }
+  | {
+    Err: Details;
+  };
 
 export type StepStatus =
   | { Planned: null }

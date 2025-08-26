@@ -13,6 +13,7 @@ import {
   Details,
   EvmChain,
   EvmTx,
+  ExpectedFee,
   IcrcAccount,
   Result,
   Step,
@@ -254,15 +255,6 @@ export class CheckFeesAndLimitsStep extends BaseStep {
     );
 
     if (this.amount !== undefined) {
-      const x = bigintToNumberScaled(this.amount, this.decimals);
-      const expectedProtocolFeeInUnits = numberToBigintScaled(
-        x * expectedProtocolFeeInPercent,
-        this.decimals,
-      );
-      const expectedProtocolFee = amountFromUnits(
-        expectedProtocolFeeInUnits,
-        this.decimals,
-      );
       this._status = {
         Done: ok({
           summary: "Checked fees and limits",
@@ -278,6 +270,42 @@ export class CheckFeesAndLimitsStep extends BaseStep {
       };
     }
     return this._status;
+  }
+}
+
+class ExpectedFeeImpl implements ExpectedFee {
+  constructor(
+    private _transferFee: Amount,
+    private _protocolFeeInPercent: number,
+    private decimals: number,
+  ) { }
+
+  transferFee(): Amount {
+    return this._transferFee;
+  }
+
+  protocolFee(amount: Amount): Amount {
+    const expectedProtocolFeeInUnits = numberToBigintScaled(
+      amount.inTokens * this._protocolFeeInPercent,
+      this.decimals,
+    );
+    return amountFromUnits(
+      expectedProtocolFeeInUnits,
+      this.decimals,
+    );
+  }
+
+  protocolFeeInPercent(): number {
+    return this._protocolFeeInPercent * 100;
+  }
+
+  totalFee(amount: Amount): Amount {
+    const a = this.transferFee();
+    const b = this.protocolFee(amount);
+    return {
+      inTokens: a.inTokens + b.inTokens,
+      inUnits: a.inUnits + b.inUnits,
+    }
   }
 }
 
