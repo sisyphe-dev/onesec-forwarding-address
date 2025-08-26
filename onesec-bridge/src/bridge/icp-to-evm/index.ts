@@ -1,13 +1,13 @@
 import { Actor, Agent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { BridgingPlan } from "../..";
-import { Config, DEFAULT_CONFIG, getTokenLedgerCanister } from "../../config";
+import { Config, DEFAULT_CONFIG, getTokenDecimals, getTokenLedgerCanister } from "../../config";
 import {
   idlFactory as IcrcLedgerIDL,
   type _SERVICE as IcrcLedger,
 } from "../../generated/candid/icrc_ledger/icrc_ledger.did";
 import { Deployment, EvmChain, IcrcAccount, Token } from "../../types";
-import { ConfirmBlocksStep, fetchTransferFees, lookupTransferFee, oneSecWithAgent } from "../shared";
+import { CheckFeesAndLimitsStep, ConfirmBlocksStep, oneSecWithAgent } from "../shared";
 import { ApproveStep } from "./approve-step";
 import { TransferStep } from "./transfer-step";
 import { ValidateReceiptStep } from "./validate-receipt-step";
@@ -69,6 +69,7 @@ export class IcpToEvmBridgeBuilder {
     }
 
     const config = this.config || DEFAULT_CONFIG;
+    const decimals = getTokenDecimals(config, this.token);
 
     const oneSecId = Principal.fromText(config.icp.onesec.get(this.deployment)!);
     const oneSecActor = await oneSecWithAgent(oneSecId, this.agent);
@@ -84,11 +85,7 @@ export class IcpToEvmBridgeBuilder {
       config,
     );
 
-    const fetchedFees = await fetchTransferFees(oneSecActor);
-    const fee = lookupTransferFee(fetchedFees, this.token, "ICP", this.evmChain);
-    if (fee === undefined) {
-      throw new Error(`Couldn't find transfer fees for bridging ${this.token} from ICP to ${this.evmChain}`);
-    }
+    const checkFeesAndLimitsStep = new CheckFeesAndLimitsStep(oneSecActor, this.token, "ICP", this.evmChain, decimals, false, this.amount);
 
     const approveStep = new ApproveStep(
       ledgerActor,
@@ -126,20 +123,13 @@ export class IcpToEvmBridgeBuilder {
 
     return new BridgingPlan(
       [
+        checkFeesAndLimitsStep,
         approveStep,
         transferStep,
         waitForTxStep,
         confirmBlocksStep,
         validateReceiptStep,
-      ],
-      {
-        inTokens: 0,
-        inUnits: 0n,
-      },
-      {
-        inTokens: 0,
-        inUnits: 0n,
-      },
+      ]
     );
   }
 }

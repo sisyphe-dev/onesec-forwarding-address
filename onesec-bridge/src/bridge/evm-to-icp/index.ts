@@ -1,7 +1,7 @@
 import { Principal } from "@dfinity/principal";
 import { Contract, Signer } from "ethers";
 import { BridgingPlan, oneSecForwarding } from "../..";
-import { DEFAULT_CONFIG, type Config, getTokenConfig, getTokenErc20Address, getTokenLockerAddress, getTokenEvmMode } from "../../config";
+import { DEFAULT_CONFIG, type Config, getTokenConfig, getTokenErc20Address, getTokenLockerAddress, getTokenEvmMode, getTokenDecimals } from "../../config";
 import type {
   Deployment,
   EvmChain,
@@ -9,7 +9,7 @@ import type {
   Step,
   Token,
 } from "../../types";
-import { anonymousAgent, ConfirmBlocksStep, oneSecWithAgent } from "../shared";
+import { anonymousAgent, CheckFeesAndLimitsStep, ConfirmBlocksStep, oneSecWithAgent } from "../shared";
 import { ApproveStep } from "./approve-step";
 import { BurnStep } from "./burn-step";
 import { ComputeForwardingAddressStep } from "./forwarding/computeForwardingAddressStep";
@@ -72,11 +72,15 @@ export class EvmToIcpBridgeBuilder {
 
     const config = this.config || DEFAULT_CONFIG;
 
+
     const mode = getTokenEvmMode(config, this.token);
+    const decimals = getTokenDecimals(config, this.token);
 
     const oneSecId = Principal.fromText(config.icp.onesec.get(this.deployment)!);
     const agent = await anonymousAgent(this.deployment, config);
     const oneSecActor = await oneSecWithAgent(oneSecId, agent);
+
+    const checkFeesAndLimitsStep = new CheckFeesAndLimitsStep(oneSecActor, this.token, this.evmChain, "ICP", decimals, false, this.evmAmount);
 
     let steps: Step[];
     switch (mode) {
@@ -130,6 +134,7 @@ export class EvmToIcpBridgeBuilder {
           validateReceiptStep,
         );
         steps = [
+          checkFeesAndLimitsStep,
           approveStep,
           lockStep,
           confirmBlocksStep,
@@ -173,6 +178,7 @@ export class EvmToIcpBridgeBuilder {
           validateReceiptStep,
         );
         steps = [
+          checkFeesAndLimitsStep,
           burnStep,
           confirmBlocksStep,
           validateReceiptStep,
@@ -182,17 +188,7 @@ export class EvmToIcpBridgeBuilder {
       }
     }
 
-    return new BridgingPlan(
-      steps,
-      {
-        inTokens: 0,
-        inUnits: 0n,
-      },
-      {
-        inTokens: 0,
-        inUnits: 0n,
-      },
-    );
+    return new BridgingPlan(steps);
   }
 
   async forward(): Promise<BridgingPlan> {
@@ -207,8 +203,16 @@ export class EvmToIcpBridgeBuilder {
     }
 
     const config = this.config || DEFAULT_CONFIG;
+    const decimals = getTokenDecimals(config, this.token);
 
     const onesec = oneSecForwarding(this.deployment);
+    const oneSecId = Principal.fromText(
+      this.config?.icp.onesec.get(this.deployment)!,
+    );
+    const agent = await anonymousAgent(this.deployment, config);
+    const oneSecActor = await oneSecWithAgent(oneSecId, agent);
+
+    const checkFeesAndLimitsStep = new CheckFeesAndLimitsStep(oneSecActor, this.token, this.evmChain, "ICP", decimals, true, this.evmAmount);
 
     const computeForwardingAddressStep = new ComputeForwardingAddressStep(
       onesec,
@@ -245,11 +249,6 @@ export class EvmToIcpBridgeBuilder {
       computeForwardingAddressStep,
     );
 
-    const oneSecId = Principal.fromText(
-      this.config?.icp.onesec.get(this.deployment)!,
-    );
-    const agent = await anonymousAgent(this.deployment, config);
-    const oneSecActor = await oneSecWithAgent(oneSecId, agent);
 
     const waitForIcpTxStep = new WaitForIcpTx(
       oneSecActor,
@@ -260,21 +259,14 @@ export class EvmToIcpBridgeBuilder {
 
     return new BridgingPlan(
       [
+        checkFeesAndLimitsStep,
         computeForwardingAddressStep,
         notifyPaymentToForwardingAddressStep,
         waitForForwardingTxStep,
         confirmBlocksStep,
         validateForwardingReceiptStep,
         waitForIcpTxStep,
-      ],
-      {
-        inTokens: 0,
-        inUnits: 0n,
-      },
-      {
-        inTokens: 0,
-        inUnits: 0n,
-      },
+      ]
     );
   }
 }

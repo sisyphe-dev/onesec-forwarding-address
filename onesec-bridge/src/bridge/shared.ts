@@ -124,6 +124,175 @@ export class ConfirmBlocksStep extends BaseStep {
   }
 }
 
+
+export class CheckFeesAndLimitsStep extends BaseStep {
+  constructor(
+    private onesec: OneSec,
+    private token: Token,
+    private sourceChain: Chain,
+    private destinationChain: Chain,
+    private decimals: number,
+    private isForwarding: boolean,
+    private amount?: bigint,
+  ) {
+    super();
+  }
+
+  details(): Details {
+    return {
+      summary: "Check fees and limits",
+      description: "Check fees and limits",
+    };
+  }
+
+  chain(): Chain {
+    return "ICP";
+  }
+
+  contract(): string | undefined {
+    return undefined;
+  }
+
+  method(): string | undefined {
+    return undefined;
+  }
+
+  args(): string | undefined {
+    return undefined;
+  }
+
+  expectedDurationMs(): number {
+    return ICP_CALL_DURATION_MS;
+  }
+
+  async run(): Promise<StepStatus> {
+    this._status = {
+      Pending: {
+        summary: "Fetching fees and limits",
+        description: "Fetching fees and limits",
+      },
+    };
+
+
+    const response = await this.onesec.get_transfer_fees();
+    const fees = fromCandid.transferFees(response);
+    const src = this.sourceChain;
+    const dst = this.destinationChain;
+    const fee = fees.find(x => x.token === this.token && x.sourceChain === src && x.destinationChain == dst);
+
+    if (fee === undefined) {
+      this._status = {
+        Done: err({
+          summary: "Bridging not supported",
+          description: `Bridging of ${this.token} from ${this.sourceChain} to ${this.destinationChain} is not supported`,
+        }),
+      };
+      return this._status;
+    }
+
+    if (this.amount !== undefined && this.amount < fee.minAmount) {
+      this._status = {
+        Done: err({
+          summary: "Amount is too low",
+          description: `Amount of tokens is too low: ${this.amount} < ${fee.minAmount}`,
+        }),
+      };
+      return this._status;
+    }
+
+    if (this.amount !== undefined && this.amount > fee.maxAmount) {
+      this._status = {
+        Done: err({
+          summary: "Amount is too high",
+          description: `Amount of tokens is too high: ${this.amount} > ${fee.maxAmount}`,
+        }),
+      };
+      return this._status;
+    }
+
+    if (this.amount !== undefined && fee.available !== undefined && this.amount > fee.available) {
+      this._status = {
+        Done: err({
+          summary: "Insufficient balance on destination chain",
+          description: `There are only ${fee.available} tokens on ${this.destinationChain}`,
+        }),
+      };
+      return this._status;
+    }
+
+    const forwardingFee = fees.find(x => x.token === this.token && x.destinationChain === src && x.sourceChain == dst);
+
+    if (forwardingFee === undefined) {
+      this._status = {
+        Done: err({
+          summary: "Bridging not supported",
+          description: `Bridging of ${this.token} from ${this.sourceChain} to ${this.destinationChain} is not supported`,
+        }),
+      };
+      return this._status;
+    }
+
+    const expectedTransferFeeInUnits = this.isForwarding ? forwardingFee.latestTransferFee : fee.latestTransferFee;
+    const expectedProtocolFeeInPercent = fee.protocolFeeInPercent;
+
+    const expectedTransferFee = amountFromUnits(expectedTransferFeeInUnits, this.decimals);
+
+    if (this.amount !== undefined) {
+      const x = bigintToNumberScaled(this.amount, this.decimals);
+      const expectedProtocolFeeInUnits = numberToBigintScaled(x * expectedProtocolFeeInPercent, this.decimals);
+      const expectedProtocolFee = amountFromUnits(expectedProtocolFeeInUnits, this.decimals);
+      this._status = {
+        Done: ok({
+          summary: "Checked fees and limits",
+          description: "Checked fees and limits",
+        }),
+      };
+    } else {
+      this._status = {
+        Done: ok({
+          summary: "Checked fees and limits",
+          description: "Checked fees and limits",
+        }),
+      };
+    }
+    return this._status;
+  }
+}
+
+export function numberToBigintScaled(value: number, decimals: number): bigint {
+  const [integerPart, fractionalPart = ''] = value.toFixed(decimals).split('.');
+
+  const paddedFractionalPart = fractionalPart.padEnd(decimals, '0').slice(0, decimals);
+
+  const combined = `${integerPart}${paddedFractionalPart}`;
+  return BigInt(combined);
+}
+
+export function bigintToNumberScaled(value: bigint, decimals: number): number {
+  const str = value.toString();
+  const len = str.length;
+  if (decimals === 0) { return Number(str); }
+  if (decimals >= len) {
+    return Number("0." + str.padStart(decimals, "0"));
+  }
+  const diff = len - decimals;
+  return Number(str.slice(0, diff) + "." + str.slice(diff));
+}
+
+export function amountFromUnits(units: bigint, decimals: number): Amount {
+  return {
+    inUnits: units,
+    inTokens: bigintToNumberScaled(units, decimals),
+  }
+}
+
+export function amountFromTokens(tokens: number, decimals: number): Amount {
+  return {
+    inUnits: numberToBigintScaled(tokens, decimals),
+    inTokens: tokens,
+  }
+}
+
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -242,18 +411,4 @@ function defaultOneSecCanisterId(
     );
   }
   return canisterId;
-}
-
-export async function fetchTransferFees(onesec: OneSec): Promise<TransferFee[]> {
-  const response = await onesec.get_transfer_fees();
-  return fromCandid.transferFees(response);
-}
-
-export function lookupTransferFee(fees: TransferFee[], token: Token, sourceChain: Chain, destinationChain: Chain): TransferFee | undefined {
-  for (const fee of fees) {
-    if (fee.token === token && fee.sourceChain === sourceChain && fee.destinationChain === destinationChain) {
-      return fee;
-    }
-  }
-  return undefined;
 }

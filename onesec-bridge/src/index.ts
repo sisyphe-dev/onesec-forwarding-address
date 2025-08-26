@@ -8,7 +8,7 @@ import type {
 } from "./types";
 
 export { EvmToIcpBridgeBuilder, IcpToEvmBridgeBuilder } from "./bridge";
-export { 
+export {
   DEFAULT_CONFIG,
   getTokenConfig,
   getTokenDecimals,
@@ -47,9 +47,7 @@ export class BridgingPlan {
 
   constructor(
     private _steps: Step[],
-    private _fees: Amount,
-    private _receiveAmount: Amount,
-  ) {}
+  ) { }
 
   steps(): Step[] {
     return this._steps;
@@ -114,13 +112,5 @@ export class BridgingPlan {
       (total, step) => total + step.expectedDurationMs(),
       0,
     );
-  }
-
-  expectedFees(): Amount {
-    return this._fees;
-  }
-
-  expectedReceive(): Amount {
-    return this._receiveAmount;
   }
 }

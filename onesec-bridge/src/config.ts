@@ -33,6 +33,7 @@ export interface TokenConfig {
   ledgerMainnet?: string;
   ledgerTestnet?: string;
   ledgerLocal?: string;
+  ledgerFee: bigint;
   decimals: number;
 }
 
@@ -67,6 +68,7 @@ const TOKEN_CONFIGS: Map<Token, TokenConfig> = new Map([
       erc20Local: "0x00f3C42833C3170159af4E92dbb451Fb3F708917",
       erc20Testnet: "0xa96496d9Ef442a3CF8F3e24B614b87a70ddf74f3",
       ledger: "ryjl3-tyaaa-aaaaa-aaaba-cai",
+      ledgerFee: 10_000n,
       decimals: 8,
     },
   ],
@@ -83,6 +85,7 @@ const TOKEN_CONFIGS: Map<Token, TokenConfig> = new Map([
       ledgerMainnet: "53nhb-haaaa-aaaar-qbn5q-cai",
       ledgerLocal: "53nhb-haaaa-aaaar-qbn5q-cai",
       ledgerTestnet: "7csws-aiaaa-aaaar-qaqpa-cai",
+      ledgerFee: 10_000n,
       decimals: 6,
     },
   ],
@@ -99,6 +102,7 @@ const TOKEN_CONFIGS: Map<Token, TokenConfig> = new Map([
       ledgerMainnet: "ij33n-oiaaa-aaaar-qbooa-cai",
       ledgerLocal: "ij33n-oiaaa-aaaar-qbooa-cai",
       ledgerTestnet: "n4dku-tiaaa-aaaar-qboqa-cai",
+      ledgerFee: 10_000n,
       decimals: 6,
     },
   ],
@@ -113,6 +117,7 @@ const TOKEN_CONFIGS: Map<Token, TokenConfig> = new Map([
       ledgerMainnet: "io25z-dqaaa-aaaar-qbooq-cai",
       ledgerLocal: "io25z-dqaaa-aaaar-qbooq-cai",
       ledgerTestnet: "n3cma-6qaaa-aaaar-qboqq-cai",
+      ledgerFee: 20n,
       decimals: 8,
     },
   ],
@@ -124,6 +129,7 @@ const TOKEN_CONFIGS: Map<Token, TokenConfig> = new Map([
       erc20Local: "0x919A41Ea07c26f0001859Bc5dcb8754068718Fb7",
       erc20Testnet: "0x9D8dE8E7Cd748F760C81199AD3b902798DA7E7bC",
       ledger: "mxzaz-hqaaa-aaaar-qaada-cai",
+      ledgerFee: 10n,
       decimals: 8,
     },
   ],
@@ -135,6 +141,7 @@ const TOKEN_CONFIGS: Map<Token, TokenConfig> = new Map([
       erc20Local: "0x86856814e74456893Cfc8946BedcBb472b5fA856",
       erc20Testnet: "0xB5A497b709703eC987B6879f064B02017998De1d",
       ledger: "6c7su-kiaaa-aaaar-qaira-cai",
+      ledgerFee: 10_000_000n,
       decimals: 8,
     },
   ],
@@ -146,6 +153,7 @@ const TOKEN_CONFIGS: Map<Token, TokenConfig> = new Map([
       erc20Local: "0xecc5f868AdD75F4ff9FD00bbBDE12C35BA2C9C89",
       erc20Testnet: "0xc6d02fa25bC437E38099476a6856225aE5ac2C75",
       ledger: "7pail-xaaaa-aaaas-aabmq-cai",
+      ledgerFee: 1_000_000n,
       decimals: 8,
     },
   ],
