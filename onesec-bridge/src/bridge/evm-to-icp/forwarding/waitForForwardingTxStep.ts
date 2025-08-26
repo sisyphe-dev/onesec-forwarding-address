@@ -8,7 +8,7 @@ import type {
   Token,
   TransferId,
 } from "../../../types";
-import { BaseStep, err, ICP_CALL_DURATION_MS, ok, sleep } from "../../shared";
+import { BaseStep, err, exponentialBackoff, ICP_CALL_DURATION_MS, ok, sleep } from "../../shared";
 import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
 
 export class WaitForForwardingTxStep extends BaseStep {
@@ -71,9 +71,8 @@ export class WaitForForwardingTxStep extends BaseStep {
       return this._status;
     }
 
-    const maxDelayMs = 10_000;
     await sleep(this.delayMs);
-    this.delayMs = Math.min(maxDelayMs, this.delayMs * 1.2); // Exponential backoff
+    this.delayMs = exponentialBackoff(this.delayMs);
 
     const response = await this.onesec.getForwardingStatus(
       this.token,

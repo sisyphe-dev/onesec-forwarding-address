@@ -12,6 +12,7 @@ import type {
 import {
   BaseStep,
   err,
+  exponentialBackoff,
   GetEvmTx,
   GetTransferId,
   ICP_CALL_DURATION_MS,
@@ -64,9 +65,8 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
       throw Error("Missing EVM transaction");
     }
 
-    const maxDelayMs = 10_000;
     await sleep(this.delayMs);
-    this.delayMs = Math.min(maxDelayMs, this.delayMs * 1.2); // Exponential backoff
+    this.delayMs = exponentialBackoff(this.delayMs);
 
     const result = await this.oneSecActor.transfer_evm_to_icp({
       token: toCandid.token(this.token),

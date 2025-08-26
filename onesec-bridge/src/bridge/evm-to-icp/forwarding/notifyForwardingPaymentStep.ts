@@ -9,7 +9,7 @@ import type {
 import { BaseStep, ICP_CALL_DURATION_MS, ok } from "../../shared";
 import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
 
-export class NotifyPaymentToForwardingAddressStep extends BaseStep {
+export class NotifyForwardingPaymentStep extends BaseStep {
   constructor(
     private onesec: OneSecForwarding,
     private token: Token,
@@ -22,8 +22,8 @@ export class NotifyPaymentToForwardingAddressStep extends BaseStep {
 
   details(): Details {
     return {
-      summary: "Notify payment to forwarding address",
-      description: "Notify payment to forwarding address",
+      summary: "Notify forwarding payment",
+      description: "Notify forwarding payment",
     };
   }
 
@@ -34,8 +34,8 @@ export class NotifyPaymentToForwardingAddressStep extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        summary: "Notifying payment to forwarding address",
-        description: "Notifying payment to forwarding address",
+        summary: "Notifying forwarding payment",
+        description: "Notifying forwarding payment",
       },
     };
 
@@ -57,8 +57,8 @@ export class NotifyPaymentToForwardingAddressStep extends BaseStep {
 
     this._status = {
       Done: ok({
-        summary: "Notified payment to forwarding address",
-        description: "Notified payment to forwarding address",
+        summary: "Notified forwarding payment",
+        description: "Notified forwarding payment",
       }),
     };
 

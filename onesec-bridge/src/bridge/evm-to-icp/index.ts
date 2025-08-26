@@ -26,7 +26,7 @@ import {
 import { ApproveStep } from "./approveStep";
 import { BurnStep } from "./burnStep";
 import { ComputeForwardingAddressStep } from "./forwarding/computeForwardingAddressStep";
-import { NotifyPaymentToForwardingAddressStep } from "./forwarding/notifyPaymentToForwardingAddressStep";
+import { NotifyForwardingPaymentStep } from "./forwarding/notifyForwardingPaymentStep";
 import { ValidateForwardingReceiptStep } from "./forwarding/validateForwardingReceiptStep";
 import { WaitForForwardingTxStep } from "./forwarding/waitForForwardingTxStep";
 import { LockStep } from "./lockStep";
@@ -246,8 +246,8 @@ export class EvmToIcpBridgeBuilder {
       this.evmChain,
     );
 
-    const notifyPaymentToForwardingAddressStep =
-      new NotifyPaymentToForwardingAddressStep(
+    const notifyForwardingPaymentStep =
+      new NotifyForwardingPaymentStep(
         onesec,
         this.token,
         this.icpAccount,
@@ -286,7 +286,7 @@ export class EvmToIcpBridgeBuilder {
     return new BridgingPlan([
       checkFeesAndLimitsStep,
       computeForwardingAddressStep,
-      notifyPaymentToForwardingAddressStep,
+      notifyForwardingPaymentStep,
       waitForForwardingTxStep,
       confirmBlocksStep,
       validateForwardingReceiptStep,

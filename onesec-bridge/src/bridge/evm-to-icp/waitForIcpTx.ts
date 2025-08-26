@@ -4,6 +4,7 @@ import type { Details, StepStatus } from "../../types";
 import {
   BaseStep,
   err,
+  exponentialBackoff,
   GetTransferId,
   ICP_CALL_DURATION_MS,
   ok,
@@ -45,9 +46,8 @@ export class WaitForIcpTx extends BaseStep {
       throw Error("Missing receipt validation step");
     }
 
-    const maxDelayMs = 10_000;
     await sleep(this.delayMs);
-    this.delayMs = Math.min(maxDelayMs, this.delayMs * 1.2); // Exponential backoff
+    this.delayMs = exponentialBackoff(this.delayMs);
 
     const result = await this.oneSecActor.get_transfer(transferId);
 

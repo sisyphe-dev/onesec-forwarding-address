@@ -317,6 +317,10 @@ export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function exponentialBackoff(currentDelayMs: number, maxDelayMs: number = 10_000): number {
+  return Math.min(maxDelayMs, currentDelayMs * 1.2);
+}
+
 // Helper functions for constructing Result::Done
 export function ok(params: {
   summary: string;

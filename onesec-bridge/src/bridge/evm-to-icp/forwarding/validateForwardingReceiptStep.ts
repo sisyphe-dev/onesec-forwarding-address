@@ -10,6 +10,7 @@ import type {
 import {
   BaseStep,
   err,
+  exponentialBackoff,
   GetTransferId,
   ICP_CALL_DURATION_MS,
   ok,
@@ -73,9 +74,8 @@ export class ValidateForwardingReceiptStep
       return this._status;
     }
 
-    const maxDelayMs = 10_000;
     await sleep(this.delayMs);
-    this.delayMs = Math.min(maxDelayMs, this.delayMs * 1.2); // Exponential backoff
+    this.delayMs = exponentialBackoff(this.delayMs);
 
     const response = await this.onesec.getForwardingStatus(
       this.token,

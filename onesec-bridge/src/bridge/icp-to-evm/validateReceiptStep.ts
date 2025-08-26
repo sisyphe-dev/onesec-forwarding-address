@@ -1,7 +1,7 @@
 import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
 import type { Details, EvmChain, StepStatus } from "../../types";
-import { BaseStep, err, ICP_CALL_DURATION_MS, ok, sleep } from "../shared";
+import { BaseStep, err, exponentialBackoff, ICP_CALL_DURATION_MS, ok, sleep } from "../shared";
 import { TransferStep } from "./transferStep";
 
 export class ValidateReceiptStep extends BaseStep {
@@ -40,9 +40,8 @@ export class ValidateReceiptStep extends BaseStep {
       throw Error("Missing transfer step");
     }
 
-    const maxDelayMs = 10_000;
     await sleep(this.delayMs);
-    this.delayMs = Math.min(maxDelayMs, this.delayMs * 1.2); // Exponential backoff
+    this.delayMs = exponentialBackoff(this.delayMs);
 
     const result = await this.oneSecActor.get_transfer(transferId);
 
