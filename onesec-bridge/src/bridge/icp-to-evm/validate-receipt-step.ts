@@ -1,7 +1,7 @@
 import { Principal } from "@dfinity/principal";
 import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
-import type { Chain, Details, EvmChain, StepStatus } from "../../types";
+import type { Details, EvmChain, StepStatus } from "../../types";
 import { BaseStep, err, ICP_CALL_DURATION_MS, ok, sleep } from "../shared";
 import { TransferStep } from "./transfer-step";
 
@@ -23,10 +23,6 @@ export class ValidateReceiptStep extends BaseStep {
       description: `Wait for OneSec to validate the receipt of ${this.evmChain} transaction`,
     };
   }
-
-
-
-
 
   expectedDurationMs(): number {
     return ICP_CALL_DURATION_MS;

@@ -1,5 +1,4 @@
 import type {
-  Chain,
   Details,
   EvmChain,
   EvmTx,
@@ -34,7 +33,6 @@ export class WaitForForwardingTxStep extends BaseStep {
         "Wait for transaction that moves tokens from the forwarding address to the bridge",
     };
   }
-
 
   expectedDurationMs(): number {
     return ICP_CALL_DURATION_MS;

@@ -3,7 +3,6 @@ import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
 import * as toCandid from "../../toCandid";
 import type {
-  Chain,
   Details,
   EvmChain,
   IcrcAccount,

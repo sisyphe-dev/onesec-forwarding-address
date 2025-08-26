@@ -223,7 +223,11 @@ export class CheckFeesAndLimitsStep extends BaseStep {
         Done: ok({
           summary: "Checked fees and limits",
           description: "Checked fees and limits",
-          expectedFee: new ExpectedFeeImpl(expectedTransferFee, expectedProtocolFeeInPercent, this.decimals),
+          expectedFee: new ExpectedFeeImpl(
+            expectedTransferFee,
+            expectedProtocolFeeInPercent,
+            this.decimals,
+          ),
         }),
       };
     } else {
@@ -243,7 +247,7 @@ class ExpectedFeeImpl implements ExpectedFee {
     private _transferFee: Amount,
     private _protocolFeeInPercent: number,
     private decimals: number,
-  ) { }
+  ) {}
 
   transferFee(): Amount {
     return this._transferFee;

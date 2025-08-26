@@ -1,12 +1,6 @@
 import { Principal } from "@dfinity/principal";
 import { type _SERVICE as IcrcLedger } from "../../generated/candid/icrc_ledger/icrc_ledger.did";
-import type {
-  Chain,
-  Details,
-  IcrcAccount,
-  StepStatus,
-  Token,
-} from "../../types";
+import type { Details, IcrcAccount, StepStatus, Token } from "../../types";
 import { BaseStep, err, ICP_CALL_DURATION_MS, ok } from "../shared";
 
 export class ApproveStep extends BaseStep {

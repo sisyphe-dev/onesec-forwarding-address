@@ -4,7 +4,7 @@ import {
   TraceEvent,
   type _SERVICE as OneSec,
 } from "../../generated/candid/onesec/onesec.did";
-import type { Chain, Details, EvmChain, StepStatus } from "../../types";
+import type { Details, EvmChain, StepStatus } from "../../types";
 import { BaseStep, err, ICP_CALL_DURATION_MS, ok, sleep } from "../shared";
 import { TransferStep } from "./transfer-step";
 
@@ -29,10 +29,6 @@ export class WaitForTxStep extends BaseStep {
       description: `Wait for OneSec to submit a transaction on ${this.evmChain}`,
     };
   }
-
-
-
-
 
   expectedDurationMs(): number {
     // At least three calls are needed:

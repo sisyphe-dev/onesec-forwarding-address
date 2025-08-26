@@ -1,6 +1,5 @@
 import { Contract } from "ethers";
 import type {
-  Chain,
   Details,
   EvmChain,
   EvmTx,

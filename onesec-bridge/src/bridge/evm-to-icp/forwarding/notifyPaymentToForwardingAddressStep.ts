@@ -1,5 +1,4 @@
 import type {
-  Chain,
   Details,
   EvmChain,
   IcrcAccount,

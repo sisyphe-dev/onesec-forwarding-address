@@ -3,7 +3,6 @@ import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
 import * as toCandid from "../../toCandid";
 import type {
-  Chain,
   Details,
   EvmChain,
   IcrcAccount,
@@ -44,10 +43,6 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
       description: `Wait for OneSec to validate the receipt of the ${this.evmChain} transaction`,
     };
   }
-
-
-
-
 
   expectedDurationMs(): number {
     return ICP_CALL_DURATION_MS;
