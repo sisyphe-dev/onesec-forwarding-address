@@ -84,9 +84,6 @@ export class WaitForTxStep extends BaseStep {
     const transfer = fromCandid.transfer(result.Ok);
 
     if (transfer.status) {
-      console.log(JSON.stringify(result.Ok, (_, value) =>
-        typeof value === "bigint" ? value.toString() : value
-      ));
       if ("Succeeded" in transfer.status) {
         this._status = {
           state: "succeeded",
@@ -117,12 +114,10 @@ export class WaitForTxStep extends BaseStep {
           if (entry.chain[0] && this.evmChain in entry.chain[0]) {
             if (entry.result[0] && "Ok" in entry.result[0]) {
               const event = entry.event[0];
-              console.log(event);
               if (event === undefined) {
                 continue;
               }
               const ts = traceEventToTxStatus(event);
-              console.log(ts);
               if (order(this.txStatus) < order(ts)) {
                 this.txStatus = ts;
                 const status = txStatus(ts);
