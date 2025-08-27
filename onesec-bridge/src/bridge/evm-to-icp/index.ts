@@ -1,6 +1,6 @@
 import { Principal } from "@dfinity/principal";
 import { Contract, Signer } from "ethers";
-import { BridgingPlan, oneSecForwarding } from "../..";
+import { BridgingPlan } from "../..";
 import {
   DEFAULT_CONFIG,
   getIcpPollDelayMs,
@@ -11,6 +11,7 @@ import {
   getTokenLockerAddress,
   type Config,
 } from "../../config";
+import { OneSecForwardingImpl } from "../../forwarding";
 import type {
   Deployment,
   EvmChain,
@@ -22,6 +23,7 @@ import {
   anonymousAgent,
   ConfirmBlocksStep,
   FetchFeesAndCheckLimits,
+  numberToBigintScaled,
   oneSecWithAgent,
 } from "../shared";
 import { ApproveStep } from "./approveStep";
@@ -59,7 +61,8 @@ import { WaitForIcpTx } from "./waitForIcpTx";
 export class EvmToIcpBridgeBuilder {
   private deployment: Deployment = "Mainnet";
   private evmAddress?: string;
-  private evmAmount?: bigint;
+  private evmAmountInUnits?: bigint;
+  private evmAmountInTokens?: number;
   private icpAccount?: IcrcAccount;
   private config?: Config;
 
@@ -70,7 +73,7 @@ export class EvmToIcpBridgeBuilder {
   constructor(
     private evmChain: EvmChain,
     private token: Token,
-  ) {}
+  ) { }
 
   /**
    * Set target deployment network.
@@ -95,7 +98,16 @@ export class EvmToIcpBridgeBuilder {
    * @param amount Amount in base units (e.g., 1_500_000n for 1.5 USDC)
    */
   amountInUnits(amount: bigint): EvmToIcpBridgeBuilder {
-    this.evmAmount = amount;
+    this.evmAmountInUnits = amount;
+    return this;
+  }
+
+  /**
+   * Set amount to bridge in human-readable token units.
+   * @param amount Amount in token units (e.g., 1.5 for 1.5 USDC)
+   */
+  amountInTokens(amount: number): EvmToIcpBridgeBuilder {
+    this.evmAmountInTokens = amount;
     return this;
   }
 
@@ -132,9 +144,30 @@ export class EvmToIcpBridgeBuilder {
    * @throws Error if required parameters (amount, receiver) are missing
    */
   async build(signer: Signer): Promise<BridgingPlan> {
-    if (!this.evmAmount) {
-      throw new Error("EVM amount is required");
+    if (
+      this.evmAmountInUnits === undefined &&
+      this.evmAmountInTokens === undefined
+    ) {
+      throw new Error("Provide amount of tokens to bridge");
     }
+
+    const config = this.config || DEFAULT_CONFIG;
+    const decimals = getTokenDecimals(config, this.token);
+
+    if (
+      this.evmAmountInUnits !== undefined &&
+      this.evmAmountInTokens !== undefined
+    ) {
+      if (
+        numberToBigintScaled(this.evmAmountInTokens, decimals) !=
+        this.evmAmountInUnits
+      ) {
+        throw new Error(
+          "Provide either amount of tokens to bridge in units or token, but not both",
+        );
+      }
+    }
+
     if (!this.icpAccount) {
       throw new Error("ICP account is required");
     }
@@ -149,10 +182,12 @@ export class EvmToIcpBridgeBuilder {
 
     const evmAddress = signerAddress;
 
-    const config = this.config || DEFAULT_CONFIG;
-
     const mode = getTokenEvmMode(config, this.token);
-    const decimals = getTokenDecimals(config, this.token);
+
+    const amount =
+      this.evmAmountInUnits !== undefined
+        ? this.evmAmountInUnits
+        : numberToBigintScaled(this.evmAmountInTokens!, decimals);
 
     const oneSecId = Principal.fromText(
       config.icp.onesec.get(this.deployment)!,
@@ -167,7 +202,7 @@ export class EvmToIcpBridgeBuilder {
       "ICP",
       decimals,
       false,
-      this.evmAmount,
+      amount,
     );
 
     let steps: Step[];
@@ -192,7 +227,7 @@ export class EvmToIcpBridgeBuilder {
           this.token,
           this.evmChain,
           this.icpAccount,
-          this.evmAmount,
+          amount,
           decimals,
           lockerAddress,
         );
@@ -201,7 +236,7 @@ export class EvmToIcpBridgeBuilder {
           this.token,
           this.evmChain,
           this.icpAccount,
-          this.evmAmount,
+          amount,
           decimals,
         );
         const evmConfig = config.evm.get(this.evmChain)!;
@@ -215,7 +250,7 @@ export class EvmToIcpBridgeBuilder {
           this.token,
           this.evmChain,
           this.icpAccount,
-          this.evmAmount,
+          amount,
           evmAddress,
           lockStep,
           getIcpPollDelayMs(config, this.deployment),
@@ -251,7 +286,7 @@ export class EvmToIcpBridgeBuilder {
           this.token,
           this.evmChain,
           this.icpAccount,
-          this.evmAmount,
+          amount,
           decimals,
         );
         const evmConfig = config.evm.get(this.evmChain)!;
@@ -265,7 +300,7 @@ export class EvmToIcpBridgeBuilder {
           this.token,
           this.evmChain,
           this.icpAccount,
-          this.evmAmount,
+          amount,
           evmAddress,
           burnStep,
           getIcpPollDelayMs(config, this.deployment),
@@ -303,9 +338,6 @@ export class EvmToIcpBridgeBuilder {
    * @throws Error if required parameters (amount, receiver) are missing
    */
   async forward(): Promise<BridgingPlan> {
-    if (!this.evmAmount) {
-      throw new Error("EVM amount is required");
-    }
     if (!this.icpAccount) {
       throw new Error("ICP account is required");
     }
@@ -313,7 +345,28 @@ export class EvmToIcpBridgeBuilder {
     const config = this.config || DEFAULT_CONFIG;
     const decimals = getTokenDecimals(config, this.token);
 
-    const onesec = oneSecForwarding(this.deployment);
+    if (
+      this.evmAmountInUnits !== undefined &&
+      this.evmAmountInTokens !== undefined
+    ) {
+      if (
+        numberToBigintScaled(this.evmAmountInTokens, decimals) !=
+        this.evmAmountInUnits
+      ) {
+        throw new Error(
+          "Provide either amount of tokens to bridge in units or token, but not both",
+        );
+      }
+    }
+
+    const amount =
+      this.evmAmountInUnits !== undefined
+        ? this.evmAmountInUnits
+        : this.amountInTokens !== undefined
+          ? numberToBigintScaled(this.evmAmountInTokens!, decimals)
+          : undefined;
+
+    const onesec = new OneSecForwardingImpl(this.deployment ?? "Mainnet");
     const oneSecId = Principal.fromText(
       config?.icp.onesec.get(this.deployment)!,
     );
@@ -327,7 +380,7 @@ export class EvmToIcpBridgeBuilder {
       "ICP",
       decimals,
       true,
-      this.evmAmount,
+      amount,
     );
 
     const computeForwardingAddressStep = new ComputeForwardingAddressStep(

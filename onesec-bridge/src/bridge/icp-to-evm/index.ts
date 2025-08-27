@@ -5,6 +5,7 @@ import {
   Config,
   DEFAULT_CONFIG,
   getIcpPollDelayMs,
+  getTokenConfig,
   getTokenDecimals,
   getTokenLedgerCanister,
 } from "../../config";
@@ -16,6 +17,7 @@ import { Deployment, EvmChain, IcrcAccount, Token } from "../../types";
 import {
   ConfirmBlocksStep,
   FetchFeesAndCheckLimits,
+  numberToBigintScaled,
   oneSecWithAgent,
 } from "../shared";
 import { ApproveStep } from "./approveStep";
@@ -45,9 +47,11 @@ import { WaitForTxStep } from "./waitForTxStep";
  */
 export class IcpToEvmBridgeBuilder {
   private deployment: Deployment = "Mainnet";
-  private amount?: bigint;
+  private icpAmountInUnits?: bigint;
+  private icpAmountInTokens?: number;
   private icpAccount?: IcrcAccount;
   private evmAddress?: string;
+  private approveFeeInAmount: boolean = false;
   private config?: Config;
 
   /**
@@ -59,7 +63,7 @@ export class IcpToEvmBridgeBuilder {
     private agent: Agent,
     private evmChain: EvmChain,
     private token: Token,
-  ) {}
+  ) { }
 
   /**
    * Set target deployment network.
@@ -89,20 +93,43 @@ export class IcpToEvmBridgeBuilder {
     return this;
   }
 
-  /**
-   * @deprecated Use amountInUnits() instead
-   */
-  amountInTokens(amount: number): IcpToEvmBridgeBuilder {
-    //this._amount = convert;
-    return this;
-  }
 
   /**
    * Set amount to bridge in token's smallest units.
    * @param amount Amount in base units (e.g., 1_500_000n for 1.5 USDC)
    */
   amountInUnits(amount: bigint): IcpToEvmBridgeBuilder {
-    this.amount = amount;
+    this.icpAmountInUnits = amount;
+    return this;
+  }
+
+  /**
+   * Set amount to bridge in human-readable token units.
+   * @param amount Amount in token units (e.g., 1.5 for 1.5 USDC)
+   */
+  amountInTokens(amount: number): IcpToEvmBridgeBuilder {
+    this.icpAmountInTokens = amount;
+    return this;
+  }
+
+  /**
+   * Deduct the ledger approval fee from the bridging amount.
+   * 
+   * When enabled, the approval fee is subtracted from the specified amount, so the user
+   * only needs to have exactly the bridging amount in their account rather than
+   * bridging amount + approval fee.
+   * 
+   * @example
+   * ```typescript
+   * // Without payApproveFeeFromAmount(): User needs 1.5 USDC + approval fee
+   * const plan1 = await builder.amountInUnits(1_500_000n).build();
+   * 
+   * // With payApproveFeeFromAmount(): User needs exactly 1.5 USDC, approval fee deducted from amount
+   * const plan2 = await builder.amountInUnits(1_500_000n).payApproveFeeFromAmount().build();
+   * ```
+   */
+  payApproveFeeFromAmount(): IcpToEvmBridgeBuilder {
+    this.approveFeeInAmount = true;
     return this;
   }
 
@@ -125,18 +152,52 @@ export class IcpToEvmBridgeBuilder {
    * @throws Error if required parameters (sender, receiver, amount) are missing
    */
   async build(): Promise<BridgingPlan> {
-    if (!this.icpAccount) {
-      throw new Error("Sender ICP account is required");
-    }
     if (!this.evmAddress) {
       throw new Error("Receiver EVM address is required");
     }
-    if (!this.amount) {
-      throw new Error("Transfer amount is required");
+
+    const agentPrincipal = await this.agent.getPrincipal();
+
+    const icpAccount = this.icpAccount || { owner: agentPrincipal };
+
+    if (icpAccount.owner != agentPrincipal) {
+      throw new Error(`The principal of sender does not match the principal of the agent: ${icpAccount.owner} vs ${agentPrincipal}`);
+    }
+
+    if (
+      this.icpAmountInUnits === undefined &&
+      this.icpAmountInTokens === undefined
+    ) {
+      throw new Error("Provide amount of tokens to bridge");
     }
 
     const config = this.config || DEFAULT_CONFIG;
     const decimals = getTokenDecimals(config, this.token);
+
+    if (
+      this.icpAmountInUnits !== undefined &&
+      this.icpAmountInTokens !== undefined
+    ) {
+      if (
+        numberToBigintScaled(this.icpAmountInTokens, decimals) !=
+        this.icpAmountInUnits
+      ) {
+        throw new Error(
+          "Provide either amount of tokens to bridge in units or token, but not both",
+        );
+      }
+    }
+
+    let amount =
+      this.icpAmountInUnits !== undefined
+        ? this.icpAmountInUnits
+        : numberToBigintScaled(this.icpAmountInTokens!, decimals);
+
+    const approveFee = getTokenConfig(config, this.token)!.ledgerFee;
+    if (this.approveFeeInAmount && amount >= approveFee) {
+      amount -= approveFee;
+    }
+
 
     const oneSecId = Principal.fromText(
       config.icp.onesec.get(this.deployment)!,
@@ -161,16 +222,16 @@ export class IcpToEvmBridgeBuilder {
       this.evmChain,
       decimals,
       false,
-      this.amount,
+      amount,
     );
 
     const approveStep = new ApproveStep(
       ledgerActor,
       this.token,
-      this.icpAccount,
+      icpAccount,
       this.evmChain,
       this.evmAddress,
-      this.amount,
+      amount,
       decimals,
       ledgerId,
       oneSecId,
@@ -179,10 +240,10 @@ export class IcpToEvmBridgeBuilder {
     const transferStep = new TransferStep(
       oneSecActor,
       this.token,
-      this.icpAccount,
+      icpAccount,
       this.evmChain,
       this.evmAddress,
-      this.amount,
+      amount,
       decimals,
       ledgerId,
     );
@@ -190,7 +251,7 @@ export class IcpToEvmBridgeBuilder {
     const waitForTxStep = new WaitForTxStep(
       oneSecActor,
       this.token,
-      this.icpAccount,
+      icpAccount,
       this.evmChain,
       this.evmAddress,
       decimals,
