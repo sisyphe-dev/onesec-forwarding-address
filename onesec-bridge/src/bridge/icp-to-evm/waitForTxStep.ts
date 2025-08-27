@@ -11,10 +11,8 @@ import type {
   Token,
 } from "../../types";
 import {
-  amountFromUnits,
   BaseStep,
   exponentialBackoff,
-  format,
   formatIcpAccount,
   formatTx,
   ICP_CALL_DURATION_MS,
@@ -78,7 +76,9 @@ export class WaitForTxStep extends BaseStep {
     const result = await this.oneSecActor.get_transfer(transferId);
 
     if ("Err" in result) {
-      throw Error(`Failed to request the status of transfer ${transferId.id}: ${result.Err}`);
+      throw Error(
+        `Failed to request the status of transfer ${transferId.id}: ${result.Err}`,
+      );
     }
 
     const transfer = fromCandid.transfer(result.Ok);
@@ -164,9 +164,7 @@ function traceEventToTxStatus(event: TraceEvent): TxStatus {
   return "unknown";
 }
 
-function txStatus(
-  ts: TxStatus,
-): StepStatus | undefined {
+function txStatus(ts: TxStatus): StepStatus | undefined {
   switch (ts) {
     case "unknown":
       return undefined;

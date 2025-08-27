@@ -51,7 +51,6 @@ export class ValidateReceiptStep extends BaseStep {
       verbose: "waiting",
     };
 
-
     await sleep(this.delayMs);
     this.delayMs = exponentialBackoff(this.delayMs);
 

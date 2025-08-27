@@ -1,5 +1,8 @@
 import { Principal } from "@dfinity/principal";
-import { ApproveError, type _SERVICE as IcrcLedger } from "../../generated/candid/icrc_ledger/icrc_ledger.did";
+import {
+  ApproveError,
+  type _SERVICE as IcrcLedger,
+} from "../../generated/candid/icrc_ledger/icrc_ledger.did";
 import type {
   About,
   EvmChain,
@@ -82,7 +85,7 @@ export class ApproveStep extends BaseStep {
 
 function formatError(err: ApproveError): string {
   const str = JSON.stringify(err, (_, value) =>
-    typeof value === "bigint" ? value.toString() : value
+    typeof value === "bigint" ? value.toString() : value,
   );
   return str;
 }

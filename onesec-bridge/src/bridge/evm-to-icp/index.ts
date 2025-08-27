@@ -20,8 +20,8 @@ import type {
 } from "../../types";
 import {
   anonymousAgent,
-  FetchFeesAndCheckLimits,
   ConfirmBlocksStep,
+  FetchFeesAndCheckLimits,
   oneSecWithAgent,
 } from "../shared";
 import { ApproveStep } from "./approveStep";
@@ -34,7 +34,28 @@ import { LockStep } from "./lockStep";
 import { ValidateReceiptStep } from "./validateReceiptStep";
 import { WaitForIcpTx } from "./waitForIcpTx";
 
-// EVM to ICP Bridge Builder
+/**
+ * Builder for creating EVM to ICP token bridging plans.
+ *
+ * Supports two bridging modes:
+ * - Direct bridging via `build()` - requires user to connect wallet and sign transactions
+ * - Forwarding via `forward()` - user sends tokens to a generated forwarding address
+ *
+ * @example
+ * ```typescript
+ * // Direct bridging
+ * const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
+ *   .receiver(icpPrincipal)
+ *   .amountInUnits(1_500_000n) // 1.5 USDC
+ *   .build(evmSigner);
+ *
+ * // Forwarding (no signer needed)
+ * const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
+ *   .receiver(icpPrincipal)
+ *   .amountInUnits(1_500_000n)
+ *   .forward();
+ * ```
+ */
 export class EvmToIcpBridgeBuilder {
   private deployment: Deployment = "Mainnet";
   private evmAddress?: string;
@@ -42,36 +63,74 @@ export class EvmToIcpBridgeBuilder {
   private icpAccount?: IcrcAccount;
   private config?: Config;
 
+  /**
+   * @param evmChain Source EVM chain (e.g., "Base", "Arbitrum", "Ethereum")
+   * @param token Token to bridge (e.g., "USDC", "ICP")
+   */
   constructor(
     private evmChain: EvmChain,
     private token: Token,
-  ) { }
+  ) {}
 
+  /**
+   * Set target deployment network.
+   * @param deployment Target network ("Mainnet", "Testnet", or "Local")
+   */
   target(deployment: Deployment): EvmToIcpBridgeBuilder {
     this.deployment = deployment;
     return this;
   }
 
+  /**
+   * Set sender EVM address. Optional for direct bridging (inferred from signer).
+   * @param evmAddress EVM address sending the tokens
+   */
   sender(evmAddress: string): EvmToIcpBridgeBuilder {
     this.evmAddress = evmAddress;
     return this;
   }
 
+  /**
+   * Set amount to bridge in token's smallest units.
+   * @param amount Amount in base units (e.g., 1_500_000n for 1.5 USDC)
+   */
   amountInUnits(amount: bigint): EvmToIcpBridgeBuilder {
     this.evmAmount = amount;
     return this;
   }
 
-  receiver(principal: Principal, subaccount?: Uint8Array): EvmToIcpBridgeBuilder {
+  /**
+   * Set ICP recipient account.
+   * @param principal ICP principal receiving the tokens
+   * @param subaccount Optional 32-byte subaccount
+   */
+  receiver(
+    principal: Principal,
+    subaccount?: Uint8Array,
+  ): EvmToIcpBridgeBuilder {
     this.icpAccount = { owner: principal, subaccount };
     return this;
   }
 
+  /**
+   * Use custom configuration instead of defaults.
+   * @param config Custom bridge configuration
+   */
   withConfig(config: Config): EvmToIcpBridgeBuilder {
     this.config = config;
     return this;
   }
 
+  /**
+   * Build a direct bridging plan that requires wallet interaction.
+   *
+   * Creates a multi-step plan including: fee validation, EVM transaction approval/submission,
+   * block confirmation, receipt validation, and ICP transfer completion.
+   *
+   * @param signer Ethereum signer to approve and submit transactions
+   * @returns Executable bridging plan
+   * @throws Error if required parameters (amount, receiver) are missing
+   */
   async build(signer: Signer): Promise<BridgingPlan> {
     if (!this.evmAmount) {
       throw new Error("EVM amount is required");
@@ -83,7 +142,9 @@ export class EvmToIcpBridgeBuilder {
     const signerAddress = await signer.getAddress();
 
     if (this.evmAddress && this.evmAddress != signerAddress) {
-      throw new Error(`The provided EVM address ${this.evmAddress} doesn't match the signer's address ${signerAddress}`);
+      throw new Error(
+        `The provided EVM address ${this.evmAddress} doesn't match the signer's address ${signerAddress}`,
+      );
     }
 
     const evmAddress = signerAddress;
@@ -231,6 +292,16 @@ export class EvmToIcpBridgeBuilder {
     return new BridgingPlan(steps);
   }
 
+  /**
+   * Build a forwarding-based bridging plan that doesn't require wallet connection.
+   *
+   * Creates a plan that generates a unique forwarding address where users can send tokens.
+   * The plan includes: fee validation, address generation, payment notification, transaction
+   * detection, block confirmation, receipt validation, and ICP transfer completion.
+   *
+   * @returns Executable bridging plan that provides a forwarding address
+   * @throws Error if required parameters (amount, receiver) are missing
+   */
   async forward(): Promise<BridgingPlan> {
     if (!this.evmAmount) {
       throw new Error("EVM amount is required");

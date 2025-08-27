@@ -7,11 +7,7 @@ import type {
   Token,
   TransferId,
 } from "../../../types";
-import {
-  BaseStep,
-  formatIcpAccount,
-  ICP_CALL_DURATION_MS,
-} from "../../shared";
+import { BaseStep, formatIcpAccount, ICP_CALL_DURATION_MS } from "../../shared";
 
 export class ComputeForwardingAddressStep extends BaseStep {
   private lastTransferId?: TransferId;

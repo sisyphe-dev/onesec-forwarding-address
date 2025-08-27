@@ -18,7 +18,8 @@ import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
 
 export class ValidateForwardingReceiptStep
   extends BaseStep
-  implements GetTransferId {
+  implements GetTransferId
+{
   private transferId?: TransferId;
 
   constructor(

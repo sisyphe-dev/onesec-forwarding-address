@@ -1,14 +1,12 @@
 import { HttpAgent } from "@dfinity/agent";
-import { Principal } from "@dfinity/principal";
-import { expect, it, describe } from "vitest";
-import { EvmToIcpBridgeBuilder, IcpToEvmBridgeBuilder, oneSecForwarding } from "./index";
+import { describe, expect, it } from "vitest";
+import { EvmToIcpBridgeBuilder, IcpToEvmBridgeBuilder } from "./index";
 import { createTestSigners } from "./testUtils";
 
 it.skip(
   "should transfer USDC from Base to ICP using bridge directly",
   { timeout: 200000 },
   async () => {
-
     const { icpIdentity, evmSigner } = createTestSigners();
 
     const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
@@ -23,7 +21,7 @@ it.skip(
     console.log("");
 
     let nextStep;
-    while (nextStep = plan.nextStep()) {
+    while ((nextStep = plan.nextStep())) {
       const status = nextStep.status();
       if (status.state === "planned") {
         console.log(nextStep.about().verbose);
@@ -34,7 +32,7 @@ it.skip(
       } catch (error) {
         console.log(error);
         // Either retry the step or break depending on the error.
-        throw (error);
+        throw error;
       }
     }
 
@@ -48,11 +46,9 @@ it.skip(
   "should transfer USDC from ICP to Base using bridge directly",
   { timeout: 200000 },
   async () => {
-
     const { icpIdentity, evmSigner } = createTestSigners();
 
     const evmAddress = await evmSigner.getAddress();
-
 
     const agent = HttpAgent.createSync({
       identity: icpIdentity,
@@ -72,7 +68,7 @@ it.skip(
     console.log("");
 
     let nextStep;
-    while (nextStep = plan.nextStep()) {
+    while ((nextStep = plan.nextStep())) {
       const status = nextStep.status();
       if (status.state === "planned") {
         console.log(nextStep.about().verbose);
@@ -83,7 +79,7 @@ it.skip(
       } catch (error) {
         console.log(error);
         // Either retry the step or break depending on the error.
-        throw (error);
+        throw error;
       }
     }
 
@@ -94,12 +90,10 @@ it.skip(
   },
 );
 
-
 it.skip(
   "should transfer USDC from Base to ICP using forwarding address",
   { timeout: 200000 },
   async () => {
-
     const { icpIdentity } = createTestSigners();
 
     const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
@@ -115,7 +109,7 @@ it.skip(
 
     let nextStep;
     let forwardingAddress;
-    while (nextStep = plan.nextStep()) {
+    while ((nextStep = plan.nextStep())) {
       const status = nextStep.status();
       if (status.state === "planned") {
         console.log(nextStep.about().verbose);
@@ -130,15 +124,15 @@ it.skip(
       } catch (error) {
         console.log(error);
         // Either retry the step or break depending on the error.
-        throw (error);
+        throw error;
       }
     }
 
     console.log(`Please send USDC to ${forwardingAddress}`);
     // Wait until the user transfers USDC and then
-    // continue with the remaining steps. 
+    // continue with the remaining steps.
 
-    while (nextStep = plan.nextStep()) {
+    while ((nextStep = plan.nextStep())) {
       const status = nextStep.status();
       if (status.state === "planned") {
         console.log(nextStep.about().verbose);
@@ -149,7 +143,7 @@ it.skip(
       } catch (error) {
         console.log(error);
         // Either retry the step or break depending on the error.
-        throw (error);
+        throw error;
       }
     }
 
@@ -170,36 +164,48 @@ describe("Bridging Plan Message Validation", () => {
       .build(evmSigner);
 
     const steps = plan.steps();
-    const messages = steps.map(step => ({
+    const messages = steps.map((step) => ({
       concise: step.about().concise,
-      verbose: step.about().verbose
+      verbose: step.about().verbose,
     }));
 
     expect(messages).toEqual([
       {
         concise: "Fetch fees and check limits",
-        verbose: "Fetch fees and check limits for USDC from Base to ICP"
+        verbose: "Fetch fees and check limits for USDC from Base to ICP",
       },
       {
         concise: "Approve transaction on Base",
-        verbose: expect.stringContaining("Approve transaction to send 1.5 USDC to OneSec on Base for bridging to") && expect.stringContaining("on ICP")
+        verbose:
+          expect.stringContaining(
+            "Approve transaction to send 1.5 USDC to OneSec on Base for bridging to",
+          ) && expect.stringContaining("on ICP"),
       },
       {
         concise: "Submit transaction on Base",
-        verbose: expect.stringContaining("Submit transaction to send 1.5 USDC to OneSec on Base for bridging to") && expect.stringContaining("on ICP")
+        verbose:
+          expect.stringContaining(
+            "Submit transaction to send 1.5 USDC to OneSec on Base for bridging to",
+          ) && expect.stringContaining("on ICP"),
       },
       {
         concise: "Confirm blocks on Base",
-        verbose: expect.stringContaining("Wait for") && expect.stringContaining("blocks on Base until the transaction becomes confirmed")
+        verbose:
+          expect.stringContaining("Wait for") &&
+          expect.stringContaining(
+            "blocks on Base until the transaction becomes confirmed",
+          ),
       },
       {
         concise: "Validate transaction receipt",
-        verbose: "Wait for OneSec to validate transaction receipt"
+        verbose: "Wait for OneSec to validate transaction receipt",
       },
       {
         concise: "Wait for transfer on ICP",
-        verbose: expect.stringContaining("Wait for OneSec to transfer USDC to") && expect.stringContaining("on ICP")
-      }
+        verbose:
+          expect.stringContaining("Wait for OneSec to transfer USDC to") &&
+          expect.stringContaining("on ICP"),
+      },
     ]);
   });
 
@@ -219,36 +225,49 @@ describe("Bridging Plan Message Validation", () => {
       .build();
 
     const steps = plan.steps();
-    const messages = steps.map(step => ({
+    const messages = steps.map((step) => ({
       concise: step.about().concise,
-      verbose: step.about().verbose
+      verbose: step.about().verbose,
     }));
 
     expect(messages).toEqual([
       {
         concise: "Fetch fees and check limits",
-        verbose: "Fetch fees and check limits for USDC from ICP to Base"
+        verbose: "Fetch fees and check limits for USDC from ICP to Base",
       },
       {
         concise: "Approve transfer on ICP",
-        verbose: expect.stringContaining("Approve transfer of 1.5 USDC to OneSec on ICP for bridging to") && expect.stringContaining("on Base")
+        verbose:
+          expect.stringContaining(
+            "Approve transfer of 1.5 USDC to OneSec on ICP for bridging to",
+          ) && expect.stringContaining("on Base"),
       },
       {
         concise: "Transfer on ICP",
-        verbose: expect.stringContaining("Transfer 1.5 USDC to OneSec on ICP for bridging to") && expect.stringContaining("on Base")
+        verbose:
+          expect.stringContaining(
+            "Transfer 1.5 USDC to OneSec on ICP for bridging to",
+          ) && expect.stringContaining("on Base"),
       },
       {
         concise: "Wait for transaction on Base",
-        verbose: expect.stringContaining("Wait for OneSec to sign and submit a transaction to send USDC to") && expect.stringContaining("on Base")
+        verbose:
+          expect.stringContaining(
+            "Wait for OneSec to sign and submit a transaction to send USDC to",
+          ) && expect.stringContaining("on Base"),
       },
       {
         concise: "Confirm blocks on Base",
-        verbose: expect.stringContaining("Wait for") && expect.stringContaining("blocks on Base until the transaction becomes confirmed")
+        verbose:
+          expect.stringContaining("Wait for") &&
+          expect.stringContaining(
+            "blocks on Base until the transaction becomes confirmed",
+          ),
       },
       {
         concise: "Validate transaction receipt",
-        verbose: "Wait for OneSec to validate the receipt of the transaction"
-      }
+        verbose: "Wait for OneSec to validate the receipt of the transaction",
+      },
     ]);
   });
 
@@ -261,40 +280,51 @@ describe("Bridging Plan Message Validation", () => {
       .forward();
 
     const steps = plan.steps();
-    const messages = steps.map(step => ({
+    const messages = steps.map((step) => ({
       concise: step.about().concise,
-      verbose: step.about().verbose
+      verbose: step.about().verbose,
     }));
 
     expect(messages).toEqual([
       {
         concise: "Fetch fees and check limits",
-        verbose: "Fetch fees and check limits for USDC from Base to ICP"
+        verbose: "Fetch fees and check limits for USDC from Base to ICP",
       },
       {
         concise: "Compute forwarding address on Base",
-        verbose: expect.stringContaining("Compute the forwarding address on Base for bridging USDC to") && expect.stringContaining("on ICP")
+        verbose:
+          expect.stringContaining(
+            "Compute the forwarding address on Base for bridging USDC to",
+          ) && expect.stringContaining("on ICP"),
       },
       {
         concise: "Notify user payment on Base",
-        verbose: "Notify OneSec about a user payment to the forwarding address on Base"
+        verbose:
+          "Notify OneSec about a user payment to the forwarding address on Base",
       },
       {
         concise: "Wait for forwarding transaction on Base",
-        verbose: "Wait for OneSec to detect the USDC payment and submit a forwarding transaction on Base"
+        verbose:
+          "Wait for OneSec to detect the USDC payment and submit a forwarding transaction on Base",
       },
       {
         concise: "Confirm blocks on Base",
-        verbose: expect.stringContaining("Wait for") && expect.stringContaining("blocks on Base until the transaction becomes confirmed")
+        verbose:
+          expect.stringContaining("Wait for") &&
+          expect.stringContaining(
+            "blocks on Base until the transaction becomes confirmed",
+          ),
       },
       {
         concise: "Validate transaction receipt",
-        verbose: "Wait for OneSec to validate transaction receipt"
+        verbose: "Wait for OneSec to validate transaction receipt",
       },
       {
         concise: "Wait for transfer on ICP",
-        verbose: expect.stringContaining("Wait for OneSec to transfer USDC to") && expect.stringContaining("on ICP")
-      }
+        verbose:
+          expect.stringContaining("Wait for OneSec to transfer USDC to") &&
+          expect.stringContaining("on ICP"),
+      },
     ]);
   });
 
@@ -314,36 +344,49 @@ describe("Bridging Plan Message Validation", () => {
       .build();
 
     const steps = plan.steps();
-    const messages = steps.map(step => ({
+    const messages = steps.map((step) => ({
       concise: step.about().concise,
-      verbose: step.about().verbose
+      verbose: step.about().verbose,
     }));
 
     expect(messages).toEqual([
       {
         concise: "Fetch fees and check limits",
-        verbose: "Fetch fees and check limits for ICP from ICP to Arbitrum"
+        verbose: "Fetch fees and check limits for ICP from ICP to Arbitrum",
       },
       {
         concise: "Approve transfer on ICP",
-        verbose: expect.stringContaining("Approve transfer of 1 ICP to OneSec on ICP for bridging to") && expect.stringContaining("on Arbitrum")
+        verbose:
+          expect.stringContaining(
+            "Approve transfer of 1 ICP to OneSec on ICP for bridging to",
+          ) && expect.stringContaining("on Arbitrum"),
       },
       {
         concise: "Transfer on ICP",
-        verbose: expect.stringContaining("Transfer 1 ICP to OneSec on ICP for bridging to") && expect.stringContaining("on Arbitrum")
+        verbose:
+          expect.stringContaining(
+            "Transfer 1 ICP to OneSec on ICP for bridging to",
+          ) && expect.stringContaining("on Arbitrum"),
       },
       {
         concise: "Wait for transaction on Arbitrum",
-        verbose: expect.stringContaining("Wait for OneSec to sign and submit a transaction to send ICP to") && expect.stringContaining("on Arbitrum")
+        verbose:
+          expect.stringContaining(
+            "Wait for OneSec to sign and submit a transaction to send ICP to",
+          ) && expect.stringContaining("on Arbitrum"),
       },
       {
         concise: "Confirm blocks on Arbitrum",
-        verbose: expect.stringContaining("Wait for") && expect.stringContaining("blocks on Arbitrum until the transaction becomes confirmed")
+        verbose:
+          expect.stringContaining("Wait for") &&
+          expect.stringContaining(
+            "blocks on Arbitrum until the transaction becomes confirmed",
+          ),
       },
       {
         concise: "Validate transaction receipt",
-        verbose: "Wait for OneSec to validate the receipt of the transaction"
-      }
+        verbose: "Wait for OneSec to validate the receipt of the transaction",
+      },
     ]);
   });
 });

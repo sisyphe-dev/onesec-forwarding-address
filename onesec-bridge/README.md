@@ -1,7 +1,12 @@
-# OneSec Bridge
+# OneSec Bridge SDK
 
-This repository contains a library for bridging tokens between EVM and ICP
-blockchains using the OneSec smart contract.
+A TypeScript SDK for bridging tokens between EVM chains (Ethereum, Arbitrum, Base) and the Internet Computer (ICP) using the OneSec bridge protocol.
+
+## Features
+
+- **Bi-directional bridging**: Transfer tokens from EVM chains to ICP and vice versa
+- **Multiple bridging modes**: Direct wallet-based bridging and forwarding address bridging
+- **Step-by-step execution**: Track progress and handle errors at each step
 
 ## Installation
 
@@ -14,70 +19,158 @@ pnpm add onesec-bridge
 yarn add onesec-bridge
 ```
 
-## Usage
+## Quick Start
 
-See `src/index.spec.ts` for more examples of usage.
+### EVM to ICP Bridging (Direct)
+
+Use this approach when users can connect their wallet and sign transactions directly.
 
 ```typescript
-import { oneSecForwarding } from "onesec-bridge";
+import { EvmToIcpBridgeBuilder } from "@onesec/bridge-sdk";
+import { JsonRpcProvider, Wallet } from "ethers";
+import { Principal } from "@dfinity/principal";
 
+// Setup wallet
+const provider = new JsonRpcProvider("https://mainnet.base.org");
+const wallet = new Wallet("your-private-key", provider);
+
+// Create bridging plan
+const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
+  .receiver(Principal.fromText("your-icp-principal"))
+  .amountInUnits(1_500_000n) // 1.5 USDC
+  .build(wallet);
+
+// Print plan overview
+console.log("Plan steps:");
+plan.steps().forEach((step, index) => {
+  console.log(`  ${index + 1}. ${step.about().verbose}`);
+});
+
+// Execute step by step with progress tracking
+let nextStep;
+while (nextStep = plan.nextStep()) {
+  const status = nextStep.status();
+  if (status.state === "planned") {
+    console.log(nextStep.about().verbose);
+  }
+  try {
+    const result = await nextStep.run();
+    console.log(`  - ${result.verbose}`);
+  } catch (error) {
+    console.error("Step execution failed:", error);
+    break;
+  }
+}
+```
+
+### EVM to ICP Bridging (Forwarding Address)
+
+Use this approach when users cannot connect a wallet or prefer to send tokens manually.
+
+```typescript
+import { EvmToIcpBridgeBuilder } from "@onesec/bridge-sdk";
+import { Principal } from "@dfinity/principal";
+
+// Create forwarding-based bridging plan
+const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
+  .receiver(Principal.fromText("your-icp-principal"))
+  .forward();
+
+// Execute with progress tracking
+let nextStep;
+while (nextStep = plan.nextStep()) {
+  const status = nextStep.status();
+  if (status.state === "planned") {
+    console.log(nextStep.about().verbose);
+  }
+  try {
+    const result = await nextStep.run();
+    console.log(`  - ${result.verbose}`);
+    
+    // Show forwarding address to user
+    if (result.forwardingAddress) {
+      console.log(`Please send USDC to: ${result.forwardingAddress}`);
+      // Wait for user to send tokens before continuing
+    }
+  } catch (error) {
+    console.error("Step execution failed:", error);
+    break;
+  }
+}
+```
+
+### ICP to EVM Bridging
+
+Transfer tokens from ICP to EVM chains. Requires an authenticated ICP agent.
+
+```typescript
+import { IcpToEvmBridgeBuilder } from "@onesec/bridge-sdk";
+import { HttpAgent } from "@dfinity/agent";
+import { Secp256k1KeyIdentity } from "@dfinity/identity-secp256k1";
+
+// Setup ICP identity and agent
+const identity = Secp256k1KeyIdentity.fromSecretKey(/* your private key */);
+const agent = HttpAgent.createSync({
+  identity,
+  host: "https://ic0.app",
+});
+
+// Create bridging plan
+const plan = await new IcpToEvmBridgeBuilder(agent, "Base", "USDC")
+  .sender(identity.getPrincipal())
+  .receiver("0x742d35Cc6575C4B9bE904C1e13D21c4C624A9960")
+  .amountInUnits(1_500_000n) // 1.5 USDC
+  .build();
+
+// Execute with progress tracking (same pattern as above)
+let nextStep;
+while (nextStep = plan.nextStep()) {
+  // ... execution logic
+}
+```
+
+## Supported Networks and Tokens
+
+### EVM Chains
+- Ethereum
+- Arbitrum
+- Base
+
+### Tokens
+- USDC
+- USDT
+- ICP
+- ckBTC
+- cbBTC
+- BOB
+- GLDT
+
+## Migration from v0.7.x
+
+If you're using the deprecated `oneSecForwarding()` function:
+
+```typescript
+// Old approach (deprecated)
 const forwarding = oneSecForwarding();
-
-const receiver = {
-  owner: Principal.fromText(
-    "67m5w-gm4hr-27n4h-l3nav-cgwnn-wczuf-m4cif-5dbl6-pyqe4-4ztyg-lae",
-  ),
-};
-
 const address = await forwarding.addressFor(receiver);
 
-// Transfer tokens to `address` and then notify the smart
-// contract to start bridging.
-let result = await forwarding.forwardEvmToIcp(
-  "USDC",
-  "Base",
-  address,
-  receiver,
-);
-
-while (!result.done) {
-  console.log(result.status);
-  // Wait some time before retrying.
-  await sleep(10_000);
-  result = await forwarding.forwardEvmToIcp("USDC", "Base", address, receiver);
-}
-
-const transferId = result.done;
-const transfer = await forwarding.getTransfer(transferId);
-
-console.log(transfer.status);
-
-// Wait more and retry if `transfer.status` is pending.
+// New approach
+const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
+  .receiver(principal)
+  .amountInUnits(amount)
+  .forward();
 ```
 
 ## Documentation
+-<!-- TSDOC_START -->
 
-`onesec-bridge` exports the following types and functions:
+-<!-- TSDOC_END -->
 
-<!-- TSDOC_START -->
+## License
 
-### :toolbox: Functions
+MIT
 
-- [oneSecForwarding](#gear-onesecforwarding)
+## Support
 
-#### :gear: oneSecForwarding
-
-Constructs an instance of `OneSecForwarding` for bridging tokens from EVM
-chains to ICP using forwarding addresses.
-
-A forwarding address is an EVM address that is derived from an ICP address.
-Tokens transferred to the forwarding address on EVM are bridged to the
-corresponding ICP address on ICP.
-
-| Function           | Type                     |
-| ------------------ | ------------------------ |
-| `oneSecForwarding` | `() => OneSecForwarding` |
-
-[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/index.ts#L13)
-
-<!-- TSDOC_END -->
+For issues and questions:
+- [GitHub Issues](https://github.com/sisyphe-dev/onesec-forwarding-address/issues)

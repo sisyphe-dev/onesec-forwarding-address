@@ -15,8 +15,8 @@ import {
   EvmTx,
   ExpectedFee,
   IcrcAccount,
-  StepStatus,
   Step,
+  StepStatus,
   Token,
   TransferId,
   Tx,
@@ -246,7 +246,7 @@ class ExpectedFeeImpl implements ExpectedFee {
     private _transferFee: Amount,
     private _protocolFeeInPercent: number,
     private decimals: number,
-  ) { }
+  ) {}
 
   transferFee(): Amount {
     return this._transferFee;
@@ -420,7 +420,7 @@ export function format(amount: bigint, decimals: number): string {
   const tokens = bigintToNumberScaled(amount, decimals);
   const str = tokens.toFixed(6);
   let end = str.length;
-  while (end > 2 && str[end - 1] === "0" && str[end - 2] != '.') {
+  while (end > 2 && str[end - 1] === "0" && str[end - 2] != ".") {
     --end;
   }
   return str.slice(0, end);

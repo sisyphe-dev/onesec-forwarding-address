@@ -27,6 +27,47 @@ export type {
  * Tokens transferred to the forwarding address on EVM are bridged to the
  * corresponding ICP address on ICP.
  *
+ * @deprecated Use `EvmToIcpBridgeBuilder.forward()` instead for better step-by-step
+ * execution, progress tracking, and error handling.
+ *
+ * @example
+ * ```typescript
+ * // Instead of:
+ * // const forwarding = oneSecForwarding();
+ * // const address = await forwarding.addressFor(receiver);
+ *
+ * // Use:
+ * const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
+ *   .receiver(icpPrincipal)
+ *   .amountInUnits(1_500_000n)
+ *   .forward();
+ *
+ * // Print plan overview
+ * console.log("Plan steps:");
+ * plan.steps().forEach((step, index) => {
+ *   console.log(`  ${index + 1}. ${step.about().verbose}`);
+ * });
+ *
+ * // Execute step by step with progress tracking
+ * let nextStep;
+ * while (nextStep = plan.nextStep()) {
+ *   const status = nextStep.status();
+ *   if (status.state === "planned") {
+ *     console.log(nextStep.about().verbose);
+ *   }
+ *   try {
+ *     const result = await nextStep.run();
+ *     console.log(`  - ${result.verbose}`);
+ *     if (result.forwardingAddress) {
+ *       console.log(`Please send USDC to ${result.forwardingAddress}`);
+ *     }
+ *   } catch (error) {
+ *     console.error("Step execution failed:", error);
+ *     break;
+ *   }
+ * }
+ * ```
+ *
  * @param setup - the deployment environment (defaults to Mainnet)
  * @param addresses - optional canister IDs for custom deployments
  */
@@ -34,15 +75,71 @@ export function oneSecForwarding(setup?: Deployment): OneSecForwarding {
   return new OneSecForwardingImpl(setup ?? "Mainnet");
 }
 
+/**
+ * Orchestrates the execution of a multi-step token bridging process.
+ *
+ * A BridgingPlan contains an ordered sequence of steps that must be executed
+ * to complete a token bridge operation. Steps can be run individually with
+ * `nextStep().run()` or all at once with `runAllSteps()`.
+ *
+ * The plan tracks execution state and handles step dependencies, ensuring
+ * steps are executed in the correct order and failed steps halt progression.
+ *
+ * @example
+ * ```typescript
+ * const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
+ *   .receiver(icpPrincipal)
+ *   .amountInUnits(1_500_000n)
+ *   .build(evmSigner);
+ *
+ * // Print plan overview
+ * console.log("Plan steps:");
+ * plan.steps().forEach((step, index) => {
+ *   console.log(`  ${index + 1}. ${step.about().verbose}`);
+ * });
+ *
+ * // Execute step-by-step with progress tracking
+ * let nextStep;
+ * while (nextStep = plan.nextStep()) {
+ *   const status = nextStep.status();
+ *   if (status.state === "planned") {
+ *     console.log(nextStep.about().verbose);
+ *   }
+ *   try {
+ *     const result = await nextStep.run();
+ *     console.log(`  - ${result.verbose}`);
+ *   } catch (error) {
+ *     console.error("Step execution failed:", error);
+ *     break;
+ *   }
+ * }
+ *
+ * // Or execute all steps at once
+ * try {
+ *   const finalResult = await plan.runAllSteps();
+ *   console.log("Bridging completed:", finalResult.state);
+ * } catch (error) {
+ *   console.error("Bridging failed:", error);
+ * }
+ * ```
+ */
 export class BridgingPlan {
   private currentStepIndex: number = 0;
 
-  constructor(private _steps: Step[]) { }
+  constructor(private _steps: Step[]) {}
 
+  /**
+   * Get all steps in this bridging plan.
+   * @returns Array of steps in execution order
+   */
   steps(): Step[] {
     return this._steps;
   }
 
+  /**
+   * Get the most recently executed step.
+   * @returns The last executed step, or undefined if no steps have been executed
+   */
   lastStep(): Step | undefined {
     if (this.currentStepIndex === 0) {
       return undefined;
@@ -50,7 +147,14 @@ export class BridgingPlan {
     return this._steps[this.currentStepIndex - 1];
   }
 
-
+  /**
+   * Get the next step to execute.
+   *
+   * Automatically skips completed steps and stops at failed steps.
+   * Returns undefined when all steps are complete or a step has failed.
+   *
+   * @returns Next step to execute, or undefined if plan is complete/failed
+   */
   nextStep(): Step | undefined {
     this.skipDone();
 
@@ -75,6 +179,15 @@ export class BridgingPlan {
     return this._steps[this.currentStepIndex];
   }
 
+  /**
+   * Execute all remaining steps in sequence.
+   *
+   * Runs each step until completion or failure. If a step fails,
+   * execution stops and the error status is returned.
+   *
+   * @returns Final step status (success or failure)
+   * @throws Error if a step encounters an unexpected error during execution
+   */
   async runAllSteps(): Promise<StepStatus> {
     let nextStep = this.nextStep();
     while (nextStep) {
@@ -84,6 +197,10 @@ export class BridgingPlan {
     return this.lastStep()!.status();
   }
 
+  /**
+   * Calculate the total expected duration for all steps.
+   * @returns Total expected duration in milliseconds
+   */
   expectedDurationMs(): number {
     return this._steps.reduce(
       (total, step) => total + step.expectedDurationMs(),
@@ -98,7 +215,7 @@ export class BridgingPlan {
         case "succeeded":
         case "failed":
         case "refunded": {
-          // Skip this step and continue. 
+          // Skip this step and continue.
           break;
         }
         case "planned":
