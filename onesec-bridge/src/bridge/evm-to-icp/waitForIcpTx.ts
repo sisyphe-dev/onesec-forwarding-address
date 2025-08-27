@@ -4,13 +4,11 @@ import type { About, IcrcAccount, StepStatus, Token } from "../../types";
 import {
   amountFromUnits,
   BaseStep,
-  err,
   exponentialBackoff,
   format,
   formatIcpAccount,
   GetTransferId,
   ICP_CALL_DURATION_MS,
-  ok,
   sleep,
 } from "../shared";
 
@@ -47,10 +45,9 @@ export class WaitForIcpTx extends BaseStep {
     }
 
     this._status = {
-      Pending: {
-        concise: "Waiting for transfer on ICP",
-        verbose: `Waiting for OneSec to transfer ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP`,
-      },
+      state: "running",
+      concise: "running",
+      verbose: `calling get_transfer of OneSec to query the state of transfer ${transferId}`,
     };
 
     await sleep(this.delayMs);
@@ -60,10 +57,9 @@ export class WaitForIcpTx extends BaseStep {
 
     if ("Err" in result) {
       this._status = {
-        Done: err({
-          concise: "Transfer failed",
-          verbose: `OneSec failed to transfer ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP: ${result.Err}`,
-        }),
+        state: "failed",
+        concise: "transfer failed",
+        verbose: `transfer failed: ${result.Err}`,
       };
       return this._status;
     }
@@ -73,19 +69,17 @@ export class WaitForIcpTx extends BaseStep {
     if (transfer.status) {
       if ("Succeeded" in transfer.status) {
         this._status = {
-          Done: ok({
-            concise: "Transferred tokens",
-            verbose: `OneSec transferred ${format(transfer.destination.amount, this.decimals)} ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP`,
-            transaction: transfer.destination.tx,
-            amount: amountFromUnits(transfer.destination.amount, this.decimals),
-          }),
+          state: "succeeded",
+          concise: "done",
+          verbose: `transferred ${format(transfer.destination.amount, this.decimals)} ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP`,
+          transaction: transfer.destination.tx,
+          amount: amountFromUnits(transfer.destination.amount, this.decimals),
         };
       } else if ("Failed" in transfer.status) {
         this._status = {
-          Done: err({
-            concise: "Transfer failed",
-            verbose: `OneSec failed to transfer ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP: ${transfer.status.Failed.error}`,
-          }),
+          state: "failed",
+          concise: "transfer failed",
+          verbose: `transfer failed: ${transfer.status.Failed.error}`,
         };
       } else if (
         "Refunded" in transfer.status ||

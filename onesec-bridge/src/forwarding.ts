@@ -98,14 +98,12 @@ export class OneSecForwardingImpl implements OneSecForwarding {
     if (onesec === undefined) {
       onesec = this.onesec = await anonymousOneSec(this.deployment);
     }
-    console.log("forward evm to icp");
     const result = await onesec.forward_evm_to_icp({
       chain: toCandid.chain(sourceChain),
       token: toCandid.token(token),
       address: sender,
       receiver: toCandid.icpAccount(receiver),
     });
-    console.log(" > forward evm to icp");
     if ("Err" in result) {
       throw Error(result.Err);
     }

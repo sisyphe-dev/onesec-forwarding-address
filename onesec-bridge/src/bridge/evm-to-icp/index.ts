@@ -20,7 +20,7 @@ import type {
 } from "../../types";
 import {
   anonymousAgent,
-  FetchFeesAndLimits,
+  FetchFeesAndCheckLimits,
   ConfirmBlocksStep,
   oneSecWithAgent,
 } from "../shared";
@@ -99,7 +99,7 @@ export class EvmToIcpBridgeBuilder {
     const agent = await anonymousAgent(this.deployment, config);
     const oneSecActor = await oneSecWithAgent(oneSecId, agent);
 
-    const checkFeesAndLimitsStep = new FetchFeesAndLimits(
+    const checkFeesAndLimitsStep = new FetchFeesAndCheckLimits(
       oneSecActor,
       this.token,
       this.evmChain,
@@ -249,7 +249,7 @@ export class EvmToIcpBridgeBuilder {
     const agent = await anonymousAgent(this.deployment, config);
     const oneSecActor = await oneSecWithAgent(oneSecId, agent);
 
-    const checkFeesAndLimitsStep = new FetchFeesAndLimits(
+    const checkFeesAndLimitsStep = new FetchFeesAndCheckLimits(
       oneSecActor,
       this.token,
       this.evmChain,

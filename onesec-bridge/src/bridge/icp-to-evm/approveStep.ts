@@ -7,7 +7,7 @@ import type {
   StepStatus,
   Token,
 } from "../../types";
-import { BaseStep, err, format, ICP_CALL_DURATION_MS, ok } from "../shared";
+import { BaseStep, format, formatTx, ICP_CALL_DURATION_MS } from "../shared";
 
 export class ApproveStep extends BaseStep {
   constructor(
@@ -37,10 +37,9 @@ export class ApproveStep extends BaseStep {
 
   async run(): Promise<StepStatus> {
     this._status = {
-      Pending: {
-        concise: `Approving transfer on ICP`,
-        verbose: `Approving transfer of ${format(this.amount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}`,
-      },
+      state: "running",
+      concise: "running",
+      verbose: `calling icrc2_approve of ${this.token} ledger`,
     };
 
     const approvalResult = await this.ledgerActor.icrc2_approve({
@@ -58,23 +57,22 @@ export class ApproveStep extends BaseStep {
 
     if ("Err" in approvalResult) {
       this._status = {
-        Done: err({
-          concise: `Failed to approve transfer on ICP`,
-          verbose: `Failed to approve transfer of ${format(this.amount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}: ${formatError(approvalResult.Err)}`,
-        }),
+        state: "failed",
+        concise: "failed to approve",
+        verbose: `failed to approve: ${formatError(approvalResult.Err)}`,
       };
     } else {
+      const icpTx = {
+        Icp: {
+          blockIndex: approvalResult.Ok,
+          ledger: this.ledgerId,
+        },
+      };
       this._status = {
-        Done: ok({
-          concise: `Approved transfer on ICP`,
-          verbose: `Approved transfer of ${format(this.amount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}: ${approvalResult.Ok}`,
-          transaction: {
-            Icp: {
-              blockIndex: approvalResult.Ok,
-              ledger: this.ledgerId,
-            },
-          },
-        }),
+        state: "succeeded",
+        concise: "done",
+        verbose: `icrc2_approve succeeded: ${formatTx(icpTx)}`,
+        transaction: icpTx,
       };
     }
 

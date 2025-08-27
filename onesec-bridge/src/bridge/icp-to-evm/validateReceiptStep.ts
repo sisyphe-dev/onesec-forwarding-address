@@ -4,12 +4,10 @@ import type { About, EvmChain, StepStatus, Token } from "../../types";
 import {
   amountFromUnits,
   BaseStep,
-  err,
   exponentialBackoff,
   format,
   formatTx,
   ICP_CALL_DURATION_MS,
-  ok,
   sleep,
 } from "../shared";
 import { TransferStep } from "./transferStep";
@@ -48,11 +46,11 @@ export class ValidateReceiptStep extends BaseStep {
     }
 
     this._status = {
-      Pending: {
-        concise: "Validating transaction receipt",
-        verbose: "Waiting for OneSec to validate the receipt of the transaction",
-      },
+      state: "running",
+      concise: "waiting",
+      verbose: "waiting",
     };
+
 
     await sleep(this.delayMs);
     this.delayMs = exponentialBackoff(this.delayMs);
@@ -61,10 +59,9 @@ export class ValidateReceiptStep extends BaseStep {
 
     if ("Err" in result) {
       this._status = {
-        Done: err({
-          concise: "Failed to validate transaction receipt",
-          verbose: `OneSec failed to validate the receipt of the transaction: ${result.Err}`,
-        }),
+        state: "failed",
+        concise: "failed to validate transaction receipt",
+        verbose: `failed to validate transaction receipt: ${result.Err}`,
       };
       return this._status;
     }
@@ -74,19 +71,17 @@ export class ValidateReceiptStep extends BaseStep {
     if (transfer.status) {
       if ("Succeeded" in transfer.status) {
         this._status = {
-          Done: ok({
-            concise: "Validated transaction receipt",
-            verbose: `OneSec validated the receipt of transaction ${formatTx(transfer.destination.tx)}: ${format(transfer.destination.amount, this.decimals)} ${this.token} have been sent to ${this.evmAddress} on ${this.evmChain}`,
-            transaction: transfer.destination.tx,
-            amount: amountFromUnits(transfer.destination.amount, this.decimals),
-          }),
+          state: "succeeded",
+          concise: "done",
+          verbose: `validated that transaction ${formatTx(transfer.destination.tx)} has sent ${format(transfer.destination.amount, this.decimals)} ${this.token} to ${this.evmAddress} on ${this.evmChain}`,
+          transaction: transfer.destination.tx,
+          amount: amountFromUnits(transfer.destination.amount, this.decimals),
         };
       } else if ("Failed" in transfer.status) {
         this._status = {
-          Done: err({
-            concise: "Failed to validate transaction receipt",
-            verbose: `OneSec failed to validate the receipt of the transaction: ${transfer.status.Failed.error}`,
-          }),
+          state: "failed",
+          concise: "failed to validate transaction receipt",
+          verbose: `failed to validate transaction receipt: ${transfer.status.Failed.error}`,
         };
       } else if (
         "Refunded" in transfer.status ||

@@ -11,13 +11,10 @@ import type {
 } from "../../types";
 import {
   BaseStep,
-  err,
   exponentialBackoff,
-  formatIcpAccount,
   GetEvmTx,
   GetTransferId,
   ICP_CALL_DURATION_MS,
-  ok,
   sleep,
 } from "../shared";
 
@@ -40,7 +37,7 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
   about(): About {
     return {
       concise: "Validate transaction receipt",
-      verbose: "Wait for OneSec to validate the receipt of the transaction",
+      verbose: "Wait for OneSec to validate transaction receipt",
     };
   }
 
@@ -62,10 +59,9 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
     }
 
     this._status = {
-      Pending: {
-        concise: "Validating transaction receipt",
-        verbose: "Waiting for OneSec to validate the receipt of the transaction",
-      },
+      state: "running",
+      concise: "running",
+      verbose: "calling transfer_evm_to_icp of OneSec",
     };
 
     await sleep(this.delayMs);
@@ -86,17 +82,15 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
     if ("Accepted" in response) {
       this.transferId = { id: response.Accepted.id };
       this._status = {
-        Done: ok({
-          concise: "Validated transaction receipt",
-          verbose: "OneSec validated the receipt of the transaction",
-        }),
+        state: "succeeded",
+        concise: "done",
+        verbose: `validated transaction receipt and assigned transfer-id ${this.transferId.id}`,
       };
     } else if ("Failed" in response) {
       this._status = {
-        Done: err({
-          concise: "Failed to validate transaction receipt",
-          verbose: "OneSec failed to validate the receipt of the transaction",
-        }),
+        state: "failed",
+        concise: "validation failed",
+        verbose: `validation failed: ${response.Failed.error}`,
       };
     }
 

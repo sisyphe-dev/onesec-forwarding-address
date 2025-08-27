@@ -13,13 +13,11 @@ import type {
 import {
   amountFromUnits,
   BaseStep,
-  err,
   exponentialBackoff,
   format,
   formatIcpAccount,
   formatTx,
   ICP_CALL_DURATION_MS,
-  ok,
   sleep,
 } from "../shared";
 import { TransferStep } from "./transferStep";
@@ -66,12 +64,11 @@ export class WaitForTxStep extends BaseStep {
       );
     }
 
-    if ("Planned" in this._status) {
+    if (this._status.state === "planned") {
       this._status = {
-        Pending: {
-          concise: `Waiting for transaction on ${this.evmChain}`,
-          verbose: `Waiting for OneSec to sign and submit a transaction to send ${this.token} to ${this.evmAddress} on ${this.evmChain}`,
-        },
+        state: "running",
+        concise: "running",
+        verbose: "calling get_transfer of OneSec to query transfer status",
       };
     }
 
@@ -81,66 +78,56 @@ export class WaitForTxStep extends BaseStep {
     const result = await this.oneSecActor.get_transfer(transferId);
 
     if ("Err" in result) {
-      throw Error(`Failed to request the status of transfer ${transferId}`);
+      throw Error(`Failed to request the status of transfer ${transferId.id}: ${result.Err}`);
     }
 
     const transfer = fromCandid.transfer(result.Ok);
 
     if (transfer.status) {
+      console.log(JSON.stringify(result.Ok, (_, value) =>
+        typeof value === "bigint" ? value.toString() : value
+      ));
       if ("Succeeded" in transfer.status) {
         this._status = {
-          Done: ok({
-            concise: `Executed transaction on ${this.evmChain}`,
-            verbose: `OneSec executed a transaction to send ${format(transfer.destination.amount, this.decimals)} ${this.token} to ${this.evmAddress} on ${this.evmChain}: ${formatTx(transfer.destination.tx)}`,
-            transaction: transfer.destination.tx,
-            amount: amountFromUnits(transfer.destination.amount, this.decimals),
-          }),
+          state: "succeeded",
+          concise: "done",
+          verbose: "executed transaction",
         };
       } else if ("Failed" in transfer.status) {
         this._status = {
-          Done: err({
-            concise: `Transaction failed on ${this.evmChain}`,
-            verbose: `OneSec failed to send ${this.token} to ${this.evmAddress} on ${this.evmChain}: ${transfer.status.Failed.error}`,
-          }),
+          state: "failed",
+          concise: "transaction failed",
+          verbose: `transaction failed: ${transfer.status.Failed.error}`,
         };
       } else if ("Refunded" in transfer.status) {
         this._status = {
-          Done: ok({
-            concise: "Refunded tokens on ICP",
-            verbose: `OneSec refunded ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP due to insufficient tokens on ${this.evmChain}: ${formatTx(transfer.source.tx)}`,
-            transaction: transfer.source.tx,
-          }),
+          state: "refunded",
+          concise: "refunded tokens on ICP",
+          verbose: `refunded ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP due to insufficient tokens on ${this.evmChain}: ${formatTx(transfer.source.tx)}`,
+          transaction: transfer.source.tx,
         };
       } else if ("PendingRefund" in transfer.status) {
         this._status = {
-          Pending: {
-            concise: "Refunding tokens on ICP",
-            verbose: `OneSec is refunding ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP due to insufficient tokens on ${this.evmChain}: ${formatTx(transfer.source.tx)}`,
-          },
+          state: "running",
+          concise: "refunding tokens on ICP",
+          verbose: `refunding ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP due to insufficient tokens on ${this.evmChain}: ${formatTx(transfer.source.tx)}`,
         };
       } else if ("PendingDestinationTx" in transfer.status) {
         for (let entry of result.Ok.trace.entries) {
-          if (this.evmChain in entry.chain) {
+          if (entry.chain[0] && this.evmChain in entry.chain[0]) {
             if (entry.result[0] && "Ok" in entry.result[0]) {
               const event = entry.event[0];
+              console.log(event);
               if (event === undefined) {
                 continue;
               }
               const ts = traceEventToTxStatus(event);
+              console.log(ts);
               if (order(this.txStatus) < order(ts)) {
                 this.txStatus = ts;
-                const details = txStatusDetails(
-                  ts,
-                  this.token,
-                  this.evmChain,
-                  this.evmAddress,
-                  transfer.destination.amount,
-                  this.decimals,
-                );
-                if (details) {
-                  this._status = {
-                    Pending: details,
-                  };
+                const status = txStatus(ts);
+                if (status) {
+                  this._status = status;
                 }
               }
             }
@@ -182,28 +169,29 @@ function traceEventToTxStatus(event: TraceEvent): TxStatus {
   return "unknown";
 }
 
-function txStatusDetails(
+function txStatus(
   ts: TxStatus,
-  token: Token,
-  evmChain: EvmChain,
-  evmAddress: string,
-  evmAmount: bigint,
-  decimals: number,
-): About | undefined {
+): StepStatus | undefined {
   switch (ts) {
     case "unknown":
       return undefined;
     case "signed":
       return {
-        concise: `Signing transaction for ${evmChain}`,
-        verbose: `OneSec is signing a transaction to transfer ${format(evmAmount, decimals)} ${token} to ${evmAddress} on ${evmChain}`,
+        state: "running",
+        concise: `signed transaction`,
+        verbose: `signed transaction`,
       };
     case "sent":
       return {
-        concise: `Sending transaction to ${evmChain}`,
-        verbose: `OneSec is sending a transaction to transfer ${format(evmAmount, decimals)} ${token} to ${evmAddress} on ${evmChain}`,
+        state: "running",
+        concise: `sent transaction`,
+        verbose: `sent transaction`,
       };
     case "executed":
-      return undefined;
+      return {
+        state: "succeeded",
+        concise: `executed transaction`,
+        verbose: `executed transaction`,
+      };
   }
 }

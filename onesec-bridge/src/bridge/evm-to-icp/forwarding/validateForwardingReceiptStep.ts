@@ -10,10 +10,8 @@ import type {
 import {
   BaseStep,
   exponentialBackoff,
-  formatIcpAccount,
   GetTransferId,
   ICP_CALL_DURATION_MS,
-  ok,
   sleep,
 } from "../../shared";
 import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
@@ -37,7 +35,7 @@ export class ValidateForwardingReceiptStep
   about(): About {
     return {
       concise: "Validate transaction receipt",
-      verbose: `Wait for OneSec to validate the receipt of the forwarding transaction on ${this.evmChain}`,
+      verbose: `Wait for OneSec to validate transaction receipt`,
     };
   }
 
@@ -62,10 +60,9 @@ export class ValidateForwardingReceiptStep
     }
 
     this._status = {
-      Pending: {
-        concise: "Validating transaction receipt",
-        verbose: `Waiting for OneSec to validate the receipt of the forwarding transaction on ${this.evmChain}`,
-      },
+      state: "running",
+      concise: "querying",
+      verbose: "calling get_forwarding_status of OneSec",
     };
 
     await sleep(this.delayMs);
@@ -81,15 +78,14 @@ export class ValidateForwardingReceiptStep
     const transferId = response.done;
 
     if (
-      lastTransferId === undefined ||
-      (transferId && transferId > lastTransferId)
+      transferId !== undefined &&
+      (lastTransferId === undefined || transferId > lastTransferId)
     ) {
       this.transferId = transferId;
       this._status = {
-        Done: ok({
-          concise: "Validated transaction receipt",
-          verbose: `OneSec validated the receipt of the forwarding transaction on ${this.evmChain}`,
-        }),
+        state: "succeeded",
+        concise: "done",
+        verbose: `validated transaction receipt and assigned transfer-id ${this.transferId.id}`,
       };
       return this._status;
     }

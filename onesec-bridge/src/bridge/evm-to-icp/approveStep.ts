@@ -8,11 +8,9 @@ import type {
 } from "../../types";
 import {
   BaseStep,
-  err,
   EVM_CALL_DURATION_MS,
   format,
   formatIcpAccount,
-  ok,
 } from "../shared";
 
 export class ApproveStep extends BaseStep {
@@ -41,10 +39,9 @@ export class ApproveStep extends BaseStep {
 
   async run(): Promise<StepStatus> {
     this._status = {
-      Pending: {
-        concise: `Approving transaction on ${this.evmChain}`,
-        verbose: `Submitting transaction to approve sending of ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP`,
-      },
+      state: "running",
+      concise: "preparing transaction",
+      verbose: "preparing transaction",
     };
 
     const approveTx = await this.erc20Contract.approve(
@@ -52,23 +49,21 @@ export class ApproveStep extends BaseStep {
       this.evmAmount,
     );
 
-    const approveReceipt = await approveTx.wait();
+    const receipt = await approveTx.wait();
 
-    if (approveReceipt.status === 1) {
+    if (receipt.status === 1) {
       this._status = {
-        Done: ok({
-          concise: `Approved transaction on ${this.evmChain}`,
-          verbose: `Successfully executed transaction to approve sending of ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP: ${approveReceipt.hash}`,
-          transaction: { Evm: { hash: approveReceipt.hash } },
-        }),
+        state: "succeeded",
+        concise: `executed transaction: ${receipt.hash}`,
+        verbose: `executed transaction: ${receipt.hash}`,
+        transaction: { Evm: { hash: receipt.hash } },
       };
     } else {
       this._status = {
-        Done: err({
-          concise: `Failed to approve transaction on ${this.evmChain}`,
-          verbose: `Transaction to approve sending of ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP has been reverted: ${approveReceipt.hash}`,
-          transaction: approveReceipt.hash,
-        }),
+        state: "failed",
+        concise: `transaction reverted: ${receipt.hash}`,
+        verbose: `transaction reverted: ${receipt.hash}`,
+        transaction: { Evm: { hash: receipt.hash } },
       };
     }
 

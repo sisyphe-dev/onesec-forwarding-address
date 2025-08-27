@@ -10,7 +10,7 @@ import type {
   Token,
   TransferId,
 } from "../../types";
-import { BaseStep, err, format, ICP_CALL_DURATION_MS, ok } from "../shared";
+import { BaseStep, format, formatTx, ICP_CALL_DURATION_MS } from "../shared";
 
 export class TransferStep extends BaseStep {
   private transferId?: TransferId;
@@ -45,10 +45,9 @@ export class TransferStep extends BaseStep {
 
   async run(): Promise<StepStatus> {
     this._status = {
-      Pending: {
-        concise: `Transferring on ICP`,
-        verbose: `Transferring ${format(this.icpAmount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}`,
-      },
+      state: "running",
+      concise: "running",
+      verbose: "calling transfer_icp_to_evm of OneSec",
     };
 
     const result = await this.oneSecActor.transfer_icp_to_evm({
@@ -64,24 +63,23 @@ export class TransferStep extends BaseStep {
 
     if ("Failed" in response) {
       this._status = {
-        Done: err({
-          concise: `Failed to transfer on ICP`,
-          verbose: `Failed to transfer ${format(this.icpAmount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}: ${response.Failed.error}`,
-        }),
+        state: "failed",
+        concise: "failed to transfer",
+        verbose: `failed to transfer: ${response.Failed.error}`,
       };
     } else if ("Accepted" in response) {
+      const icpTx = {
+        Icp: {
+          blockIndex: response.Accepted.id,
+          ledger: this.ledgerId,
+        },
+      };
       this.transferId = response.Accepted;
       this._status = {
-        Done: ok({
-          concise: `Transferred on ICP`,
-          verbose: `Transferred ${format(this.icpAmount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}: ${response.Accepted.id}`,
-          transaction: {
-            Icp: {
-              blockIndex: response.Accepted.id,
-              ledger: this.ledgerId,
-            },
-          },
-        }),
+        state: "succeeded",
+        concise: "done",
+        verbose: `transferred tokens to OneSec: ${formatTx(icpTx)}`,
+        transaction: icpTx,
       };
     } else if ("Fetching" in response) {
       throw Error(

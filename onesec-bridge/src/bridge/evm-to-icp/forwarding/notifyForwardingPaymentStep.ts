@@ -6,7 +6,7 @@ import type {
   StepStatus,
   Token,
 } from "../../../types";
-import { BaseStep, ICP_CALL_DURATION_MS, ok } from "../../shared";
+import { BaseStep, ICP_CALL_DURATION_MS } from "../../shared";
 import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
 
 export class NotifyForwardingPaymentStep extends BaseStep {
@@ -42,10 +42,9 @@ export class NotifyForwardingPaymentStep extends BaseStep {
     }
 
     this._status = {
-      Pending: {
-        concise: `Notifying user payment on ${this.evmChain}`,
-        verbose: `Notifying OneSec about a user payment to the forwarding address ${forwardingAddress} on ${this.evmChain}`,
-      },
+      state: "running",
+      concise: "running",
+      verbose: `calling forward_evm_to_icp of OneSec with forwarding address ${forwardingAddress}`,
     };
 
     await this.onesec.forwardEvmToIcp(
@@ -56,10 +55,9 @@ export class NotifyForwardingPaymentStep extends BaseStep {
     );
 
     this._status = {
-      Done: ok({
-        concise: `Notified user payment on ${this.evmChain}`,
-        verbose: `Notified OneSec about a user payment to the forwarding address ${forwardingAddress} on ${this.evmChain}`,
-      }),
+      state: "succeeded",
+      concise: "done",
+      verbose: `notified user payment to ${forwardingAddress}`,
     };
 
     return this._status;

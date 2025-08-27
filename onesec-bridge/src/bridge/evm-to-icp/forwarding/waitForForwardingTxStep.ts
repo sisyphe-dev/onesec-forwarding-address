@@ -10,11 +10,9 @@ import type {
 } from "../../../types";
 import {
   BaseStep,
-  err,
   exponentialBackoff,
   format,
   ICP_CALL_DURATION_MS,
-  ok,
   sleep,
 } from "../../shared";
 import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
@@ -67,10 +65,9 @@ export class WaitForForwardingTxStep extends BaseStep {
     }
 
     this._status = {
-      Pending: {
-        concise: `Waiting for forwarding transaction on ${this.evmChain}`,
-        verbose: `Waiting for OneSec to detect the ${this.token} payment and submit a forwarding transaction on ${this.evmChain}`,
-      },
+      state: "running",
+      concise: "querying",
+      verbose: "calling get_forwarding_status of OneSec",
     };
 
     await sleep(this.delayMs);
@@ -87,15 +84,14 @@ export class WaitForForwardingTxStep extends BaseStep {
     const status = response.status;
 
     if (
-      lastTransferId === undefined ||
-      (transferId && transferId > lastTransferId)
+      transferId !== undefined &&
+      (lastTransferId === undefined || transferId > lastTransferId)
     ) {
       this.transferId = transferId;
       this._status = {
-        Done: ok({
-          concise: `Submitted forwarding transaction on ${this.evmChain}`,
-          verbose: `OneSec submitted a forwarding transaction on ${this.evmChain}`,
-        }),
+        state: "succeeded",
+        concise: "executed forwarding transaction",
+        verbose: "executed forwarding transaction",
       };
       return this._status;
     }
@@ -104,39 +100,34 @@ export class WaitForForwardingTxStep extends BaseStep {
       if ("Forwarded" in status) {
         this.forwardingTx = status.Forwarded;
         this._status = {
-          Done: ok({
-            concise: `Submitted forwarding transaction on ${this.evmChain}`,
-            verbose: `OneSec submitted a forwarding transaction on ${this.evmChain}`,
-          }),
+          state: "succeeded",
+          concise: "executed forwarding transaction",
+          verbose: "executed forwarding transaction",
         };
       } else if ("CheckingBalance" in status) {
         this._status = {
-          Pending: {
-            concise: "Checking balance",
-            verbose: `OneSec is checking the balance of the forwarding address ${forwardingAddress} on ${this.evmChain}`,
-          },
+          state: "running",
+          concise: "checking balance",
+          verbose: `checking balance of forwarding address ${forwardingAddress}`,
         };
       } else if ("Forwarding" in status) {
         this._status = {
-          Pending: {
-            concise: `Submitting forwarding transaction on ${this.evmChain}`,
-            verbose: `OneSec is signing and submitting a forwarding transaction on ${this.evmChain}`,
-          },
+          state: "running",
+          concise: "submitting forwarding transaction",
+          verbose: "submitting forwarding transaction",
         };
       } else if ("LowBalance" in status) {
         if (status.LowBalance.balance) {
           this._status = {
-            Done: err({
-              concise: "Balance is too low",
-              verbose: `The balance of the forwarding address ${forwardingAddress} is too low: ${format(status.LowBalance.balance, this.decimals)} ${this.token}. Please ask the user to send at least ${format(status.LowBalance.minAmount, this.decimals)} ${this.token}`,
-            }),
+            state: "failed",
+            concise: "balance is too low",
+            verbose: `balance of forwarding address ${forwardingAddress} is too low: ${format(status.LowBalance.balance, this.decimals)} ${this.token}. Please ask the user to send at least ${format(status.LowBalance.minAmount, this.decimals)} ${this.token}`,
           };
         } else {
           this._status = {
-            Pending: {
-              concise: "Checking balance",
-              verbose: `OneSec is checking the balance of the forwarding address ${forwardingAddress} on ${this.evmChain}`,
-            },
+            state: "running",
+            concise: "checking balance",
+            verbose: `checking balance of forwarding address ${forwardingAddress}`,
           };
         }
       }

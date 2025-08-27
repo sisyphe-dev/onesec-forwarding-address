@@ -1,5 +1,5 @@
 import { OneSecForwardingImpl } from "./forwarding";
-import type { Deployment, OneSecForwarding, Result, Step } from "./types";
+import type { Deployment, OneSecForwarding, Step, StepStatus } from "./types";
 
 export { EvmToIcpBridgeBuilder, IcpToEvmBridgeBuilder } from "./bridge";
 export {
@@ -15,9 +15,8 @@ export type {
   About,
   Amount,
   OneSecForwarding,
-  Result,
   Step,
-  StepStatus,
+  StepStatus as StepStatus,
 } from "./types";
 
 /**
@@ -36,17 +35,12 @@ export function oneSecForwarding(setup?: Deployment): OneSecForwarding {
 }
 
 export class BridgingPlan {
-  private _result?: Result;
   private currentStepIndex: number = 0;
 
   constructor(private _steps: Step[]) { }
 
   steps(): Step[] {
     return this._steps;
-  }
-
-  result(): Result | undefined {
-    return this._result;
   }
 
   lastStep(): Step | undefined {
@@ -56,24 +50,24 @@ export class BridgingPlan {
     return this._steps[this.currentStepIndex - 1];
   }
 
-  skipDone() {
-    while (
-      this.currentStepIndex < this._steps.length &&
-      "Done" in this._steps[this.currentStepIndex].status()
-    ) {
-      this.currentStepIndex += 1;
-    }
-  }
 
   nextStep(): Step | undefined {
     this.skipDone();
 
     const lastStep = this.lastStep();
     if (lastStep) {
-      const lastStatus = lastStep.status();
-      if ("Done" in lastStatus) {
-        if ("Err" in lastStatus.Done) {
+      const state = lastStep.status().state;
+      switch (state) {
+        case "failed":
+        case "refunded": {
+          // There is no next step if the last step has failed or triggered a refund.
           return undefined;
+        }
+        case "succeeded":
+        case "planned":
+        case "running": {
+          // Nothing to do;
+          break;
         }
       }
     }
@@ -81,28 +75,13 @@ export class BridgingPlan {
     return this._steps[this.currentStepIndex];
   }
 
-  async runAllSteps(): Promise<Result> {
+  async runAllSteps(): Promise<StepStatus> {
     let nextStep = this.nextStep();
     while (nextStep) {
-      const result = await nextStep.run();
-      if ("Done" in result && "Ok" in result.Done) {
-        console.log(result.Done.Ok.about.verbose);
-      }
-      if ("Done" in result && "Err" in result.Done) {
-        console.log(result.Done.Err.about.verbose);
-      }
+      await nextStep.run();
       nextStep = this.nextStep();
     }
-
-    const lastStep = this.lastStep();
-    if (lastStep) {
-      const lastStatus = lastStep.status();
-      if ("Done" in lastStatus) {
-        this._result = lastStatus.Done;
-      }
-    }
-
-    return this._result!;
+    return this.lastStep()!.status();
   }
 
   expectedDurationMs(): number {
@@ -110,5 +89,25 @@ export class BridgingPlan {
       (total, step) => total + step.expectedDurationMs(),
       0,
     );
+  }
+
+  private skipDone() {
+    while (this.currentStepIndex < this._steps.length) {
+      const state = this._steps[this.currentStepIndex].status().state;
+      switch (state) {
+        case "succeeded":
+        case "failed":
+        case "refunded": {
+          // Skip this step and continue. 
+          break;
+        }
+        case "planned":
+        case "running": {
+          // Stop here.
+          return;
+        }
+      }
+      this.currentStepIndex += 1;
+    }
   }
 }

@@ -266,48 +266,35 @@ export interface ExpectedFee {
   totalFee: (amount: Amount) => Amount;
 }
 
-export interface Details {
-  about: About;
+
+export type StepState = "planned" | "running" | "succeeded" | "failed" | "refunded";
+
+export interface StepStatus {
+  state: StepState;
+  concise: string;
+  verbose: string;
   amount?: Amount;
+  expectedFee?: ExpectedFee;
   transaction?: Tx;
   link?: string;
-  expectedFee?: ExpectedFee;
+  transferId?: TransferId;
   forwardingAddress?: string;
+  error?: Error;
 }
-
-export type Result =
-  | {
-      Ok: Details;
-    }
-  | {
-      Err: Details;
-    };
-
-export type StepStatus =
-  | { Planned: null }
-  | { Pending: About }
-  | { Done: Result };
 
 export interface Step {
   about: () => About;
-
+  index: () => number;
   status: () => StepStatus;
-
   run: () => Promise<StepStatus>;
-
   expectedDurationMs: () => number;
 }
 
 export interface BridgingPlan {
   steps: () => Step[];
-
-  result: () => Result | undefined;
-
   lastStep: () => Step | undefined;
-
   nextStep: () => Step | undefined;
-
-  runAllSteps: () => Promise<Result>;
+  runAllSteps: () => Promise<StepStatus>;
 
   expectedDurationMs: () => number;
   expectedFees: () => Amount;

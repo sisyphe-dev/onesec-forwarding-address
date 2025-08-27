@@ -15,9 +15,8 @@ import {
   EvmTx,
   ExpectedFee,
   IcrcAccount,
-  Result,
-  Step,
   StepStatus,
+  Step,
   Token,
   TransferId,
   Tx,
@@ -27,7 +26,12 @@ export const ICP_CALL_DURATION_MS = 5000;
 export const EVM_CALL_DURATION_MS = 5000;
 
 export abstract class BaseStep implements Step {
-  protected _status: StepStatus = { Planned: null };
+  protected _index?: number;
+  protected _status: StepStatus = {
+    state: "planned",
+    concise: "Planned to run",
+    verbose: "Planned to run",
+  };
 
   abstract about(): About;
   abstract run(): Promise<StepStatus>;
@@ -35,6 +39,17 @@ export abstract class BaseStep implements Step {
 
   status(): StepStatus {
     return this._status;
+  }
+
+  index(): number {
+    return this._index!;
+  }
+
+  setIndex(index: number) {
+    if (this._index !== undefined) {
+      throw Error("index has already been set");
+    }
+    this._index = index;
   }
 }
 
@@ -68,43 +83,35 @@ export class ConfirmBlocksStep extends BaseStep {
   }
 
   async run(): Promise<StepStatus> {
-    if (this.startTime === undefined) {
+    if (this._status.state === "planned") {
       this.startTime = new Date();
       this._status = {
-        Pending: {
-          concise: `Confirming blocks on ${this.evmChain}`,
-          verbose: `Waiting for ${this.blockCount} blocks on ${this.evmChain} until the transaction becomes confirmed`,
-        },
+        state: "running",
+        concise: `confirmed 0 out of ${this.blockCount} blocks`,
+        verbose: `confirmed 0 out of ${this.blockCount} blocks`,
       };
     }
-
     await sleep(1000);
-
-    const elapsedMs = new Date().getTime() - this.startTime.getTime();
-
+    const elapsedMs = new Date().getTime() - this.startTime!.getTime();
     const blocks = Math.floor(elapsedMs / this.blockTimeMs);
-
     if (blocks >= this.blockCount) {
       this._status = {
-        Done: ok({
-          concise: `Confirmed blocks on ${this.evmChain}`,
-          verbose: `Waited for ${this.blockCount} blocks on ${this.evmChain} until the transaction became confirmed`,
-        }),
+        state: "succeeded",
+        concise: `confirmed ${this.blockCount} blocks`,
+        verbose: `confirmed ${this.blockCount} blocks`,
       };
     } else {
       this._status = {
-        Pending: {
-          concise: `Confirming blocks on ${this.evmChain}`,
-          verbose: `Waiting for ${blocks} out of ${this.blockCount} blocks on ${this.evmChain} until the transaction becomes confirmed`,
-        },
+        state: "running",
+        concise: `confirmed ${blocks} out of ${this.blockCount} blocks`,
+        verbose: `confirmed ${blocks} out of ${this.blockCount} blocks`,
       };
     }
-
     return this._status;
   }
 }
 
-export class FetchFeesAndLimits extends BaseStep {
+export class FetchFeesAndCheckLimits extends BaseStep {
   constructor(
     private onesec: OneSec,
     private token: Token,
@@ -119,8 +126,8 @@ export class FetchFeesAndLimits extends BaseStep {
 
   about(): About {
     return {
-      concise: "Fetch fees and limits",
-      verbose: `Fetch fees and limits for ${this.token} from ${this.sourceChain} to ${this.destinationChain}`,
+      concise: "Fetch fees and check limits",
+      verbose: `Fetch fees and check limits for ${this.token} from ${this.sourceChain} to ${this.destinationChain}`,
     };
   }
 
@@ -130,10 +137,9 @@ export class FetchFeesAndLimits extends BaseStep {
 
   async run(): Promise<StepStatus> {
     this._status = {
-      Pending: {
-        concise: "Fetching fees and limits",
-        verbose: `Fetching fees and limits for ${this.token} from ${this.sourceChain} to ${this.destinationChain}`,
-      },
+      state: "running",
+      concise: "running",
+      verbose: "running",
     };
 
     const response = await this.onesec.get_transfer_fees();
@@ -149,30 +155,27 @@ export class FetchFeesAndLimits extends BaseStep {
 
     if (fee === undefined) {
       this._status = {
-        Done: err({
-          concise: "Bridging not supported",
-          verbose: `Bridging of ${this.token} from ${this.sourceChain} to ${this.destinationChain} is not supported`,
-        }),
+        state: "failed",
+        concise: "bridging not supported",
+        verbose: `bridging of ${this.token} from ${this.sourceChain} to ${this.destinationChain} is not supported`,
       };
       return this._status;
     }
 
     if (this.amount !== undefined && this.amount < fee.minAmount) {
       this._status = {
-        Done: err({
-          concise: "Amount is too low",
-          verbose: `Amount of tokens is too low: ${this.amount} < ${fee.minAmount}`,
-        }),
+        state: "failed",
+        concise: "amount is too low",
+        verbose: `amount of tokens is too low: ${this.amount} < ${fee.minAmount}`,
       };
       return this._status;
     }
 
     if (this.amount !== undefined && this.amount > fee.maxAmount) {
       this._status = {
-        Done: err({
-          concise: "Amount is too high",
-          verbose: `Amount of tokens is too high: ${this.amount} > ${fee.maxAmount}`,
-        }),
+        state: "failed",
+        concise: "amount is too high",
+        verbose: `amount of tokens is too high: ${this.amount} > ${fee.maxAmount}`,
       };
       return this._status;
     }
@@ -183,10 +186,9 @@ export class FetchFeesAndLimits extends BaseStep {
       this.amount > fee.available
     ) {
       this._status = {
-        Done: err({
-          concise: "Insufficient balance on destination chain",
-          verbose: `There are only ${fee.available} tokens on ${this.destinationChain}`,
-        }),
+        state: "failed",
+        concise: "insufficient balance on destination chain",
+        verbose: `there are only ${fee.available} tokens on ${this.destinationChain}`,
       };
       return this._status;
     }
@@ -200,10 +202,9 @@ export class FetchFeesAndLimits extends BaseStep {
 
     if (forwardingFee === undefined) {
       this._status = {
-        Done: err({
-          concise: "Bridging not supported",
-          verbose: `Bridging of ${this.token} from ${this.sourceChain} to ${this.destinationChain} is not supported`,
-        }),
+        state: "failed",
+        concise: "bridging not supported",
+        verbose: `bridging of ${this.token} from ${this.sourceChain} to ${this.destinationChain} is not supported`,
       };
       return this._status;
     }
@@ -220,22 +221,20 @@ export class FetchFeesAndLimits extends BaseStep {
 
     if (this.amount !== undefined) {
       this._status = {
-        Done: ok({
-          concise: "Fetched fees and limits",
-          verbose: `Fetched fees and limits for ${this.token} from ${this.sourceChain} to ${this.destinationChain}`,
-          expectedFee: new ExpectedFeeImpl(
-            expectedTransferFee,
-            expectedProtocolFeeInPercent,
-            this.decimals,
-          ),
-        }),
+        state: "succeeded",
+        concise: "done",
+        verbose: `expected fees: transfer=${format(expectedTransferFee.inUnits, this.decimals)}, protocol=${expectedProtocolFeeInPercent * 100}%`,
+        expectedFee: new ExpectedFeeImpl(
+          expectedTransferFee,
+          expectedProtocolFeeInPercent,
+          this.decimals,
+        ),
       };
     } else {
       this._status = {
-        Done: ok({
-          concise: "Fetched fees and limits",
-          verbose: `Fetched fees and limits for ${this.token} from ${this.sourceChain} to ${this.destinationChain}`,
-        }),
+        state: "succeeded",
+        concise: "done",
+        verbose: `expected fees: transfer=${format(expectedTransferFee.inUnits, this.decimals)}, protocol=${expectedProtocolFeeInPercent * 100}%`,
       };
     }
     return this._status;
@@ -324,51 +323,6 @@ export function exponentialBackoff(
   return Math.min(maxDelayMs, Math.max(currentDelayMs, 10) * 1.2);
 }
 
-// Helper functions for constructing Result::Done
-export function ok(params: {
-  concise: string;
-  verbose: string;
-  transaction?: Tx;
-  amount?: Amount;
-  link?: string;
-  expectedFee?: ExpectedFee;
-  forwardingAddress?: string;
-}): Result {
-  return {
-    Ok: {
-      about: {
-        concise: params.concise,
-        verbose: params.verbose,
-      },
-      transaction: params.transaction,
-      amount: params.amount,
-      link: params.link,
-      expectedFee: params.expectedFee,
-      forwardingAddress: params.forwardingAddress,
-    },
-  };
-}
-
-export function err(params: {
-  concise: string;
-  verbose: string;
-  transaction?: Tx;
-  link?: string;
-}): Result {
-  return {
-    Err: {
-      about: {
-        concise: params.concise,
-        verbose: params.verbose,
-      },
-      transaction: params.transaction,
-      link: params.link,
-    },
-  };
-}
-
-const TAG_ICRC = 0;
-
 // Format of the first array:
 // - bytes[0] = tag: ICRC or account identifier.
 // - bytes[1..32] = encoded principal.
@@ -391,6 +345,7 @@ export function encodeIcrcAccount(
 // - bytes[2..length+2] = the principal itself.
 // - bytes[length+2..32] = zeros.
 export function encodePrincipal(p: Principal): Uint8Array {
+  const TAG_ICRC = 0;
   const principal = p.toUint8Array();
   const array = new Uint8Array(32);
   array[0] = TAG_ICRC;
