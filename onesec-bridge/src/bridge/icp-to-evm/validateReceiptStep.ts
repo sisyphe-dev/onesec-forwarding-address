@@ -19,10 +19,10 @@ export class ValidateReceiptStep extends BaseStep {
     private oneSecActor: OneSec,
     private token: Token,
     private evmChain: EvmChain,
-    private transferStep: TransferStep,
-    private delayMs: number,
     private evmAddress: string,
     private decimals: number,
+    private transferStep: TransferStep,
+    private delayMs: number,
   ) {
     super();
   }

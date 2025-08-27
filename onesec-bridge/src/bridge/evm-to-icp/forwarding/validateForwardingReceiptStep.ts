@@ -27,8 +27,8 @@ export class ValidateForwardingReceiptStep
   constructor(
     private onesec: OneSecForwarding,
     private token: Token,
-    private icpAccount: IcrcAccount,
     private evmChain: EvmChain,
+    private icpAccount: IcrcAccount,
     private computeForwardingAddressStep: ComputeForwardingAddressStep,
     private delayMs: number,
   ) {

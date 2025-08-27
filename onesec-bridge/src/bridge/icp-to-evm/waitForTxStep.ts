@@ -26,12 +26,12 @@ export class WaitForTxStep extends BaseStep {
   constructor(
     private oneSecActor: OneSec,
     private token: Token,
+    private icpAccount: IcrcAccount,
     private evmChain: EvmChain,
     private evmAddress: string,
-    private icpAccount: IcrcAccount,
+    private decimals: number,
     private transferStep: TransferStep,
     private delayMs: number,
-    private decimals: number,
   ) {
     super();
   }

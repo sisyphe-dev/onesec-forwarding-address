@@ -19,8 +19,8 @@ export class LockStep extends BaseStep implements GetEvmTx {
     private lockerContract: Contract,
     private token: Token,
     private evmChain: EvmChain,
-    private evmAmount: bigint,
     private icpAccount: IcrcAccount,
+    private evmAmount: bigint,
     private decimals: number,
   ) {
     super();

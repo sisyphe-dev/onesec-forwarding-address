@@ -13,8 +13,8 @@ export class NotifyForwardingPaymentStep extends BaseStep {
   constructor(
     private onesec: OneSecForwarding,
     private token: Token,
-    private icpAccount: IcrcAccount,
     private evmChain: EvmChain,
+    private icpAccount: IcrcAccount,
     private computeForwardingAddressStep: ComputeForwardingAddressStep,
   ) {
     super();

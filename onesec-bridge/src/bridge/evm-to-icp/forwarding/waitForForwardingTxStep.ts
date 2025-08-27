@@ -26,8 +26,8 @@ export class WaitForForwardingTxStep extends BaseStep {
   constructor(
     private onesec: OneSecForwarding,
     private token: Token,
-    private icpAccount: IcrcAccount,
     private evmChain: EvmChain,
+    private icpAccount: IcrcAccount,
     private decimals: number,
     private computeForwardingAddressStep: ComputeForwardingAddressStep,
     private delayMs: number,

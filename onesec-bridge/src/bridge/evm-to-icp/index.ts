@@ -125,17 +125,17 @@ export class EvmToIcpBridgeBuilder {
           erc20Contract,
           this.token,
           this.evmChain,
-          this.evmAmount,
           this.icpAccount,
-          lockerAddress,
+          this.evmAmount,
           decimals,
+          lockerAddress,
         );
         const lockStep = new LockStep(
           lockerContract,
           this.token,
           this.evmChain,
-          this.evmAmount,
           this.icpAccount,
+          this.evmAmount,
           decimals,
         );
         const evmConfig = config.evm.get(this.evmChain)!;
@@ -148,9 +148,9 @@ export class EvmToIcpBridgeBuilder {
           oneSecActor,
           this.token,
           this.evmChain,
-          this.evmAddress,
-          this.evmAmount,
           this.icpAccount,
+          this.evmAmount,
+          this.evmAddress,
           lockStep,
           getIcpPollDelayMs(config, this.deployment),
         );
@@ -184,8 +184,8 @@ export class EvmToIcpBridgeBuilder {
           minterContract,
           this.token,
           this.evmChain,
-          this.evmAmount,
           this.icpAccount,
+          this.evmAmount,
           decimals,
         );
         const evmConfig = config.evm.get(this.evmChain)!;
@@ -198,9 +198,9 @@ export class EvmToIcpBridgeBuilder {
           oneSecActor,
           this.token,
           this.evmChain,
-          this.evmAddress,
-          this.evmAmount,
           this.icpAccount,
+          this.evmAmount,
+          this.evmAddress,
           burnStep,
           getIcpPollDelayMs(config, this.deployment),
         );
@@ -260,23 +260,23 @@ export class EvmToIcpBridgeBuilder {
     const computeForwardingAddressStep = new ComputeForwardingAddressStep(
       onesec,
       this.token,
-      this.icpAccount,
       this.evmChain,
+      this.icpAccount,
     );
 
     const notifyForwardingPaymentStep = new NotifyForwardingPaymentStep(
       onesec,
       this.token,
-      this.icpAccount,
       this.evmChain,
+      this.icpAccount,
       computeForwardingAddressStep,
     );
 
     const waitForForwardingTxStep = new WaitForForwardingTxStep(
       onesec,
       this.token,
-      this.icpAccount,
       this.evmChain,
+      this.icpAccount,
       decimals,
       computeForwardingAddressStep,
       getIcpPollDelayMs(config, this.deployment),
@@ -292,8 +292,8 @@ export class EvmToIcpBridgeBuilder {
     const validateForwardingReceiptStep = new ValidateForwardingReceiptStep(
       onesec,
       this.token,
-      this.icpAccount,
       this.evmChain,
+      this.icpAccount,
       computeForwardingAddressStep,
       getIcpPollDelayMs(config, this.deployment),
     );

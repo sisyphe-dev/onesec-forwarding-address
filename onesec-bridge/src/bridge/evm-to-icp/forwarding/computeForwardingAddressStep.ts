@@ -16,8 +16,8 @@ export class ComputeForwardingAddressStep extends BaseStep {
   constructor(
     private onesec: OneSecForwarding,
     private token: Token,
-    private icpAccount: IcrcAccount,
     private evmChain: EvmChain,
+    private icpAccount: IcrcAccount,
   ) {
     super();
   }

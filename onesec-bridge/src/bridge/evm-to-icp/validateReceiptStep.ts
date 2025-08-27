@@ -28,9 +28,9 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
     private oneSecActor: OneSec,
     private token: Token,
     private evmChain: EvmChain,
-    private evmAddress: string,
-    private evmAmount: bigint,
     private icpAccount: IcrcAccount,
+    private evmAmount: bigint,
+    private evmAddress: string,
     private getEvmTx: GetEvmTx,
     private delayMs: number,
   ) {

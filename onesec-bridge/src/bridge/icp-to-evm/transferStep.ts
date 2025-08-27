@@ -17,13 +17,13 @@ export class TransferStep extends BaseStep {
 
   constructor(
     private oneSecActor: OneSec,
-    private ledgerId: Principal,
     private token: Token,
     private icpAccount: IcrcAccount,
-    private icpAmount: bigint,
     private evmChain: EvmChain,
     private evmAddress: string,
+    private icpAmount: bigint,
     private decimals: number,
+    private ledgerId: Principal,
   ) {
     super();
   }

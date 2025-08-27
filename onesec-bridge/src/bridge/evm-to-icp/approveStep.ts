@@ -7,10 +7,10 @@ export class ApproveStep extends BaseStep {
     private erc20Contract: Contract,
     private token: Token,
     private evmChain: EvmChain,
-    private evmAmount: bigint,
     private icpAccount: IcrcAccount,
-    private lockerAddress: string,
+    private evmAmount: bigint,
     private decimals: number,
+    private lockerAddress: string,
   ) {
     super();
   }

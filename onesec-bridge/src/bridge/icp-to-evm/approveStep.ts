@@ -6,14 +6,14 @@ import { BaseStep, err, format, formatIcpAccount, ICP_CALL_DURATION_MS, ok } fro
 export class ApproveStep extends BaseStep {
   constructor(
     private ledgerActor: IcrcLedger,
-    private ledgerId: Principal,
-    private icpAccount: IcrcAccount,
     private token: Token,
-    private amount: bigint,
-    private evmAddress: string,
+    private icpAccount: IcrcAccount,
     private evmChain: EvmChain,
-    private oneSecId: Principal,
+    private evmAddress: string,
+    private amount: bigint,
     private decimals: number,
+    private ledgerId: Principal,
+    private oneSecId: Principal,
   ) {
     super();
   }
