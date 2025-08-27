@@ -126,6 +126,7 @@ export class EvmToIcpBridgeBuilder {
           this.token,
           this.evmChain,
           this.evmAmount,
+          this.icpAccount,
           lockerAddress,
           decimals,
         );
@@ -156,6 +157,8 @@ export class EvmToIcpBridgeBuilder {
         const waitForIcpTxStep = new WaitForIcpTx(
           oneSecActor,
           this.token,
+          this.icpAccount,
+          decimals,
           validateReceiptStep,
           getIcpPollDelayMs(config, this.deployment),
         );
@@ -204,6 +207,8 @@ export class EvmToIcpBridgeBuilder {
         const waitForIcpTxStep = new WaitForIcpTx(
           oneSecActor,
           this.token,
+          this.icpAccount,
+          decimals,
           validateReceiptStep,
           getIcpPollDelayMs(config, this.deployment),
         );
@@ -296,6 +301,8 @@ export class EvmToIcpBridgeBuilder {
     const waitForIcpTxStep = new WaitForIcpTx(
       oneSecActor,
       this.token,
+      this.icpAccount,
+      decimals,
       validateForwardingReceiptStep,
       getIcpPollDelayMs(config, this.deployment),
     );

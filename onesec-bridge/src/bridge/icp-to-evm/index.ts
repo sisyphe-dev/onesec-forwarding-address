@@ -113,13 +113,15 @@ export class IcpToEvmBridgeBuilder {
       this.icpAccount,
       this.token,
       this.amount,
+      this.evmAddress,
+      this.evmChain,
       oneSecId,
       decimals,
     );
 
     const transferStep = new TransferStep(
       oneSecActor,
-      oneSecId,
+      ledgerId,
       this.token,
       this.icpAccount,
       this.amount,
@@ -130,9 +132,13 @@ export class IcpToEvmBridgeBuilder {
 
     const waitForTxStep = new WaitForTxStep(
       oneSecActor,
+      this.token,
       this.evmChain,
+      this.evmAddress,
+      this.icpAccount,
       transferStep,
       getIcpPollDelayMs(config, this.deployment),
+      decimals,
     );
     const evmConfig = config.evm.get(this.evmChain)!;
     const confirmBlocksStep = new ConfirmBlocksStep(
@@ -142,10 +148,12 @@ export class IcpToEvmBridgeBuilder {
     );
     const validateReceiptStep = new ValidateReceiptStep(
       oneSecActor,
+      this.token,
       this.evmChain,
       transferStep,
       getIcpPollDelayMs(config, this.deployment),
       this.evmAddress,
+      decimals,
     );
 
     return new BridgingPlan([
