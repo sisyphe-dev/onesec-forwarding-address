@@ -11,6 +11,7 @@ import {
   BaseStep,
   err,
   exponentialBackoff,
+  formatIcpAccount,
   GetTransferId,
   ICP_CALL_DURATION_MS,
   ok,
@@ -20,8 +21,7 @@ import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
 
 export class ValidateForwardingReceiptStep
   extends BaseStep
-  implements GetTransferId
-{
+  implements GetTransferId {
   private transferId?: TransferId;
 
   constructor(
@@ -37,8 +37,8 @@ export class ValidateForwardingReceiptStep
 
   about(): About {
     return {
-      concise: "Validate forwarding receipt",
-      verbose: `Wait for OneSec canister to validate the forwarding transaction receipt on ${this.evmChain} and initiate the transfer to ${this.icpAccount.owner.toText()} on ICP`,
+      concise: "Validate forwarding transaction receipt",
+      verbose: `Wait for OneSec to validate the receipt of the forwarding transaction on ${this.evmChain} and initiate transfer to ${formatIcpAccount(this.icpAccount)} on ICP`,
     };
   }
 
@@ -51,27 +51,21 @@ export class ValidateForwardingReceiptStep
   }
 
   async run(): Promise<StepStatus> {
-    this._status = {
-      Pending: {
-        concise: "Validating receipt",
-        verbose: `Waiting for OneSec to validate the receipt of the ${this.evmChain} transaction`,
-      },
-    };
-
     const forwardingAddress =
       this.computeForwardingAddressStep.getForwardingAddress();
     const lastTransferId =
       this.computeForwardingAddressStep.getLastTransferId();
 
     if (forwardingAddress === undefined) {
-      this._status = {
-        Done: err({
-          concise: "Missing forwarding address",
-          verbose: "Compute forwarding address step must run before this step",
-        }),
-      };
-      return this._status;
+      throw Error("Missing forwarding address. Please compute the forwarding address before running this step.");
     }
+
+    this._status = {
+      Pending: {
+        concise: "Validating forwarding transaction receipt",
+        verbose: `Waiting for OneSec to validate the receipt of the forwarding transaction on ${this.evmChain} and initiate transfer to ${formatIcpAccount(this.icpAccount)} on ICP`,
+      },
+    };
 
     await sleep(this.delayMs);
     this.delayMs = exponentialBackoff(this.delayMs);
@@ -92,8 +86,8 @@ export class ValidateForwardingReceiptStep
       this.transferId = transferId;
       this._status = {
         Done: ok({
-          concise: "Validated receipt",
-          verbose: `Validated receipt of the ${this.evmChain} transaction`,
+          concise: "Validated forwarding transaction receipt",
+          verbose: `OneSec validated the receipt of the forwarding transaction on ${this.evmChain} and initiated transfer to ${formatIcpAccount(this.icpAccount)} on ICP: ${transferId}`,
         }),
       };
       return this._status;

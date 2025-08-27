@@ -1,10 +1,13 @@
 import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
-import type { About, EvmChain, StepStatus } from "../../types";
+import type { About, EvmChain, StepStatus, Token } from "../../types";
 import {
+  amountFromUnits,
   BaseStep,
   err,
   exponentialBackoff,
+  format,
+  formatTx,
   ICP_CALL_DURATION_MS,
   ok,
   sleep,
@@ -14,18 +17,20 @@ import { TransferStep } from "./transferStep";
 export class ValidateReceiptStep extends BaseStep {
   constructor(
     private oneSecActor: OneSec,
+    private token: Token,
     private evmChain: EvmChain,
     private transferStep: TransferStep,
     private delayMs: number,
     private evmAddress: string,
+    private decimals: number,
   ) {
     super();
   }
 
   about(): About {
     return {
-      concise: "Validate receipt",
-      verbose: `Wait for OneSec canister validate the ${this.evmChain} transaction receipt`,
+      concise: "Validate transaction receipt",
+      verbose: `Wait for OneSec to validate the receipt of the transaction on ${this.evmChain}`,
     };
   }
 
@@ -34,18 +39,19 @@ export class ValidateReceiptStep extends BaseStep {
   }
 
   async run(): Promise<StepStatus> {
-    this._status = {
-      Pending: {
-        concise: "Validating receipt",
-        verbose: `Waiting for OneSec to validate the receipt of ${this.evmChain} transaction`,
-      },
-    };
-
     const transferId = this.transferStep.getTransferId();
 
     if (transferId === undefined) {
-      throw Error("Missing transfer step");
+      throw Error("Missing transfer id. Please run the transfer step before running this step.");
     }
+
+    this._status = {
+      Pending: {
+        concise: "Validating transaction receipt",
+        verbose: `Waiting for OneSec to validate the receipt of the transaction on ${this.evmChain}`,
+      },
+    };
+
 
     await sleep(this.delayMs);
     this.delayMs = exponentialBackoff(this.delayMs);
@@ -55,8 +61,8 @@ export class ValidateReceiptStep extends BaseStep {
     if ("Err" in result) {
       this._status = {
         Done: err({
-          concise: "Validation failed",
-          verbose: `Validation failed: ${result.Err}`,
+          concise: "Failed to validate transaction receipt",
+          verbose: `OneSec failed to validate the receipt of the transaction on ${this.evmChain}: ${result.Err}`,
         }),
       };
       return this._status;
@@ -68,33 +74,21 @@ export class ValidateReceiptStep extends BaseStep {
       if ("Succeeded" in transfer.status) {
         this._status = {
           Done: ok({
-            concise: "Validated receipt",
-            verbose: `Validated receipt of the ${this.evmChain} transaction`,
+            concise: "Validated transaction receipt",
+            verbose: `OneSec validated the receipt of transaction ${formatTx(transfer.destination.tx)} on ${this.evmChain}: ${format(transfer.destination.amount, this.decimals)} ${this.token} have been transferred to ${this.evmAddress} on ${this.evmChain}`,
             transaction: transfer.destination.tx,
+            amount: amountFromUnits(transfer.destination.amount, this.decimals),
           }),
         };
       } else if ("Failed" in transfer.status) {
         this._status = {
           Done: err({
-            concise: "Validation failed",
-            verbose: `Validation failed: ${transfer.status.Failed.error}`,
+            concise: "Failed to validate transaction receipt",
+            verbose: `OneSec failed to validate the receipt of the transaction on ${this.evmChain}: ${transfer.status.Failed.error}`,
           }),
         };
-      } else if ("Refunded" in transfer.status) {
-        this._status = {
-          Done: ok({
-            concise: "Refunded tokens",
-            verbose: "Refunded tokens due to a bridging issue",
-            transaction: transfer.source.tx,
-          }),
-        };
-      } else if ("PendingRefund" in transfer.status) {
-        this._status = {
-          Pending: {
-            concise: "Refunding tokens",
-            verbose: "Refunding tokens due to a bridging issue",
-          },
-        };
+      } else if ("Refunded" in transfer.status || "PendingRefund" in transfer.status) {
+        throw Error(`Unexpected transfer status of ${transferId}: ${transfer.status}`);
       }
     }
 

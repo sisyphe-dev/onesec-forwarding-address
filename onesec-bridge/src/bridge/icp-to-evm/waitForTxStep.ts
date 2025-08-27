@@ -3,11 +3,15 @@ import {
   TraceEvent,
   type _SERVICE as OneSec,
 } from "../../generated/candid/onesec/onesec.did";
-import type { About, EvmChain, StepStatus } from "../../types";
+import type { About, EvmChain, IcrcAccount, StepStatus, Token } from "../../types";
 import {
+  amountFromUnits,
   BaseStep,
   err,
   exponentialBackoff,
+  format,
+  formatIcpAccount,
+  formatTx,
   ICP_CALL_DURATION_MS,
   ok,
   sleep,
@@ -21,17 +25,21 @@ export class WaitForTxStep extends BaseStep {
 
   constructor(
     private oneSecActor: OneSec,
+    private token: Token,
     private evmChain: EvmChain,
+    private evmAddress: string,
+    private icpAccount: IcrcAccount,
     private transferStep: TransferStep,
     private delayMs: number,
+    private decimals: number,
   ) {
     super();
   }
 
   about(): About {
     return {
-      concise: "Wait for transaction",
-      verbose: `Wait for OneSec canister to sign and submit the transaction on ${this.evmChain}`,
+      concise: `Wait for transfer on ${this.evmChain}`,
+      verbose: `Wait for OneSec to sign and submit a transaction to transfer ${this.token} to ${this.evmAddress} on ${this.evmChain}`,
     };
   }
 
@@ -44,17 +52,19 @@ export class WaitForTxStep extends BaseStep {
   }
 
   async run(): Promise<StepStatus> {
-    this._status = {
-      Pending: {
-        concise: "Waiting for transaction",
-        verbose: `Waiting for OneSec to submit a transaction on ${this.evmChain}`,
-      },
-    };
-
     const transferId = this.transferStep.getTransferId();
 
     if (transferId === undefined) {
-      throw Error("Missing transfer step");
+      throw Error("Missing transfer id. Please run the transfer step before running this step.");
+    }
+
+    if ("Planned" in this._status) {
+      this._status = {
+        Pending: {
+          concise: `Waiting for transfer on ${this.evmChain}`,
+          verbose: `Waiting for OneSec to sign and submit a transaction to transfer ${this.token} to ${this.evmAddress} on ${this.evmChain}`,
+        },
+      };
     }
 
     await sleep(this.delayMs);
@@ -65,8 +75,8 @@ export class WaitForTxStep extends BaseStep {
     if ("Err" in result) {
       this._status = {
         Done: err({
-          concise: "Transaction failed",
-          verbose: `Transaction failed: ${result.Err}`,
+          concise: `Failed to transfer on ${this.evmChain}`,
+          verbose: `OneSec failed to transfer ${this.token} to ${this.evmAddress} on ${this.evmChain}: ${result.Err}`,
         }),
       };
       return this._status;
@@ -78,31 +88,32 @@ export class WaitForTxStep extends BaseStep {
       if ("Succeeded" in transfer.status) {
         this._status = {
           Done: ok({
-            concise: "Executed transaction",
-            verbose: `Executed transaction on ${this.evmChain}`,
+            concise: `Executed transfer on ${this.evmChain}`,
+            verbose: `OneSec executed transaction to transfer ${format(transfer.destination.amount, this.decimals)} ${this.token} to ${this.evmAddress} on ${this.evmChain}: ${formatTx(transfer.destination.tx)}`,
             transaction: transfer.destination.tx,
+            amount: amountFromUnits(transfer.destination.amount, this.decimals),
           }),
         };
       } else if ("Failed" in transfer.status) {
         this._status = {
           Done: err({
-            concise: "Transaction failed",
-            verbose: `Transaction failed: ${transfer.status.Failed.error}`,
+            concise: `Failed to transfer on ${this.evmChain}`,
+            verbose: `OneSec failed to transfer ${this.token} to ${this.evmAddress} on ${this.evmChain}: ${transfer.status.Failed.error}`,
           }),
         };
       } else if ("Refunded" in transfer.status) {
         this._status = {
           Done: ok({
-            concise: "Refunded tokens",
-            verbose: "Refunded tokens due to a bridging issue",
+            concise: "Refunded tokens on ICP",
+            verbose: `OneSec refunded ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP due to insufficient tokens on ${this.evmChain}: ${formatTx(transfer.source.tx)}`,
             transaction: transfer.source.tx,
           }),
         };
       } else if ("PendingRefund" in transfer.status) {
         this._status = {
           Pending: {
-            concise: "Refunding tokens",
-            verbose: "Refunding tokens due to a bridging issue",
+            concise: "Refunding tokens on ICP",
+            verbose: `OneSec is refunding ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP due to insufficient tokens on ${this.evmChain}: ${formatTx(transfer.source.tx)}`,
           },
         };
       } else if ("PendingDestinationTx" in transfer.status) {
@@ -116,9 +127,12 @@ export class WaitForTxStep extends BaseStep {
               const ts = traceEventToTxStatus(event);
               if (order(this.txStatus) < order(ts)) {
                 this.txStatus = ts;
-                this._status = {
-                  Pending: txStatusDetails(ts, this.evmChain),
-                };
+                const details = txStatusDetails(ts, this.token, this.evmChain, this.evmAddress, transfer.destination.amount, this.decimals);
+                if (details) {
+                  this._status = {
+                    Pending: details,
+                  }
+                }
               }
             }
           }
@@ -159,27 +173,21 @@ function traceEventToTxStatus(event: TraceEvent): TxStatus {
   return "unknown";
 }
 
-function txStatusDetails(ts: TxStatus, evmChain: EvmChain): About {
+function txStatusDetails(ts: TxStatus, token: Token, evmChain: EvmChain, evmAddress: string, evmAmount: bigint, decimals: number): About | undefined {
   switch (ts) {
     case "unknown":
-      return {
-        concise: "Waiting for transaction",
-        verbose: `Waiting for OneSec to submit a transaction on ${evmChain}`,
-      };
+      return undefined;
     case "signed":
       return {
-        concise: "Signing transaction",
-        verbose: `Signing transaction on ${evmChain}`,
+        concise: `Signing transaction for ${evmChain}`,
+        verbose: `OneSec is signing a transaction to transfer ${format(evmAmount, decimals)} ${token} to ${evmAddress} on ${evmChain}`,
       };
     case "sent":
       return {
-        concise: "Sending transaction",
-        verbose: `Sending transaction on ${evmChain}`,
+        concise: `Sending transaction to ${evmChain}`,
+        verbose: `OneSec is sending a transaction to transfer ${format(evmAmount, decimals)} ${token} to ${evmAddress} on ${evmChain}`,
       };
     case "executed":
-      return {
-        concise: "Executed transaction",
-        verbose: `Executed transaction on ${evmChain}`,
-      };
+      return undefined;
   }
 }

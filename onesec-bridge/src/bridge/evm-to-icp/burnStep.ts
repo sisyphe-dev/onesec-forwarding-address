@@ -1,11 +1,12 @@
 import { Contract } from "ethers";
-import type { About, EvmTx, IcrcAccount, StepStatus, Token } from "../../types";
+import type { About, EvmChain, EvmTx, IcrcAccount, StepStatus, Token } from "../../types";
 import {
   BaseStep,
   encodeIcrcAccount,
   err,
   EVM_CALL_DURATION_MS,
   format,
+  formatIcpAccount,
   GetEvmTx,
   ok,
 } from "../shared";
@@ -17,6 +18,7 @@ export class BurnStep extends BaseStep implements GetEvmTx {
   constructor(
     private minterContract: Contract,
     private token: Token,
+    private evmChain: EvmChain,
     private evmAmount: bigint,
     private icpAccount: IcrcAccount,
     private decimals: number,
@@ -29,8 +31,8 @@ export class BurnStep extends BaseStep implements GetEvmTx {
 
   about(): About {
     return {
-      concise: `Burn ${this.token}`,
-      verbose: `Burn ${format(this.evmAmount, this.decimals)} ${this.token} tokens and send them to ${this.icpAccount.owner.toText()} on ICP`,
+      concise: `Transfer ${this.token}`,
+      verbose: `Transfer ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP`,
     };
   }
 
@@ -42,7 +44,7 @@ export class BurnStep extends BaseStep implements GetEvmTx {
     this._status = {
       Pending: {
         concise: `Transferring ${this.token}`,
-        verbose: `Transferring ${this.token} to OneSec`,
+        verbose: `Transferring ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP`,
       },
     };
 
@@ -51,23 +53,23 @@ export class BurnStep extends BaseStep implements GetEvmTx {
       : await this.minterContract.burn1(this.evmAmount, this.data1);
     const burnReceipt = await burnTx.wait();
 
-    if (burnReceipt.status !== 1) {
+    if (burnReceipt.status === 1) {
       this._status = {
-        Done: err({
-          concise: `Failed to transfer ${this.token}`,
-          verbose: `Failed to transfer ${this.token} to OneSec: transaction ${burnReceipt.hash} failed`,
+        Done: ok({
+          concise: `Transferred ${this.token}: ${burnReceipt.hash}`,
+          verbose: `Transferred ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP: transaction hash ${burnReceipt.hash}`,
+          transaction: { Evm: { hash: burnReceipt.hash } },
         }),
       };
-      return this._status;
+    } else {
+      this._status = {
+        Done: err({
+          concise: `Failed to transfer ${this.token}: ${burnReceipt.hash}`,
+          verbose: `Transaction to transfer ${this.token} has been reverted: ${burnReceipt.hash}`,
+        }),
+      };
     }
 
-    this._status = {
-      Done: ok({
-        concise: `Transferred ${this.token}`,
-        verbose: `Transferred ${this.token} to OneSec`,
-        transaction: { Evm: { hash: burnReceipt.hash } },
-      }),
-    };
     return this._status;
   }
 

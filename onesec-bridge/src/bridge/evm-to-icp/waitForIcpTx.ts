@@ -1,10 +1,13 @@
 import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
-import type { About, StepStatus, Token } from "../../types";
+import type { About, IcrcAccount, StepStatus, Token } from "../../types";
 import {
+  amountFromUnits,
   BaseStep,
   err,
   exponentialBackoff,
+  format,
+  formatIcpAccount,
   GetTransferId,
   ICP_CALL_DURATION_MS,
   ok,
@@ -15,6 +18,8 @@ export class WaitForIcpTx extends BaseStep {
   constructor(
     private oneSecActor: OneSec,
     private token: Token,
+    private icpAccount: IcrcAccount,
+    private decimals: number,
     private getTransferId: GetTransferId,
     private delayMs: number,
   ) {
@@ -23,8 +28,8 @@ export class WaitForIcpTx extends BaseStep {
 
   about(): About {
     return {
-      concise: "Wait for ledger transaction",
-      verbose: `Wait for OneSec canister to submit the transaction to the ${this.token} ledger canister`,
+      concise: "Wait for transfer",
+      verbose: `Wait for OneSec to complete transfer of ${this.token} to ${formatIcpAccount(this.icpAccount)}`,
     };
   }
 
@@ -33,18 +38,18 @@ export class WaitForIcpTx extends BaseStep {
   }
 
   async run(): Promise<StepStatus> {
-    this._status = {
-      Pending: {
-        concise: "Waiting for ledger transaction",
-        verbose: "Waiting for OneSec to call the ledger",
-      },
-    };
-
     const transferId = this.getTransferId.getTransferId();
 
     if (transferId === undefined) {
-      throw Error("Missing receipt validation step");
+      throw Error("Missing transfer id. Please run the receipt validation step before running this step.");
     }
+
+    this._status = {
+      Pending: {
+        concise: "Waiting for transfer",
+        verbose: `Waiting for OneSec to complete transfer of ${this.token} to ${formatIcpAccount(this.icpAccount)}`,
+      },
+    };
 
     await sleep(this.delayMs);
     this.delayMs = exponentialBackoff(this.delayMs);
@@ -54,8 +59,8 @@ export class WaitForIcpTx extends BaseStep {
     if ("Err" in result) {
       this._status = {
         Done: err({
-          concise: "Transaction failed",
-          verbose: `Ledger transaction failed: ${result.Err}`,
+          concise: "Transfer failed",
+          verbose: `OneSec failed to transfer ${this.token} to ${formatIcpAccount(this.icpAccount)}: ${result.Err}`,
         }),
       };
       return this._status;
@@ -67,36 +72,21 @@ export class WaitForIcpTx extends BaseStep {
       if ("Succeeded" in transfer.status) {
         this._status = {
           Done: ok({
-            concise: "Executed transaction",
-            verbose: "Executed ledger transaction",
+            concise: "Transferred tokens",
+            verbose: `OneSec transferred ${format(transfer.destination.amount, this.decimals)} ${this.token} to ${formatIcpAccount(this.icpAccount)}`,
             transaction: transfer.destination.tx,
+            amount: amountFromUnits(transfer.destination.amount, this.decimals),
           }),
         };
-        return this._status;
       } else if ("Failed" in transfer.status) {
         this._status = {
           Done: err({
-            concise: "Transaction failed",
-            verbose: `Ledger transaction failed: ${transfer.status.Failed.error}`,
+            concise: "Transfer failed",
+            verbose: `OneSec failed to transfer ${this.token} to ${formatIcpAccount(this.icpAccount)}: ${transfer.status.Failed.error}`,
           }),
         };
-        return this._status;
-      } else if ("Refunded" in transfer.status) {
-        this._status = {
-          Done: ok({
-            concise: "Refunded tokens",
-            verbose: "Refunded tokens due to a bridging issue",
-            transaction: transfer.source.tx,
-          }),
-        };
-        return this._status;
-      } else if ("PendingRefund" in transfer.status) {
-        this._status = {
-          Pending: {
-            concise: "Refunding tokens",
-            verbose: "Refunding tokens due to a bridging issue",
-          },
-        };
+      } else if ("Refunded" in transfer.status || "PendingRefund" in transfer.status) {
+        throw Error(`Unexpected transfer status: ${transfer.status}`);
       }
     }
 

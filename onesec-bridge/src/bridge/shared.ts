@@ -247,7 +247,7 @@ class ExpectedFeeImpl implements ExpectedFee {
     private _transferFee: Amount,
     private _protocolFeeInPercent: number,
     private decimals: number,
-  ) {}
+  ) { }
 
   transferFee(): Amount {
     return this._transferFee;
@@ -332,6 +332,7 @@ export function ok(params: {
   amount?: Amount;
   link?: string;
   expectedFee?: ExpectedFee;
+  forwardingAddress?: string;
 }): Result {
   return {
     Ok: {
@@ -343,6 +344,7 @@ export function ok(params: {
       amount: params.amount,
       link: params.link,
       expectedFee: params.expectedFee,
+      forwardingAddress: params.forwardingAddress,
     },
   };
 }
@@ -466,4 +468,27 @@ export function format(amount: bigint, decimals: number): string {
     --end;
   }
   return str.slice(0, end);
+}
+
+export function formatIcpAccount(account: IcrcAccount): string {
+  if (account.subaccount && !account.subaccount.every(x => x === 0)) {
+    const subaccount = [...account.subaccount]
+      .map(byte => byte.toString(16).padStart(2, "0"))
+      .join("");
+    return `${account.owner.toText} / ${subaccount}`
+  }
+  return account.owner.toText();
+}
+
+export function formatTx(tx?: Tx): string {
+  if (tx === undefined) {
+    return "";
+  }
+  if ("Icp" in tx) {
+    return `${tx.Icp.ledger.toText()} / ${tx.Icp.blockIndex}`;
+  } else if ("Evm" in tx) {
+    return tx.Evm.hash;
+  } else {
+    return "";
+  }
 }

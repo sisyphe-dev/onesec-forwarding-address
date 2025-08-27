@@ -45,7 +45,7 @@ export class EvmToIcpBridgeBuilder {
   constructor(
     private evmChain: EvmChain,
     private token: Token,
-  ) {}
+  ) { }
 
   target(deployment: Deployment): EvmToIcpBridgeBuilder {
     this.deployment = deployment;
@@ -132,6 +132,7 @@ export class EvmToIcpBridgeBuilder {
         const lockStep = new LockStep(
           lockerContract,
           this.token,
+          this.evmChain,
           this.evmAmount,
           this.icpAccount,
           decimals,
@@ -179,6 +180,7 @@ export class EvmToIcpBridgeBuilder {
         const burnStep = new BurnStep(
           minterContract,
           this.token,
+          this.evmChain,
           this.evmAmount,
           this.icpAccount,
           decimals,
@@ -270,6 +272,7 @@ export class EvmToIcpBridgeBuilder {
       this.token,
       this.icpAccount,
       this.evmChain,
+      decimals,
       computeForwardingAddressStep,
       getIcpPollDelayMs(config, this.deployment),
     );

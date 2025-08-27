@@ -13,6 +13,7 @@ import {
   BaseStep,
   err,
   exponentialBackoff,
+  formatIcpAccount,
   GetEvmTx,
   GetTransferId,
   ICP_CALL_DURATION_MS,
@@ -38,8 +39,8 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
 
   about(): About {
     return {
-      concise: "Validate receipt",
-      verbose: `Wait for OneSec canister to validate the ${this.evmChain} transaction receipt`,
+      concise: "Validate transaction receipt",
+      verbose: `Wait for OneSec to validate the receipt of the transaction on ${this.evmChain} and initiate transfer to ${formatIcpAccount(this.icpAccount)} on ICP`,
     };
   }
 
@@ -52,18 +53,18 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
   }
 
   async run(): Promise<StepStatus> {
-    this._status = {
-      Pending: {
-        concise: "Validating receipt",
-        verbose: `Waiting for OneSec to validate the receipt of the ${this.evmChain} transaction`,
-      },
-    };
-
     const evmTx = this.getEvmTx.getEvmTx();
 
     if (evmTx === undefined) {
-      throw Error("Missing EVM transaction");
+      throw Error("Missing the EVM transaction. Please run the transfer step before running this step.");
     }
+
+    this._status = {
+      Pending: {
+        concise: "Validate transaction receipt",
+        verbose: `Waiting for OneSec to validate the receipt of transaction ${evmTx.hash} on ${this.evmChain} and initiate transfer to ${formatIcpAccount(this.icpAccount)} on ICP`,
+      },
+    };
 
     await sleep(this.delayMs);
     this.delayMs = exponentialBackoff(this.delayMs);
@@ -84,23 +85,16 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
       this.transferId = { id: response.Accepted.id };
       this._status = {
         Done: ok({
-          concise: "Validated receipt",
-          verbose: `Validated receipt of the ${this.evmChain} transaction`,
+          concise: "Validated transaction receipt",
+          verbose: `OneSec validated the receipt of transaction ${evmTx.hash} on ${this.evmChain} and initiated transfer to ${formatIcpAccount(this.icpAccount)} on ICP: ${this.transferId}`,
         }),
       };
     } else if ("Failed" in response) {
       this._status = {
         Done: err({
-          concise: "Failed to validate",
-          verbose: `Failed to validate receipt: ${response.Failed.error}`,
+          concise: "Failed to validate transaction receipt",
+          verbose: `OneSec failed to validate the receipt of transaction ${evmTx.hash} on ${this.evmChain}: ${response.Failed.error}`,
         }),
-      };
-    } else {
-      this._status = {
-        Pending: {
-          concise: "Validating receipt",
-          verbose: `Waiting for OneSec to validate the receipt of the ${this.evmChain} transaction`,
-        },
       };
     }
 

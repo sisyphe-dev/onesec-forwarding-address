@@ -272,15 +272,16 @@ export interface Details {
   transaction?: Tx;
   link?: string;
   expectedFee?: ExpectedFee;
+  forwardingAddress?: string;
 }
 
 export type Result =
   | {
-      Ok: Details;
-    }
+    Ok: Details;
+  }
   | {
-      Err: Details;
-    };
+    Err: Details;
+  };
 
 export type StepStatus =
   | { Planned: null }

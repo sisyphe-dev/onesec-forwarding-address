@@ -17,7 +17,7 @@ export class TransferStep extends BaseStep {
 
   constructor(
     private oneSecActor: OneSec,
-    private oneSecId: Principal,
+    private ledgerId: Principal,
     private token: Token,
     private icpAccount: IcrcAccount,
     private icpAmount: bigint,
@@ -30,8 +30,8 @@ export class TransferStep extends BaseStep {
 
   about(): About {
     return {
-      concise: `Transfer ${this.token}`,
-      verbose: `Transfer ${format(this.icpAmount, this.decimals)} ${this.token} from ${this.icpAccount.owner.toText()} to OneSec canister ${this.oneSecId.toText()} for bridging to ${this.evmAddress} on ${this.evmChain}`,
+      concise: `Transfer ${this.token} on ICP`,
+      verbose: `Transfer ${format(this.icpAmount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}`,
     };
   }
 
@@ -46,8 +46,8 @@ export class TransferStep extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        concise: `Transferring ${this.token}`,
-        verbose: `Transferring ${this.token} to OneSec`,
+        concise: `Transferring ${this.token} on ICP`,
+        verbose: `Transferring ${format(this.icpAmount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}`,
       },
     };
 
@@ -65,20 +65,20 @@ export class TransferStep extends BaseStep {
     if ("Failed" in response) {
       this._status = {
         Done: err({
-          concise: `Failed to transfer ${this.token}`,
-          verbose: `Failed to transfer ${this.token}: ${response.Failed.error}`,
+          concise: `Failed to transfer ${this.token} on ICP`,
+          verbose: `Failed to transfer ${format(this.icpAmount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}: ${response.Failed.error}`,
         }),
       };
     } else if ("Accepted" in response) {
       this.transferId = response.Accepted;
       this._status = {
         Done: ok({
-          concise: `Transferred ${this.token}`,
-          verbose: `Transferred ${this.token} to OneSec`,
+          concise: `Transferred ${this.token} on ICP`,
+          verbose: `Transferred ${format(this.icpAmount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}: ${response.Accepted.id}`,
           transaction: {
             Icp: {
               blockIndex: response.Accepted.id,
-              ledger: this.oneSecId,
+              ledger: this.ledgerId,
             },
           },
         }),

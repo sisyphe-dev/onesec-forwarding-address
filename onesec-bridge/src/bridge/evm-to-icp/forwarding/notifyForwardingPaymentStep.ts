@@ -32,13 +32,6 @@ export class NotifyForwardingPaymentStep extends BaseStep {
   }
 
   async run(): Promise<StepStatus> {
-    this._status = {
-      Pending: {
-        concise: "Notifying forwarding payment",
-        verbose: "Notifying forwarding payment",
-      },
-    };
-
     const forwardingAddress =
       this.computeForwardingAddressStep.getForwardingAddress();
 
@@ -47,6 +40,14 @@ export class NotifyForwardingPaymentStep extends BaseStep {
         "Missing forwarding address: the compute forwarding address step did not run",
       );
     }
+
+    this._status = {
+      Pending: {
+        concise: "Notifying forwarding payment",
+        verbose: `Notifying OneSec canister about ${this.token} payment to the forwarding address ${forwardingAddress} on ${this.evmChain}`,
+      },
+    };
+
 
     await this.onesec.forwardEvmToIcp(
       this.token,
@@ -58,7 +59,7 @@ export class NotifyForwardingPaymentStep extends BaseStep {
     this._status = {
       Done: ok({
         concise: "Notified forwarding payment",
-        verbose: "Notified forwarding payment",
+        verbose: `Notified OneSec canister about ${this.token} payment to the forwarding address ${forwardingAddress} on ${this.evmChain}`,
       }),
     };
 

@@ -12,6 +12,7 @@ import {
   BaseStep,
   err,
   exponentialBackoff,
+  format,
   ICP_CALL_DURATION_MS,
   ok,
   sleep,
@@ -27,6 +28,7 @@ export class WaitForForwardingTxStep extends BaseStep {
     private token: Token,
     private icpAccount: IcrcAccount,
     private evmChain: EvmChain,
+    private decimals: number,
     private computeForwardingAddressStep: ComputeForwardingAddressStep,
     private delayMs: number,
   ) {
@@ -36,7 +38,7 @@ export class WaitForForwardingTxStep extends BaseStep {
   about(): About {
     return {
       concise: "Wait for forwarding transaction",
-      verbose: `Wait for OneSec to detect ${this.token} payment to the forwarding address and move tokens to the bridge on ${this.evmChain}`,
+      verbose: `Wait for OneSec to detect ${this.token} payment to the forwarding address and submit a forwarding transaction on ${this.evmChain}`,
     };
   }
 
@@ -53,28 +55,23 @@ export class WaitForForwardingTxStep extends BaseStep {
   }
 
   async run(): Promise<StepStatus> {
-    this._status = {
-      Pending: {
-        concise: "Waiting for forwarding transaction",
-        verbose:
-          "Waiting for transaction that moves tokens from the forwarding address to the bridge",
-      },
-    };
-
     const forwardingAddress =
       this.computeForwardingAddressStep.getForwardingAddress();
     const lastTransferId =
       this.computeForwardingAddressStep.getLastTransferId();
 
     if (forwardingAddress === undefined) {
-      this._status = {
-        Done: err({
-          concise: "Missing forwarding address",
-          verbose: "Compute forwarding address step must run before this step",
-        }),
-      };
-      return this._status;
+      throw Error("Missing forwarding address. Please compute the forwarding address before running this step.");
     }
+
+    this._status = {
+      Pending: {
+        concise: "Waiting for forwarding transaction",
+        verbose: `Waiting for OneSec to detect ${this.token} payment to the forwarding address ${forwardingAddress} and submit a forwarding transaction on ${this.evmChain}`,
+      },
+    };
+
+
 
     await sleep(this.delayMs);
     this.delayMs = exponentialBackoff(this.delayMs);
@@ -96,8 +93,8 @@ export class WaitForForwardingTxStep extends BaseStep {
       this.transferId = transferId;
       this._status = {
         Done: ok({
-          concise: "Forwarded tokens to bridge",
-          verbose: "Forwarded tokens to bridge",
+          concise: "Submitted forwarding transaction",
+          verbose: `OneSec submitted a forwarding transaction on ${this.evmChain}`,
         }),
       };
       return this._status;
@@ -108,23 +105,22 @@ export class WaitForForwardingTxStep extends BaseStep {
         this.forwardingTx = status.Forwarded;
         this._status = {
           Done: ok({
-            concise: "Forwarded tokens to bridge",
-            verbose: "Forwarded tokens to bridge",
+            concise: "Submitted forwarding transaction",
+            verbose: `OneSec submitted a forwarding transaction on ${this.evmChain}`,
           }),
         };
       } else if ("CheckingBalance" in status) {
         this._status = {
           Pending: {
-            concise: "Checking balance of the forwarding address",
-            verbose: "OneSec is checking the balance of the forwarding address",
+            concise: "Checking balance",
+            verbose: `OneSec is checking the balance of the forwarding address ${forwardingAddress} on ${this.evmChain}`,
           },
         };
       } else if ("Forwarding" in status) {
         this._status = {
           Pending: {
             concise: "Submitting forwarding transaction",
-            verbose:
-              "OneSec is moving tokens from the forwarding address to the bridge",
+            verbose: `OneSec is signing and submitting a forwarding transaction on ${this.evmChain}`,
           },
         };
       } else if ("LowBalance" in status) {
@@ -132,15 +128,14 @@ export class WaitForForwardingTxStep extends BaseStep {
           this._status = {
             Done: err({
               concise: "Balance is too low",
-              verbose: `Balance of the forwarding address is too low: ${status.LowBalance.balance}, required at least ${status.LowBalance.minAmount}`,
+              verbose: `The balance of the forwarding address ${forwardingAddress} is too low: ${format(status.LowBalance.balance, this.decimals)} ${this.token}. Please ask the user to send at least ${format(status.LowBalance.minAmount, this.decimals)} ${this.token}`,
             }),
           };
         } else {
           this._status = {
             Pending: {
-              concise: "Checking balance of the forwarding address",
-              verbose:
-                "OneSec is checking the balance of the forwarding address",
+              concise: "Checking balance",
+              verbose: `OneSec is checking the balance of the forwarding address ${forwardingAddress} on ${this.evmChain}`,
             },
           };
         }
