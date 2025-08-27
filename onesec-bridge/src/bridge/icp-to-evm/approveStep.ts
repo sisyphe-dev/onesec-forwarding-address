@@ -1,7 +1,13 @@
 import { Principal } from "@dfinity/principal";
-import { type _SERVICE as IcrcLedger } from "../../generated/candid/icrc_ledger/icrc_ledger.did";
-import type { About, EvmChain, IcrcAccount, StepStatus, Token } from "../../types";
-import { BaseStep, err, format, formatIcpAccount, ICP_CALL_DURATION_MS, ok } from "../shared";
+import { ApproveError, type _SERVICE as IcrcLedger } from "../../generated/candid/icrc_ledger/icrc_ledger.did";
+import type {
+  About,
+  EvmChain,
+  IcrcAccount,
+  StepStatus,
+  Token,
+} from "../../types";
+import { BaseStep, err, format, ICP_CALL_DURATION_MS, ok } from "../shared";
 
 export class ApproveStep extends BaseStep {
   constructor(
@@ -20,7 +26,7 @@ export class ApproveStep extends BaseStep {
 
   about(): About {
     return {
-      concise: "Approve transfer on ICP",
+      concise: `Approve transfer on ICP`,
       verbose: `Approve transfer of ${format(this.amount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}`,
     };
   }
@@ -32,7 +38,7 @@ export class ApproveStep extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        concise: "Approving transfer on ICP",
+        concise: `Approving transfer on ICP`,
         verbose: `Approving transfer of ${format(this.amount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}`,
       },
     };
@@ -42,7 +48,9 @@ export class ApproveStep extends BaseStep {
       spender: { owner: this.oneSecId, subaccount: [] },
       fee: [],
       memo: [],
-      from_subaccount: this.icpAccount.subaccount ? [this.icpAccount.subaccount] : [],
+      from_subaccount: this.icpAccount.subaccount
+        ? [this.icpAccount.subaccount]
+        : [],
       created_at_time: [],
       expected_allowance: [],
       expires_at: [],
@@ -51,14 +59,14 @@ export class ApproveStep extends BaseStep {
     if ("Err" in approvalResult) {
       this._status = {
         Done: err({
-          concise: "Failed to approve transfer on ICP",
-          verbose: `Failed to approve transfer of ${format(this.amount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}: ${JSON.stringify(approvalResult.Err)}`,
+          concise: `Failed to approve transfer on ICP`,
+          verbose: `Failed to approve transfer of ${format(this.amount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}: ${formatError(approvalResult.Err)}`,
         }),
       };
     } else {
       this._status = {
         Done: ok({
-          concise: "Approved transfer on ICP",
+          concise: `Approved transfer on ICP`,
           verbose: `Approved transfer of ${format(this.amount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}: ${approvalResult.Ok}`,
           transaction: {
             Icp: {
@@ -72,4 +80,11 @@ export class ApproveStep extends BaseStep {
 
     return this._status;
   }
+}
+
+function formatError(err: ApproveError): string {
+  const str = JSON.stringify(err, (_, value) =>
+    typeof value === "bigint" ? value.toString() : value
+  );
+  return str;
 }

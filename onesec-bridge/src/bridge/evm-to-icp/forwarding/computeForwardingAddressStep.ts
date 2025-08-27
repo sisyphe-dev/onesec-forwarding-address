@@ -7,7 +7,12 @@ import type {
   Token,
   TransferId,
 } from "../../../types";
-import { BaseStep, formatIcpAccount, ICP_CALL_DURATION_MS, ok } from "../../shared";
+import {
+  BaseStep,
+  formatIcpAccount,
+  ICP_CALL_DURATION_MS,
+  ok,
+} from "../../shared";
 
 export class ComputeForwardingAddressStep extends BaseStep {
   private lastTransferId?: TransferId;
@@ -24,8 +29,8 @@ export class ComputeForwardingAddressStep extends BaseStep {
 
   about(): About {
     return {
-      concise: `Compute forwarding address`,
-      verbose: `Compute a forwarding address on ${this.evmChain} for bridging ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP`,
+      concise: `Compute forwarding address on ${this.evmChain}`,
+      verbose: `Compute the forwarding address on ${this.evmChain} for bridging ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP`,
     };
   }
 
@@ -44,8 +49,8 @@ export class ComputeForwardingAddressStep extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        concise: `Computing forwarding address`,
-        verbose: `Computing a forwarding address on ${this.evmChain} for bridging ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP`,
+        concise: `Computing forwarding address on ${this.evmChain}`,
+        verbose: `Computing the forwarding address on ${this.evmChain} for bridging ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP`,
       },
     };
 
@@ -60,12 +65,10 @@ export class ComputeForwardingAddressStep extends BaseStep {
     this.lastTransferId = response.done;
     this._status = {
       Done: ok({
-        concise: `Computed forwarding address: ${this.forwardingAddress}`,
+        concise: `Computed forwarding address on ${this.evmChain}`,
         verbose: `The user can now send ${this.token} to ${this.forwardingAddress} on ${this.evmChain} to bridge them to ${formatIcpAccount(this.icpAccount)} on ICP`,
       }),
     };
     return this._status;
   }
 }
-
-

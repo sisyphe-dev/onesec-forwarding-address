@@ -3,7 +3,13 @@ import {
   TraceEvent,
   type _SERVICE as OneSec,
 } from "../../generated/candid/onesec/onesec.did";
-import type { About, EvmChain, IcrcAccount, StepStatus, Token } from "../../types";
+import type {
+  About,
+  EvmChain,
+  IcrcAccount,
+  StepStatus,
+  Token,
+} from "../../types";
 import {
   amountFromUnits,
   BaseStep,
@@ -38,8 +44,8 @@ export class WaitForTxStep extends BaseStep {
 
   about(): About {
     return {
-      concise: `Wait for transfer on ${this.evmChain}`,
-      verbose: `Wait for OneSec to sign and submit a transaction to transfer ${this.token} to ${this.evmAddress} on ${this.evmChain}`,
+      concise: `Wait for transaction on ${this.evmChain}`,
+      verbose: `Wait for OneSec to sign and submit a transaction to send ${this.token} to ${this.evmAddress} on ${this.evmChain}`,
     };
   }
 
@@ -55,14 +61,16 @@ export class WaitForTxStep extends BaseStep {
     const transferId = this.transferStep.getTransferId();
 
     if (transferId === undefined) {
-      throw Error("Missing transfer id. Please run the transfer step before running this step.");
+      throw Error(
+        "Missing transfer id. Please run the transfer step before running this step.",
+      );
     }
 
     if ("Planned" in this._status) {
       this._status = {
         Pending: {
-          concise: `Waiting for transfer on ${this.evmChain}`,
-          verbose: `Waiting for OneSec to sign and submit a transaction to transfer ${this.token} to ${this.evmAddress} on ${this.evmChain}`,
+          concise: `Waiting for transaction on ${this.evmChain}`,
+          verbose: `Waiting for OneSec to sign and submit a transaction to send ${this.token} to ${this.evmAddress} on ${this.evmChain}`,
         },
       };
     }
@@ -73,13 +81,7 @@ export class WaitForTxStep extends BaseStep {
     const result = await this.oneSecActor.get_transfer(transferId);
 
     if ("Err" in result) {
-      this._status = {
-        Done: err({
-          concise: `Failed to transfer on ${this.evmChain}`,
-          verbose: `OneSec failed to transfer ${this.token} to ${this.evmAddress} on ${this.evmChain}: ${result.Err}`,
-        }),
-      };
-      return this._status;
+      throw Error(`Failed to request the status of transfer ${transferId}`);
     }
 
     const transfer = fromCandid.transfer(result.Ok);
@@ -88,8 +90,8 @@ export class WaitForTxStep extends BaseStep {
       if ("Succeeded" in transfer.status) {
         this._status = {
           Done: ok({
-            concise: `Executed transfer on ${this.evmChain}`,
-            verbose: `OneSec executed transaction to transfer ${format(transfer.destination.amount, this.decimals)} ${this.token} to ${this.evmAddress} on ${this.evmChain}: ${formatTx(transfer.destination.tx)}`,
+            concise: `Executed transaction on ${this.evmChain}`,
+            verbose: `OneSec executed a transaction to send ${format(transfer.destination.amount, this.decimals)} ${this.token} to ${this.evmAddress} on ${this.evmChain}: ${formatTx(transfer.destination.tx)}`,
             transaction: transfer.destination.tx,
             amount: amountFromUnits(transfer.destination.amount, this.decimals),
           }),
@@ -97,8 +99,8 @@ export class WaitForTxStep extends BaseStep {
       } else if ("Failed" in transfer.status) {
         this._status = {
           Done: err({
-            concise: `Failed to transfer on ${this.evmChain}`,
-            verbose: `OneSec failed to transfer ${this.token} to ${this.evmAddress} on ${this.evmChain}: ${transfer.status.Failed.error}`,
+            concise: `Transaction failed on ${this.evmChain}`,
+            verbose: `OneSec failed to send ${this.token} to ${this.evmAddress} on ${this.evmChain}: ${transfer.status.Failed.error}`,
           }),
         };
       } else if ("Refunded" in transfer.status) {
@@ -127,11 +129,18 @@ export class WaitForTxStep extends BaseStep {
               const ts = traceEventToTxStatus(event);
               if (order(this.txStatus) < order(ts)) {
                 this.txStatus = ts;
-                const details = txStatusDetails(ts, this.token, this.evmChain, this.evmAddress, transfer.destination.amount, this.decimals);
+                const details = txStatusDetails(
+                  ts,
+                  this.token,
+                  this.evmChain,
+                  this.evmAddress,
+                  transfer.destination.amount,
+                  this.decimals,
+                );
                 if (details) {
                   this._status = {
                     Pending: details,
-                  }
+                  };
                 }
               }
             }
@@ -173,7 +182,14 @@ function traceEventToTxStatus(event: TraceEvent): TxStatus {
   return "unknown";
 }
 
-function txStatusDetails(ts: TxStatus, token: Token, evmChain: EvmChain, evmAddress: string, evmAmount: bigint, decimals: number): About | undefined {
+function txStatusDetails(
+  ts: TxStatus,
+  token: Token,
+  evmChain: EvmChain,
+  evmAddress: string,
+  evmAmount: bigint,
+  decimals: number,
+): About | undefined {
   switch (ts) {
     case "unknown":
       return undefined;

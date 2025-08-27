@@ -1,5 +1,12 @@
 import { Contract } from "ethers";
-import type { About, EvmChain, EvmTx, IcrcAccount, StepStatus, Token } from "../../types";
+import type {
+  About,
+  EvmChain,
+  EvmTx,
+  IcrcAccount,
+  StepStatus,
+  Token,
+} from "../../types";
 import {
   BaseStep,
   encodeIcrcAccount,
@@ -31,8 +38,8 @@ export class LockStep extends BaseStep implements GetEvmTx {
 
   about(): About {
     return {
-      concise: `Transfer ${this.token}`,
-      verbose: `Transfer ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP`,
+      concise: `Submit transaction on ${this.evmChain}`,
+      verbose: `Submit transaction to send ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP`,
     };
   }
 
@@ -43,8 +50,8 @@ export class LockStep extends BaseStep implements GetEvmTx {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        concise: `Transferring ${this.token}`,
-        verbose: `Transferring ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP`,
+        concise: `Submitting transaction on ${this.evmChain}`,
+        verbose: `Submitting transaction to send ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP`,
       },
     };
 
@@ -56,16 +63,16 @@ export class LockStep extends BaseStep implements GetEvmTx {
     if (lockReceipt.status === 1) {
       this._status = {
         Done: ok({
-          concise: `Transferred ${this.token}: ${lockReceipt.hash}`,
-          verbose: `Transferred ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP: transaction hash ${lockReceipt.hash}`,
+          concise: `Executed transaction on ${this.evmChain}`,
+          verbose: `Executed transaction to send ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP: transaction hash ${lockReceipt.hash}`,
           transaction: { Evm: { hash: lockReceipt.hash } },
         }),
       };
     } else {
       this._status = {
         Done: err({
-          concise: `Failed to transfer ${this.token}: ${lockReceipt.hash}`,
-          verbose: `Transaction to transfer ${this.token} has been reverted: ${lockReceipt.hash}`,
+          concise: `Transaction failed on ${this.evmChain}`,
+          verbose: `Transaction to send ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP has been reverted: ${lockReceipt.hash}`,
         }),
       };
     }

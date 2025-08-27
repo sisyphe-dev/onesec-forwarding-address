@@ -14,7 +14,7 @@ import {
 } from "../../generated/candid/icrc_ledger/icrc_ledger.did";
 import { Deployment, EvmChain, IcrcAccount, Token } from "../../types";
 import {
-  CheckFeesAndLimitsStep,
+  FetchFeesAndLimits,
   ConfirmBlocksStep,
   oneSecWithAgent,
 } from "../shared";
@@ -97,7 +97,7 @@ export class IcpToEvmBridgeBuilder {
       config,
     );
 
-    const checkFeesAndLimitsStep = new CheckFeesAndLimitsStep(
+    const checkFeesAndLimitsStep = new FetchFeesAndLimits(
       oneSecActor,
       this.token,
       "ICP",

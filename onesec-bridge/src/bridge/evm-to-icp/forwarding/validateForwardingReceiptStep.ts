@@ -9,7 +9,6 @@ import type {
 } from "../../../types";
 import {
   BaseStep,
-  err,
   exponentialBackoff,
   formatIcpAccount,
   GetTransferId,
@@ -37,8 +36,8 @@ export class ValidateForwardingReceiptStep
 
   about(): About {
     return {
-      concise: "Validate forwarding transaction receipt",
-      verbose: `Wait for OneSec to validate the receipt of the forwarding transaction on ${this.evmChain} and initiate transfer to ${formatIcpAccount(this.icpAccount)} on ICP`,
+      concise: "Validate transaction receipt",
+      verbose: `Wait for OneSec to validate the receipt of the forwarding transaction on ${this.evmChain}`,
     };
   }
 
@@ -57,13 +56,15 @@ export class ValidateForwardingReceiptStep
       this.computeForwardingAddressStep.getLastTransferId();
 
     if (forwardingAddress === undefined) {
-      throw Error("Missing forwarding address. Please compute the forwarding address before running this step.");
+      throw Error(
+        "Missing forwarding address. Please compute the forwarding address before running this step.",
+      );
     }
 
     this._status = {
       Pending: {
-        concise: "Validating forwarding transaction receipt",
-        verbose: `Waiting for OneSec to validate the receipt of the forwarding transaction on ${this.evmChain} and initiate transfer to ${formatIcpAccount(this.icpAccount)} on ICP`,
+        concise: "Validating transaction receipt",
+        verbose: `Waiting for OneSec to validate the receipt of the forwarding transaction on ${this.evmChain}`,
       },
     };
 
@@ -86,8 +87,8 @@ export class ValidateForwardingReceiptStep
       this.transferId = transferId;
       this._status = {
         Done: ok({
-          concise: "Validated forwarding transaction receipt",
-          verbose: `OneSec validated the receipt of the forwarding transaction on ${this.evmChain} and initiated transfer to ${formatIcpAccount(this.icpAccount)} on ICP: ${transferId}`,
+          concise: "Validated transaction receipt",
+          verbose: `OneSec validated the receipt of the forwarding transaction on ${this.evmChain}`,
         }),
       };
       return this._status;

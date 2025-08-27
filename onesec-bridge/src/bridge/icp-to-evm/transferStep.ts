@@ -30,7 +30,7 @@ export class TransferStep extends BaseStep {
 
   about(): About {
     return {
-      concise: `Transfer ${this.token} on ICP`,
+      concise: `Transfer on ICP`,
       verbose: `Transfer ${format(this.icpAmount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}`,
     };
   }
@@ -46,7 +46,7 @@ export class TransferStep extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        concise: `Transferring ${this.token} on ICP`,
+        concise: `Transferring on ICP`,
         verbose: `Transferring ${format(this.icpAmount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}`,
       },
     };
@@ -65,7 +65,7 @@ export class TransferStep extends BaseStep {
     if ("Failed" in response) {
       this._status = {
         Done: err({
-          concise: `Failed to transfer ${this.token} on ICP`,
+          concise: `Failed to transfer on ICP`,
           verbose: `Failed to transfer ${format(this.icpAmount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}: ${response.Failed.error}`,
         }),
       };
@@ -73,7 +73,7 @@ export class TransferStep extends BaseStep {
       this.transferId = response.Accepted;
       this._status = {
         Done: ok({
-          concise: `Transferred ${this.token} on ICP`,
+          concise: `Transferred on ICP`,
           verbose: `Transferred ${format(this.icpAmount, this.decimals)} ${this.token} to OneSec on ICP for bridging to ${this.evmAddress} on ${this.evmChain}: ${response.Accepted.id}`,
           transaction: {
             Icp: {

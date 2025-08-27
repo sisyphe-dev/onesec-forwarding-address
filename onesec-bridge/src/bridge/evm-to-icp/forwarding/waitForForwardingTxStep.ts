@@ -37,8 +37,8 @@ export class WaitForForwardingTxStep extends BaseStep {
 
   about(): About {
     return {
-      concise: "Wait for forwarding transaction",
-      verbose: `Wait for OneSec to detect ${this.token} payment to the forwarding address and submit a forwarding transaction on ${this.evmChain}`,
+      concise: `Wait for forwarding transaction on ${this.evmChain}`,
+      verbose: `Wait for OneSec to detect the ${this.token} payment and submit a forwarding transaction on ${this.evmChain}`,
     };
   }
 
@@ -61,17 +61,17 @@ export class WaitForForwardingTxStep extends BaseStep {
       this.computeForwardingAddressStep.getLastTransferId();
 
     if (forwardingAddress === undefined) {
-      throw Error("Missing forwarding address. Please compute the forwarding address before running this step.");
+      throw Error(
+        "Missing forwarding address. Please compute the forwarding address before running this step.",
+      );
     }
 
     this._status = {
       Pending: {
-        concise: "Waiting for forwarding transaction",
-        verbose: `Waiting for OneSec to detect ${this.token} payment to the forwarding address ${forwardingAddress} and submit a forwarding transaction on ${this.evmChain}`,
+        concise: `Waiting for forwarding transaction on ${this.evmChain}`,
+        verbose: `Waiting for OneSec to detect the ${this.token} payment and submit a forwarding transaction on ${this.evmChain}`,
       },
     };
-
-
 
     await sleep(this.delayMs);
     this.delayMs = exponentialBackoff(this.delayMs);
@@ -93,7 +93,7 @@ export class WaitForForwardingTxStep extends BaseStep {
       this.transferId = transferId;
       this._status = {
         Done: ok({
-          concise: "Submitted forwarding transaction",
+          concise: `Submitted forwarding transaction on ${this.evmChain}`,
           verbose: `OneSec submitted a forwarding transaction on ${this.evmChain}`,
         }),
       };
@@ -105,7 +105,7 @@ export class WaitForForwardingTxStep extends BaseStep {
         this.forwardingTx = status.Forwarded;
         this._status = {
           Done: ok({
-            concise: "Submitted forwarding transaction",
+            concise: `Submitted forwarding transaction on ${this.evmChain}`,
             verbose: `OneSec submitted a forwarding transaction on ${this.evmChain}`,
           }),
         };
@@ -119,7 +119,7 @@ export class WaitForForwardingTxStep extends BaseStep {
       } else if ("Forwarding" in status) {
         this._status = {
           Pending: {
-            concise: "Submitting forwarding transaction",
+            concise: `Submitting forwarding transaction on ${this.evmChain}`,
             verbose: `OneSec is signing and submitting a forwarding transaction on ${this.evmChain}`,
           },
         };

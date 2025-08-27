@@ -30,7 +30,7 @@ export class ValidateReceiptStep extends BaseStep {
   about(): About {
     return {
       concise: "Validate transaction receipt",
-      verbose: `Wait for OneSec to validate the receipt of the transaction on ${this.evmChain}`,
+      verbose: "Wait for OneSec to validate the receipt of the transaction",
     };
   }
 
@@ -42,16 +42,17 @@ export class ValidateReceiptStep extends BaseStep {
     const transferId = this.transferStep.getTransferId();
 
     if (transferId === undefined) {
-      throw Error("Missing transfer id. Please run the transfer step before running this step.");
+      throw Error(
+        "Missing transfer id. Please run the transfer step before running this step.",
+      );
     }
 
     this._status = {
       Pending: {
         concise: "Validating transaction receipt",
-        verbose: `Waiting for OneSec to validate the receipt of the transaction on ${this.evmChain}`,
+        verbose: "Waiting for OneSec to validate the receipt of the transaction",
       },
     };
-
 
     await sleep(this.delayMs);
     this.delayMs = exponentialBackoff(this.delayMs);
@@ -62,7 +63,7 @@ export class ValidateReceiptStep extends BaseStep {
       this._status = {
         Done: err({
           concise: "Failed to validate transaction receipt",
-          verbose: `OneSec failed to validate the receipt of the transaction on ${this.evmChain}: ${result.Err}`,
+          verbose: `OneSec failed to validate the receipt of the transaction: ${result.Err}`,
         }),
       };
       return this._status;
@@ -75,7 +76,7 @@ export class ValidateReceiptStep extends BaseStep {
         this._status = {
           Done: ok({
             concise: "Validated transaction receipt",
-            verbose: `OneSec validated the receipt of transaction ${formatTx(transfer.destination.tx)} on ${this.evmChain}: ${format(transfer.destination.amount, this.decimals)} ${this.token} have been transferred to ${this.evmAddress} on ${this.evmChain}`,
+            verbose: `OneSec validated the receipt of transaction ${formatTx(transfer.destination.tx)}: ${format(transfer.destination.amount, this.decimals)} ${this.token} have been sent to ${this.evmAddress} on ${this.evmChain}`,
             transaction: transfer.destination.tx,
             amount: amountFromUnits(transfer.destination.amount, this.decimals),
           }),
@@ -84,11 +85,16 @@ export class ValidateReceiptStep extends BaseStep {
         this._status = {
           Done: err({
             concise: "Failed to validate transaction receipt",
-            verbose: `OneSec failed to validate the receipt of the transaction on ${this.evmChain}: ${transfer.status.Failed.error}`,
+            verbose: `OneSec failed to validate the receipt of the transaction: ${transfer.status.Failed.error}`,
           }),
         };
-      } else if ("Refunded" in transfer.status || "PendingRefund" in transfer.status) {
-        throw Error(`Unexpected transfer status of ${transferId}: ${transfer.status}`);
+      } else if (
+        "Refunded" in transfer.status ||
+        "PendingRefund" in transfer.status
+      ) {
+        throw Error(
+          `Unexpected transfer status of ${transferId}: ${transfer.status}`,
+        );
       }
     }
 

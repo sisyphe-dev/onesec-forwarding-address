@@ -58,8 +58,8 @@ export class ConfirmBlocksStep extends BaseStep {
 
   about(): About {
     return {
-      concise: "Confirm blocks",
-      verbose: `Confirm ${this.blockCount} blocks on ${this.evmChain}`,
+      concise: `Confirm blocks on ${this.evmChain}`,
+      verbose: `Wait for ${this.blockCount} blocks on ${this.evmChain} until the transaction becomes confirmed`,
     };
   }
 
@@ -72,8 +72,8 @@ export class ConfirmBlocksStep extends BaseStep {
       this.startTime = new Date();
       this._status = {
         Pending: {
-          concise: "Confirming blocks",
-          verbose: `Confirming ${this.blockCount} blocks on ${this.evmChain}`,
+          concise: `Confirming blocks on ${this.evmChain}`,
+          verbose: `Waiting for ${this.blockCount} blocks on ${this.evmChain} until the transaction becomes confirmed`,
         },
       };
     }
@@ -87,15 +87,15 @@ export class ConfirmBlocksStep extends BaseStep {
     if (blocks >= this.blockCount) {
       this._status = {
         Done: ok({
-          concise: "Confirmed blocks",
-          verbose: `Confirmed ${this.blockCount} blocks on ${this.evmChain}`,
+          concise: `Confirmed blocks on ${this.evmChain}`,
+          verbose: `Waited for ${this.blockCount} blocks on ${this.evmChain} until the transaction became confirmed`,
         }),
       };
     } else {
       this._status = {
         Pending: {
-          concise: "Confirming blocks",
-          verbose: `Confirming ${blocks}/${this.blockCount} blocks on ${this.evmChain}`,
+          concise: `Confirming blocks on ${this.evmChain}`,
+          verbose: `Waiting for ${blocks} out of ${this.blockCount} blocks on ${this.evmChain} until the transaction becomes confirmed`,
         },
       };
     }
@@ -104,7 +104,7 @@ export class ConfirmBlocksStep extends BaseStep {
   }
 }
 
-export class CheckFeesAndLimitsStep extends BaseStep {
+export class FetchFeesAndLimits extends BaseStep {
   constructor(
     private onesec: OneSec,
     private token: Token,
@@ -119,8 +119,8 @@ export class CheckFeesAndLimitsStep extends BaseStep {
 
   about(): About {
     return {
-      concise: "Check fees and limits",
-      verbose: "Check fees and limits",
+      concise: "Fetch fees and limits",
+      verbose: `Fetch fees and limits for ${this.token} from ${this.sourceChain} to ${this.destinationChain}`,
     };
   }
 
@@ -132,7 +132,7 @@ export class CheckFeesAndLimitsStep extends BaseStep {
     this._status = {
       Pending: {
         concise: "Fetching fees and limits",
-        verbose: "Fetching fees and limits",
+        verbose: `Fetching fees and limits for ${this.token} from ${this.sourceChain} to ${this.destinationChain}`,
       },
     };
 
@@ -221,8 +221,8 @@ export class CheckFeesAndLimitsStep extends BaseStep {
     if (this.amount !== undefined) {
       this._status = {
         Done: ok({
-          concise: "Checked fees and limits",
-          verbose: "Checked fees and limits",
+          concise: "Fetched fees and limits",
+          verbose: `Fetched fees and limits for ${this.token} from ${this.sourceChain} to ${this.destinationChain}`,
           expectedFee: new ExpectedFeeImpl(
             expectedTransferFee,
             expectedProtocolFeeInPercent,
@@ -233,8 +233,8 @@ export class CheckFeesAndLimitsStep extends BaseStep {
     } else {
       this._status = {
         Done: ok({
-          concise: "Checked fees and limits",
-          verbose: "Checked fees and limits",
+          concise: "Fetched fees and limits",
+          verbose: `Fetched fees and limits for ${this.token} from ${this.sourceChain} to ${this.destinationChain}`,
         }),
       };
     }
@@ -407,7 +407,8 @@ export async function anonymousAgent(
 ): Promise<Agent> {
   let agent = _anonymousAgent.get(deployment);
   if (agent === undefined) {
-    agent = HttpAgent.createSync({
+    console.log(url(deployment, config));
+    agent = await HttpAgent.create({
       host: url(deployment, config),
     });
     if (deployment === "Local") {
@@ -464,18 +465,18 @@ export function format(amount: bigint, decimals: number): string {
   const tokens = bigintToNumberScaled(amount, decimals);
   const str = tokens.toFixed(6);
   let end = str.length;
-  while (end > 2 && str[end - 1] === "0") {
+  while (end > 2 && str[end - 1] === "0" && str[end - 2] != '.') {
     --end;
   }
   return str.slice(0, end);
 }
 
 export function formatIcpAccount(account: IcrcAccount): string {
-  if (account.subaccount && !account.subaccount.every(x => x === 0)) {
+  if (account.subaccount && !account.subaccount.every((x) => x === 0)) {
     const subaccount = [...account.subaccount]
-      .map(byte => byte.toString(16).padStart(2, "0"))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
       .join("");
-    return `${account.owner.toText} / ${subaccount}`
+    return `${account.owner.toText} / ${subaccount}`;
   }
   return account.owner.toText();
 }

@@ -28,8 +28,8 @@ export class WaitForIcpTx extends BaseStep {
 
   about(): About {
     return {
-      concise: "Wait for transfer",
-      verbose: `Wait for OneSec to complete transfer of ${this.token} to ${formatIcpAccount(this.icpAccount)}`,
+      concise: "Wait for transfer on ICP",
+      verbose: `Wait for OneSec to transfer ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP`,
     };
   }
 
@@ -41,13 +41,15 @@ export class WaitForIcpTx extends BaseStep {
     const transferId = this.getTransferId.getTransferId();
 
     if (transferId === undefined) {
-      throw Error("Missing transfer id. Please run the receipt validation step before running this step.");
+      throw Error(
+        "Missing transfer id. Please run the receipt validation step before running this step.",
+      );
     }
 
     this._status = {
       Pending: {
-        concise: "Waiting for transfer",
-        verbose: `Waiting for OneSec to complete transfer of ${this.token} to ${formatIcpAccount(this.icpAccount)}`,
+        concise: "Waiting for transfer on ICP",
+        verbose: `Waiting for OneSec to transfer ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP`,
       },
     };
 
@@ -60,7 +62,7 @@ export class WaitForIcpTx extends BaseStep {
       this._status = {
         Done: err({
           concise: "Transfer failed",
-          verbose: `OneSec failed to transfer ${this.token} to ${formatIcpAccount(this.icpAccount)}: ${result.Err}`,
+          verbose: `OneSec failed to transfer ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP: ${result.Err}`,
         }),
       };
       return this._status;
@@ -73,7 +75,7 @@ export class WaitForIcpTx extends BaseStep {
         this._status = {
           Done: ok({
             concise: "Transferred tokens",
-            verbose: `OneSec transferred ${format(transfer.destination.amount, this.decimals)} ${this.token} to ${formatIcpAccount(this.icpAccount)}`,
+            verbose: `OneSec transferred ${format(transfer.destination.amount, this.decimals)} ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP`,
             transaction: transfer.destination.tx,
             amount: amountFromUnits(transfer.destination.amount, this.decimals),
           }),
@@ -82,10 +84,13 @@ export class WaitForIcpTx extends BaseStep {
         this._status = {
           Done: err({
             concise: "Transfer failed",
-            verbose: `OneSec failed to transfer ${this.token} to ${formatIcpAccount(this.icpAccount)}: ${transfer.status.Failed.error}`,
+            verbose: `OneSec failed to transfer ${this.token} to ${formatIcpAccount(this.icpAccount)} on ICP: ${transfer.status.Failed.error}`,
           }),
         };
-      } else if ("Refunded" in transfer.status || "PendingRefund" in transfer.status) {
+      } else if (
+        "Refunded" in transfer.status ||
+        "PendingRefund" in transfer.status
+      ) {
         throw Error(`Unexpected transfer status: ${transfer.status}`);
       }
     }

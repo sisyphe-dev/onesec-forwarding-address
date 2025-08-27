@@ -277,11 +277,11 @@ export interface Details {
 
 export type Result =
   | {
-    Ok: Details;
-  }
+      Ok: Details;
+    }
   | {
-    Err: Details;
-  };
+      Err: Details;
+    };
 
 export type StepStatus =
   | { Planned: null }

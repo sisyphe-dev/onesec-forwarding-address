@@ -32,3 +32,16 @@ Thumbs.db
 UserInterfaceState.xcuserstate
 
 dist/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Test keys (keep these secret!)
+test_key.pem
+
+# Heap profile files
+heap-profile-*.json

@@ -40,7 +40,7 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
   about(): About {
     return {
       concise: "Validate transaction receipt",
-      verbose: `Wait for OneSec to validate the receipt of the transaction on ${this.evmChain} and initiate transfer to ${formatIcpAccount(this.icpAccount)} on ICP`,
+      verbose: "Wait for OneSec to validate the receipt of the transaction",
     };
   }
 
@@ -56,13 +56,15 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
     const evmTx = this.getEvmTx.getEvmTx();
 
     if (evmTx === undefined) {
-      throw Error("Missing the EVM transaction. Please run the transfer step before running this step.");
+      throw Error(
+        "Missing the EVM transaction. Please run the transfer step before running this step.",
+      );
     }
 
     this._status = {
       Pending: {
-        concise: "Validate transaction receipt",
-        verbose: `Waiting for OneSec to validate the receipt of transaction ${evmTx.hash} on ${this.evmChain} and initiate transfer to ${formatIcpAccount(this.icpAccount)} on ICP`,
+        concise: "Validating transaction receipt",
+        verbose: "Waiting for OneSec to validate the receipt of the transaction",
       },
     };
 
@@ -86,14 +88,14 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
       this._status = {
         Done: ok({
           concise: "Validated transaction receipt",
-          verbose: `OneSec validated the receipt of transaction ${evmTx.hash} on ${this.evmChain} and initiated transfer to ${formatIcpAccount(this.icpAccount)} on ICP: ${this.transferId}`,
+          verbose: "OneSec validated the receipt of the transaction",
         }),
       };
     } else if ("Failed" in response) {
       this._status = {
         Done: err({
           concise: "Failed to validate transaction receipt",
-          verbose: `OneSec failed to validate the receipt of transaction ${evmTx.hash} on ${this.evmChain}: ${response.Failed.error}`,
+          verbose: "OneSec failed to validate the receipt of the transaction",
         }),
       };
     }

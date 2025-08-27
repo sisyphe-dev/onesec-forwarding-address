@@ -20,7 +20,7 @@ import type {
 } from "../../types";
 import {
   anonymousAgent,
-  CheckFeesAndLimitsStep,
+  FetchFeesAndLimits,
   ConfirmBlocksStep,
   oneSecWithAgent,
 } from "../shared";
@@ -62,8 +62,8 @@ export class EvmToIcpBridgeBuilder {
     return this;
   }
 
-  receiver(icpAccount: IcrcAccount): EvmToIcpBridgeBuilder {
-    this.icpAccount = icpAccount;
+  receiver(principal: Principal, subaccount?: Uint8Array): EvmToIcpBridgeBuilder {
+    this.icpAccount = { owner: principal, subaccount };
     return this;
   }
 
@@ -73,15 +73,20 @@ export class EvmToIcpBridgeBuilder {
   }
 
   async build(signer: Signer): Promise<BridgingPlan> {
-    if (!this.evmAddress) {
-      throw new Error("EVM address is required");
-    }
     if (!this.evmAmount) {
       throw new Error("EVM amount is required");
     }
     if (!this.icpAccount) {
       throw new Error("ICP account is required");
     }
+
+    const signerAddress = await signer.getAddress();
+
+    if (this.evmAddress && this.evmAddress != signerAddress) {
+      throw new Error(`The provided EVM address ${this.evmAddress} doesn't match the signer's address ${signerAddress}`);
+    }
+
+    const evmAddress = signerAddress;
 
     const config = this.config || DEFAULT_CONFIG;
 
@@ -94,7 +99,7 @@ export class EvmToIcpBridgeBuilder {
     const agent = await anonymousAgent(this.deployment, config);
     const oneSecActor = await oneSecWithAgent(oneSecId, agent);
 
-    const checkFeesAndLimitsStep = new CheckFeesAndLimitsStep(
+    const checkFeesAndLimitsStep = new FetchFeesAndLimits(
       oneSecActor,
       this.token,
       this.evmChain,
@@ -150,7 +155,7 @@ export class EvmToIcpBridgeBuilder {
           this.evmChain,
           this.icpAccount,
           this.evmAmount,
-          this.evmAddress,
+          evmAddress,
           lockStep,
           getIcpPollDelayMs(config, this.deployment),
         );
@@ -200,7 +205,7 @@ export class EvmToIcpBridgeBuilder {
           this.evmChain,
           this.icpAccount,
           this.evmAmount,
-          this.evmAddress,
+          evmAddress,
           burnStep,
           getIcpPollDelayMs(config, this.deployment),
         );
@@ -227,9 +232,6 @@ export class EvmToIcpBridgeBuilder {
   }
 
   async forward(): Promise<BridgingPlan> {
-    if (!this.evmAddress) {
-      throw new Error("EVM address is required");
-    }
     if (!this.evmAmount) {
       throw new Error("EVM amount is required");
     }
@@ -242,12 +244,12 @@ export class EvmToIcpBridgeBuilder {
 
     const onesec = oneSecForwarding(this.deployment);
     const oneSecId = Principal.fromText(
-      this.config?.icp.onesec.get(this.deployment)!,
+      config?.icp.onesec.get(this.deployment)!,
     );
     const agent = await anonymousAgent(this.deployment, config);
     const oneSecActor = await oneSecWithAgent(oneSecId, agent);
 
-    const checkFeesAndLimitsStep = new CheckFeesAndLimitsStep(
+    const checkFeesAndLimitsStep = new FetchFeesAndLimits(
       oneSecActor,
       this.token,
       this.evmChain,

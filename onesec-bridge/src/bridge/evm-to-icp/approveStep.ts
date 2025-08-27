@@ -1,6 +1,19 @@
 import { Contract } from "ethers";
-import type { About, EvmChain, IcrcAccount, StepStatus, Token } from "../../types";
-import { BaseStep, err, EVM_CALL_DURATION_MS, format, formatIcpAccount, ok } from "../shared";
+import type {
+  About,
+  EvmChain,
+  IcrcAccount,
+  StepStatus,
+  Token,
+} from "../../types";
+import {
+  BaseStep,
+  err,
+  EVM_CALL_DURATION_MS,
+  format,
+  formatIcpAccount,
+  ok,
+} from "../shared";
 
 export class ApproveStep extends BaseStep {
   constructor(
@@ -17,8 +30,8 @@ export class ApproveStep extends BaseStep {
 
   about(): About {
     return {
-      concise: `Approve transfer`,
-      verbose: `Approve transfer of ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP`,
+      concise: `Approve transaction on ${this.evmChain}`,
+      verbose: `Approve transaction to send ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP`,
     };
   }
 
@@ -29,8 +42,8 @@ export class ApproveStep extends BaseStep {
   async run(): Promise<StepStatus> {
     this._status = {
       Pending: {
-        concise: `Approving transfer`,
-        verbose: `Submitting a transaction to approve the transfer`,
+        concise: `Approving transaction on ${this.evmChain}`,
+        verbose: `Submitting transaction to approve sending of ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP`,
       },
     };
 
@@ -44,16 +57,16 @@ export class ApproveStep extends BaseStep {
     if (approveReceipt.status === 1) {
       this._status = {
         Done: ok({
-          concise: `Approved transfer`,
-          verbose: `Successfully executed a transaction to approve transfer of ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP: ${approveReceipt.hash}`,
+          concise: `Approved transaction on ${this.evmChain}`,
+          verbose: `Successfully executed transaction to approve sending of ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP: ${approveReceipt.hash}`,
           transaction: { Evm: { hash: approveReceipt.hash } },
         }),
       };
     } else {
       this._status = {
         Done: err({
-          concise: "Failed to approve transfer",
-          verbose: `Transaction to approve the transfer has been reverted: ${approveReceipt.hash}`,
+          concise: `Failed to approve transaction on ${this.evmChain}`,
+          verbose: `Transaction to approve sending of ${format(this.evmAmount, this.decimals)} ${this.token} to OneSec on ${this.evmChain} for bridging to ${formatIcpAccount(this.icpAccount)} on ICP has been reverted: ${approveReceipt.hash}`,
           transaction: approveReceipt.hash,
         }),
       };

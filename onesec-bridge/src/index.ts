@@ -39,7 +39,7 @@ export class BridgingPlan {
   private _result?: Result;
   private currentStepIndex: number = 0;
 
-  constructor(private _steps: Step[]) {}
+  constructor(private _steps: Step[]) { }
 
   steps(): Step[] {
     return this._steps;
@@ -59,7 +59,7 @@ export class BridgingPlan {
   skipDone() {
     while (
       this.currentStepIndex < this._steps.length &&
-      "Done" in this._steps[this.currentStepIndex]
+      "Done" in this._steps[this.currentStepIndex].status()
     ) {
       this.currentStepIndex += 1;
     }
@@ -84,7 +84,13 @@ export class BridgingPlan {
   async runAllSteps(): Promise<Result> {
     let nextStep = this.nextStep();
     while (nextStep) {
-      nextStep.run();
+      const result = await nextStep.run();
+      if ("Done" in result && "Ok" in result.Done) {
+        console.log(result.Done.Ok.about.verbose);
+      }
+      if ("Done" in result && "Err" in result.Done) {
+        console.log(result.Done.Err.about.verbose);
+      }
       nextStep = this.nextStep();
     }
 

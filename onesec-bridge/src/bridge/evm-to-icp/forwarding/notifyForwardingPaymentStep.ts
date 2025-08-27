@@ -22,8 +22,8 @@ export class NotifyForwardingPaymentStep extends BaseStep {
 
   about(): About {
     return {
-      concise: "Notify forwarding payment",
-      verbose: `Notify OneSec canister about ${this.token} payment to the forwarding address on ${this.evmChain}`,
+      concise: `Notify user payment on ${this.evmChain}`,
+      verbose: `Notify OneSec about a user payment to the forwarding address on ${this.evmChain}`,
     };
   }
 
@@ -43,11 +43,10 @@ export class NotifyForwardingPaymentStep extends BaseStep {
 
     this._status = {
       Pending: {
-        concise: "Notifying forwarding payment",
-        verbose: `Notifying OneSec canister about ${this.token} payment to the forwarding address ${forwardingAddress} on ${this.evmChain}`,
+        concise: `Notifying user payment on ${this.evmChain}`,
+        verbose: `Notifying OneSec about a user payment to the forwarding address ${forwardingAddress} on ${this.evmChain}`,
       },
     };
-
 
     await this.onesec.forwardEvmToIcp(
       this.token,
@@ -58,8 +57,8 @@ export class NotifyForwardingPaymentStep extends BaseStep {
 
     this._status = {
       Done: ok({
-        concise: "Notified forwarding payment",
-        verbose: `Notified OneSec canister about ${this.token} payment to the forwarding address ${forwardingAddress} on ${this.evmChain}`,
+        concise: `Notified user payment on ${this.evmChain}`,
+        verbose: `Notified OneSec about a user payment to the forwarding address ${forwardingAddress} on ${this.evmChain}`,
       }),
     };
 
