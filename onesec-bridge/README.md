@@ -164,7 +164,205 @@ const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
 ## Documentation
 -<!-- TSDOC_START -->
 
--<!-- TSDOC_END -->
+### :factory: IcpToEvmBridgeBuilder
+
+Builder for creating ICP to EVM token bridging plans.
+
+Transfers tokens from ICP ledgers to EVM networks. Requires an authenticated
+agent to interact with ICP canisters on behalf of the user.
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L46)
+
+#### Methods
+
+- [target](#gear-target)
+- [sender](#gear-sender)
+- [receiver](#gear-receiver)
+- [amountInTokens](#gear-amountintokens)
+- [amountInUnits](#gear-amountinunits)
+- [withConfig](#gear-withconfig)
+
+##### :gear: target
+
+Set target deployment network.
+
+| Method | Type |
+| ---------- | ---------- |
+| `target` | `(deployment: Deployment) => IcpToEvmBridgeBuilder` |
+
+Parameters:
+
+* `deployment`: Target network ("Mainnet", "Testnet", or "Local")
+
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L68)
+
+##### :gear: sender
+
+Set sender ICP account.
+
+| Method | Type |
+| ---------- | ---------- |
+| `sender` | `(principal: Principal, subaccount?: Uint8Array<ArrayBufferLike> or undefined) => IcpToEvmBridgeBuilder` |
+
+Parameters:
+
+* `principal`: ICP principal sending the tokens
+* `subaccount`: Optional 32-byte subaccount
+
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L78)
+
+##### :gear: receiver
+
+Set EVM recipient address.
+
+| Method | Type |
+| ---------- | ---------- |
+| `receiver` | `(address: string) => IcpToEvmBridgeBuilder` |
+
+Parameters:
+
+* `address`: EVM address receiving the tokens
+
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L87)
+
+##### :gear: amountInTokens
+
+| Method | Type |
+| ---------- | ---------- |
+| `amountInTokens` | `(amount: number) => IcpToEvmBridgeBuilder` |
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L95)
+
+##### :gear: amountInUnits
+
+Set amount to bridge in token's smallest units.
+
+| Method | Type |
+| ---------- | ---------- |
+| `amountInUnits` | `(amount: bigint) => IcpToEvmBridgeBuilder` |
+
+Parameters:
+
+* `amount`: Amount in base units (e.g., 1_500_000n for 1.5 USDC)
+
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L104)
+
+##### :gear: withConfig
+
+Use custom configuration instead of defaults.
+
+| Method | Type |
+| ---------- | ---------- |
+| `withConfig` | `(config: Config) => IcpToEvmBridgeBuilder` |
+
+Parameters:
+
+* `config`: Custom bridge configuration
+
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L113)
+
+
+### :factory: EvmToIcpBridgeBuilder
+
+Builder for creating EVM to ICP token bridging plans.
+
+Supports two bridging modes:
+- Direct bridging via `build()` - requires user to connect wallet and sign transactions
+- Forwarding via `forward()` - user sends tokens to a generated forwarding address
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/evm-to-icp/index.ts#L59)
+
+#### Methods
+
+- [target](#gear-target)
+- [sender](#gear-sender)
+- [amountInUnits](#gear-amountinunits)
+- [receiver](#gear-receiver)
+- [withConfig](#gear-withconfig)
+
+##### :gear: target
+
+Set target deployment network.
+
+| Method | Type |
+| ---------- | ---------- |
+| `target` | `(deployment: Deployment) => EvmToIcpBridgeBuilder` |
+
+Parameters:
+
+* `deployment`: Target network ("Mainnet", "Testnet", or "Local")
+
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/evm-to-icp/index.ts#L79)
+
+##### :gear: sender
+
+Set sender EVM address. Optional for direct bridging (inferred from signer).
+
+| Method | Type |
+| ---------- | ---------- |
+| `sender` | `(evmAddress: string) => EvmToIcpBridgeBuilder` |
+
+Parameters:
+
+* `evmAddress`: EVM address sending the tokens
+
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/evm-to-icp/index.ts#L88)
+
+##### :gear: amountInUnits
+
+Set amount to bridge in token's smallest units.
+
+| Method | Type |
+| ---------- | ---------- |
+| `amountInUnits` | `(amount: bigint) => EvmToIcpBridgeBuilder` |
+
+Parameters:
+
+* `amount`: Amount in base units (e.g., 1_500_000n for 1.5 USDC)
+
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/evm-to-icp/index.ts#L97)
+
+##### :gear: receiver
+
+Set ICP recipient account.
+
+| Method | Type |
+| ---------- | ---------- |
+| `receiver` | `(principal: Principal, subaccount?: Uint8Array<ArrayBufferLike> or undefined) => EvmToIcpBridgeBuilder` |
+
+Parameters:
+
+* `principal`: ICP principal receiving the tokens
+* `subaccount`: Optional 32-byte subaccount
+
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/evm-to-icp/index.ts#L107)
+
+##### :gear: withConfig
+
+Use custom configuration instead of defaults.
+
+| Method | Type |
+| ---------- | ---------- |
+| `withConfig` | `(config: Config) => EvmToIcpBridgeBuilder` |
+
+Parameters:
+
+* `config`: Custom bridge configuration
+
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/evm-to-icp/index.ts#L119)
+
+
+<!-- TSDOC_END -->
 
 ## License
 
