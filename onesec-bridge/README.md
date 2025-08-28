@@ -232,7 +232,7 @@ agent to interact with ICP canisters on behalf of the user.
 
 #### Methods
 
-- [target](#gear-target)
+- [deployment](#gear-deployment)
 - [sender](#gear-sender)
 - [receiver](#gear-receiver)
 - [amountInUnits](#gear-amountinunits)
@@ -240,13 +240,13 @@ agent to interact with ICP canisters on behalf of the user.
 - [payApproveFeeFromAmount](#gear-payapprovefeefromamount)
 - [withConfig](#gear-withconfig)
 
-##### :gear: target
+##### :gear: deployment
 
 Set target deployment network.
 
 | Method | Type |
 | ---------- | ---------- |
-| `target` | `(deployment: Deployment) => IcpToEvmBridgeBuilder` |
+| `deployment` | `(deployment: Deployment) => IcpToEvmBridgeBuilder` |
 
 Parameters:
 
@@ -299,7 +299,7 @@ Parameters:
 * `amount`: Amount in base units (e.g., 1_500_000n for 1.5 USDC)
 
 
-[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L99)
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L98)
 
 ##### :gear: amountInTokens
 
@@ -314,7 +314,7 @@ Parameters:
 * `amount`: Amount in token units (e.g., 1.5 for 1.5 USDC)
 
 
-[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L108)
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L107)
 
 ##### :gear: payApproveFeeFromAmount
 
@@ -339,7 +339,7 @@ const plan2 = await builder.amountInUnits(1_500_000n).payApproveFeeFromAmount().
 ```
 
 
-[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L129)
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L128)
 
 ##### :gear: withConfig
 
@@ -354,7 +354,7 @@ Parameters:
 * `config`: Custom bridge configuration
 
 
-[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L138)
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L137)
 
 
 ### :factory: EvmToIcpBridgeBuilder
@@ -369,20 +369,20 @@ Supports two bridging modes:
 
 #### Methods
 
-- [target](#gear-target)
+- [deployment](#gear-deployment)
 - [sender](#gear-sender)
 - [amountInUnits](#gear-amountinunits)
 - [amountInTokens](#gear-amountintokens)
 - [receiver](#gear-receiver)
 - [withConfig](#gear-withconfig)
 
-##### :gear: target
+##### :gear: deployment
 
 Set target deployment network.
 
 | Method | Type |
 | ---------- | ---------- |
-| `target` | `(deployment: Deployment) => EvmToIcpBridgeBuilder` |
+| `deployment` | `(deployment: Deployment) => EvmToIcpBridgeBuilder` |
 
 Parameters:
 
