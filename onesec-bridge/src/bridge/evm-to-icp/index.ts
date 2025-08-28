@@ -56,7 +56,7 @@ import { WaitForIcpTx } from "./waitForIcpTx";
  * ```
  */
 export class EvmToIcpBridgeBuilder {
-  private deployment: Deployment = "Mainnet";
+  private _deployment: Deployment = "Mainnet";
   private evmAddress?: string;
   private evmAmountInUnits?: bigint;
   private evmAmountInTokens?: number;
@@ -70,14 +70,14 @@ export class EvmToIcpBridgeBuilder {
   constructor(
     private evmChain: EvmChain,
     private token: Token,
-  ) {}
+  ) { }
 
   /**
    * Set target deployment network.
    * @param deployment Target network ("Mainnet", "Testnet", or "Local")
    */
-  target(deployment: Deployment): EvmToIcpBridgeBuilder {
-    this.deployment = deployment;
+  deployment(deployment: Deployment): EvmToIcpBridgeBuilder {
+    this._deployment = deployment;
     return this;
   }
 
@@ -187,9 +187,9 @@ export class EvmToIcpBridgeBuilder {
         : numberToBigintScaled(this.evmAmountInTokens!, decimals);
 
     const oneSecId = Principal.fromText(
-      config.icp.onesec.get(this.deployment)!,
+      config.icp.onesec.get(this._deployment)!,
     );
-    const agent = await anonymousAgent(this.deployment, config);
+    const agent = await anonymousAgent(this._deployment, config);
     const oneSecActor = await oneSecWithAgent(oneSecId, agent);
 
     const checkFeesAndLimitsStep = new FetchFeesAndCheckLimitsStep(
@@ -210,14 +210,14 @@ export class EvmToIcpBridgeBuilder {
           this.evmChain,
           this.token,
           config,
-          this.deployment,
+          this._deployment,
         );
         const [erc20Contract, erc20Address] = erc20(
           signer,
           this.evmChain,
           this.token,
           config,
-          this.deployment,
+          this._deployment,
         );
         const approveStep = new ApproveStep(
           erc20Contract,
@@ -240,7 +240,7 @@ export class EvmToIcpBridgeBuilder {
         const confirmBlocksStep = new ConfirmBlocksStep(
           this.evmChain,
           evmConfig.confirmBlocks,
-          evmConfig.blockTimeMs.get(this.deployment)!,
+          evmConfig.blockTimeMs.get(this._deployment)!,
         );
         const validateReceiptStep = new ValidateReceiptStep(
           oneSecActor,
@@ -250,7 +250,7 @@ export class EvmToIcpBridgeBuilder {
           amount,
           evmAddress,
           lockStep,
-          getIcpPollDelayMs(config, this.deployment),
+          getIcpPollDelayMs(config, this._deployment),
         );
         const waitForIcpTxStep = new WaitForIcpTx(
           oneSecActor,
@@ -258,7 +258,7 @@ export class EvmToIcpBridgeBuilder {
           this.icpAccount,
           decimals,
           validateReceiptStep,
-          getIcpPollDelayMs(config, this.deployment),
+          getIcpPollDelayMs(config, this._deployment),
         );
         steps = [
           checkFeesAndLimitsStep,
@@ -271,12 +271,12 @@ export class EvmToIcpBridgeBuilder {
         break;
       }
       case "minter": {
-        const [minterContract, minterAddress] = erc20(
+        const [minterContract, _minterAddress] = erc20(
           signer,
           this.evmChain,
           this.token,
           config,
-          this.deployment,
+          this._deployment,
         );
         const burnStep = new BurnStep(
           minterContract,
@@ -290,7 +290,7 @@ export class EvmToIcpBridgeBuilder {
         const confirmBlocksStep = new ConfirmBlocksStep(
           this.evmChain,
           evmConfig.confirmBlocks,
-          evmConfig.blockTimeMs.get(this.deployment)!,
+          evmConfig.blockTimeMs.get(this._deployment)!,
         );
         const validateReceiptStep = new ValidateReceiptStep(
           oneSecActor,
@@ -300,7 +300,7 @@ export class EvmToIcpBridgeBuilder {
           amount,
           evmAddress,
           burnStep,
-          getIcpPollDelayMs(config, this.deployment),
+          getIcpPollDelayMs(config, this._deployment),
         );
         const waitForIcpTxStep = new WaitForIcpTx(
           oneSecActor,
@@ -308,7 +308,7 @@ export class EvmToIcpBridgeBuilder {
           this.icpAccount,
           decimals,
           validateReceiptStep,
-          getIcpPollDelayMs(config, this.deployment),
+          getIcpPollDelayMs(config, this._deployment),
         );
         steps = [
           checkFeesAndLimitsStep,
@@ -363,11 +363,11 @@ export class EvmToIcpBridgeBuilder {
           ? numberToBigintScaled(this.evmAmountInTokens!, decimals)
           : undefined;
 
-    const onesec = new OneSecForwardingImpl(this.deployment ?? "Mainnet");
+    const onesec = new OneSecForwardingImpl(this._deployment ?? "Mainnet");
     const oneSecId = Principal.fromText(
-      config?.icp.onesec.get(this.deployment)!,
+      config?.icp.onesec.get(this._deployment)!,
     );
-    const agent = await anonymousAgent(this.deployment, config);
+    const agent = await anonymousAgent(this._deployment, config);
     const oneSecActor = await oneSecWithAgent(oneSecId, agent);
 
     const checkFeesAndLimitsStep = new FetchFeesAndCheckLimitsStep(
@@ -402,14 +402,14 @@ export class EvmToIcpBridgeBuilder {
       this.icpAccount,
       decimals,
       computeForwardingAddressStep,
-      getIcpPollDelayMs(config, this.deployment),
+      getIcpPollDelayMs(config, this._deployment),
     );
 
     const evmConfig = config.evm.get(this.evmChain)!;
     const confirmBlocksStep = new ConfirmBlocksStep(
       this.evmChain,
       evmConfig.confirmBlocks,
-      evmConfig.blockTimeMs.get(this.deployment)!,
+      evmConfig.blockTimeMs.get(this._deployment)!,
     );
 
     const validateForwardingReceiptStep = new ValidateForwardingReceiptStep(
@@ -418,7 +418,7 @@ export class EvmToIcpBridgeBuilder {
       this.evmChain,
       this.icpAccount,
       computeForwardingAddressStep,
-      getIcpPollDelayMs(config, this.deployment),
+      getIcpPollDelayMs(config, this._deployment),
     );
 
     const waitForIcpTxStep = new WaitForIcpTx(
@@ -427,7 +427,7 @@ export class EvmToIcpBridgeBuilder {
       this.icpAccount,
       decimals,
       validateForwardingReceiptStep,
-      getIcpPollDelayMs(config, this.deployment),
+      getIcpPollDelayMs(config, this._deployment),
     );
 
     return new BridgingPlan([

@@ -44,7 +44,7 @@ import { WaitForTxStep } from "./waitForTxStep";
  * ```
  */
 export class IcpToEvmBridgeBuilder {
-  private deployment: Deployment = "Mainnet";
+  private _deployment: Deployment = "Mainnet";
   private icpAmountInUnits?: bigint;
   private icpAmountInTokens?: number;
   private icpAccount?: IcrcAccount;
@@ -61,14 +61,14 @@ export class IcpToEvmBridgeBuilder {
     private agent: Agent,
     private evmChain: EvmChain,
     private token: Token,
-  ) {}
+  ) { }
 
   /**
    * Set target deployment network.
    * @param deployment Target network ("Mainnet", "Testnet", or "Local")
    */
-  target(deployment: Deployment): IcpToEvmBridgeBuilder {
-    this.deployment = deployment;
+  deployment(deployment: Deployment): IcpToEvmBridgeBuilder {
+    this._deployment = deployment;
     return this;
   }
 
@@ -198,18 +198,18 @@ export class IcpToEvmBridgeBuilder {
     }
 
     const oneSecId = Principal.fromText(
-      config.icp.onesec.get(this.deployment)!,
+      config.icp.onesec.get(this._deployment)!,
     );
     const oneSecActor = await oneSecWithAgent(oneSecId, this.agent);
 
     const ledgerId = Principal.fromText(
-      getTokenLedgerCanister(config, this.token, this.deployment)!,
+      getTokenLedgerCanister(config, this.token, this._deployment)!,
     );
 
     const ledgerActor = await icrcLedgerWithAgent(
       this.token,
       this.agent,
-      this.deployment,
+      this._deployment,
       config,
     );
 
@@ -254,13 +254,13 @@ export class IcpToEvmBridgeBuilder {
       this.evmAddress,
       decimals,
       transferStep,
-      getIcpPollDelayMs(config, this.deployment),
+      getIcpPollDelayMs(config, this._deployment),
     );
     const evmConfig = config.evm.get(this.evmChain)!;
     const confirmBlocksStep = new ConfirmBlocksStep(
       this.evmChain,
       evmConfig.confirmBlocks,
-      evmConfig.blockTimeMs.get(this.deployment)!,
+      evmConfig.blockTimeMs.get(this._deployment)!,
     );
     const validateReceiptStep = new ValidateReceiptStep(
       oneSecActor,
@@ -269,7 +269,7 @@ export class IcpToEvmBridgeBuilder {
       this.evmAddress,
       decimals,
       transferStep,
-      getIcpPollDelayMs(config, this.deployment),
+      getIcpPollDelayMs(config, this._deployment),
     );
 
     return new BridgingPlan([
