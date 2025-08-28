@@ -1,0 +1,98 @@
+import * as fromCandid from "../../fromCandid";
+import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
+import * as toCandid from "../../toCandid";
+import type {
+  About,
+  EvmChain,
+  IcrcAccount,
+  StepStatus,
+  Token,
+  TransferId,
+} from "../../types";
+import { exponentialBackoff, sleep } from "../../utils";
+import { BaseStep, GetEvmTx, GetTransferId } from "../baseStep";
+import { ICP_CALL_DURATION_MS } from "../shared";
+
+export class ValidateReceiptStep extends BaseStep implements GetTransferId {
+  private transferId?: TransferId;
+
+  constructor(
+    private oneSecActor: OneSec,
+    private token: Token,
+    private evmChain: EvmChain,
+    private icpAccount: IcrcAccount,
+    private evmAmount: bigint,
+    private evmAddress: string,
+    private getEvmTx: GetEvmTx,
+    private delayMs: number,
+  ) {
+    super();
+  }
+
+  about(): About {
+    return {
+      concise: "Validate transaction receipt",
+      verbose: "Wait for OneSec to validate transaction receipt",
+    };
+  }
+
+  expectedDurationMs(): number {
+    return ICP_CALL_DURATION_MS;
+  }
+
+  getTransferId(): TransferId | undefined {
+    return this.transferId;
+  }
+
+  async run(): Promise<StepStatus> {
+    if (!this.canRun()) {
+      return this._status;
+    }
+
+    const evmTx = this.getEvmTx.getEvmTx();
+
+    if (evmTx === undefined) {
+      throw Error(
+        "Missing the EVM transaction. Please run the transfer step before running this step.",
+      );
+    }
+
+    this._status = {
+      state: "running",
+      concise: "running",
+      verbose: "calling transfer_evm_to_icp of OneSec",
+    };
+
+    await sleep(this.delayMs);
+    this.delayMs = exponentialBackoff(this.delayMs);
+
+    const result = await this.oneSecActor.transfer_evm_to_icp({
+      token: toCandid.token(this.token),
+      evm_chain: toCandid.chain(this.evmChain),
+      evm_account: toCandid.evmAccount(this.evmAddress),
+      evm_tx: toCandid.evmTx(evmTx),
+      icp_account: toCandid.icpAccount(this.icpAccount),
+      evm_amount: this.evmAmount,
+      icp_amount: [],
+    });
+
+    const response = fromCandid.transferResponse(result);
+
+    if ("Accepted" in response) {
+      this.transferId = { id: response.Accepted.id };
+      this._status = {
+        state: "succeeded",
+        concise: "done",
+        verbose: `validated transaction receipt and assigned transfer-id ${this.transferId.id}`,
+      };
+    } else if ("Failed" in response) {
+      this._status = {
+        state: "failed",
+        concise: "validation failed",
+        verbose: `validation failed: ${response.Failed.error}`,
+      };
+    }
+
+    return this._status;
+  }
+}

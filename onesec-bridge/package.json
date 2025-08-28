@@ -44,6 +44,7 @@
   "devDependencies": {
     "@types/jest": "^29.5.13",
     "@types/node": "^20.12.7",
+    "dotenv": "^17.2.1",
     "jsdom": "^25.0.0",
     "prettier": "^3.3.3",
     "prettier-plugin-organize-imports": "^4.0.0",
@@ -58,6 +59,11 @@
   },
   "dependencies": {
     "@dfinity/agent": "^3.2.1",
+    "@dfinity/candid": "^3.2.2",
+    "@dfinity/identity": "^3.2.2",
+    "@dfinity/identity-secp256k1": "^3.2.2",
+    "@dfinity/principal": "^3.2.2",
+    "ethers": "^6.15.0",
     "fflate": "^0.8.2"
   }
 }

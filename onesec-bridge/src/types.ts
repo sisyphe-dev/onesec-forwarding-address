@@ -28,6 +28,13 @@ export type Token =
 export type Deployment = "Mainnet" | "Testnet" | "Local";
 
 /**
+ * Specifies how a token operates on EVM chains.
+ * - "minter": Token contract can mint/burn tokens (native tokens like ICP)
+ * - "locker": Tokens are locked/unlocked in a vault contract (wrapped tokens like USDC)
+ */
+export type OperatingMode = "minter" | "locker";
+
+/**
  * An EVM transaction hash with an optional log index.
  */
 export interface EvmTx {
@@ -167,6 +174,14 @@ export interface Transfer {
 }
 
 /**
+ * The response from a transfer operation.
+ */
+export type TransferResponse =
+  | { Failed: ErrorMessage }
+  | { Accepted: TransferId }
+  | { Fetching: { blockHeight: bigint } };
+
+/**
  * A helper for bridging using forwarding addresses.
  */
 export interface OneSecForwarding {
@@ -222,4 +237,169 @@ export interface OneSecForwarding {
    * @param transferId - the id of the transfer.
    */
   getTransfer: (transferId: TransferId) => Promise<Transfer>;
+}
+
+/**
+ * The response of a get transfer fee query.
+ */
+export interface TransferFee {
+  token: Token;
+  sourceChain: Chain;
+  destinationChain: Chain;
+  minAmount: bigint;
+  maxAmount: bigint;
+  available?: bigint;
+  latestTransferFee: bigint;
+  averageTransferFee: bigint;
+  protocolFeeInPercent: number;
+}
+
+/**
+ * Represents a token amount in both human-readable and contract-friendly formats.
+ */
+export interface Amount {
+  /** Amount in human-readable token units (e.g., 1.5 for 1.5 USDC) */
+  inTokens: number;
+  /** Amount in the token's smallest units (e.g., 1500000 for 1.5 USDC with 6 decimals) */
+  inUnits: bigint;
+}
+
+/**
+ * Descriptive information about a step or operation.
+ */
+export interface About {
+  /** Short, one-line description */
+  concise: string;
+  /** Detailed description with context */
+  verbose: string;
+}
+
+/**
+ * Interface for calculating various fees associated with a bridging operation.
+ */
+export interface ExpectedFee {
+  /** Get the base transfer fee */
+  transferFee: () => Amount;
+  /** Calculate protocol fee for a given amount */
+  protocolFee: (amount: Amount) => Amount;
+  /** Get protocol fee as a percentage (e.g., 0.001 for 0.1%) */
+  protocolFeeInPercent: () => number;
+  /** Calculate total fee (transfer + protocol) for a given amount */
+  totalFee: (amount: Amount) => Amount;
+}
+
+/**
+ * The execution state of a bridging step.
+ * - "planned": Step has not been executed yet
+ * - "running": Step is currently executing
+ * - "succeeded": Step completed successfully
+ * - "failed": Step failed and cannot proceed
+ * - "refunded": Step was refunded due to an issue
+ */
+export type StepState =
+  | "planned"
+  | "running"
+  | "succeeded"
+  | "failed"
+  | "refunded";
+
+/**
+ * The current status and results of a step execution.
+ */
+export interface StepStatus {
+  /** Current execution state */
+  state: StepState;
+  /** Short status message */
+  concise: string;
+  /** Detailed status message */
+  verbose: string;
+  /** Token amount involved in this step (if applicable) */
+  amount?: Amount;
+  /** Expected fees for this operation (if applicable) */
+  expectedFee?: ExpectedFee;
+  /** Transaction details if this step submitted a transaction */
+  transaction?: Tx;
+  /** Transfer ID if this step initiated a transfer */
+  transferId?: TransferId;
+  /** Generated forwarding address (for forwarding steps) */
+  forwardingAddress?: string;
+  /** Error details if the step failed */
+  error?: Error;
+}
+
+/**
+ * A single step in a token bridging process.
+ *
+ * Each step represents one operation (like transaction submission,
+ * approval, or status checking) with its own execution state and progress tracking.
+ * Steps are designed to be retryable and provide detailed status information.
+ *
+ * @example
+ * ```typescript
+ * // Get step information before execution
+ * const step = plan.nextStepToRun();
+ * console.log(step.about().verbose); // "Submit transaction on Base"
+ *
+ * // Execute the step with error handling
+ * try {
+ *   const result = await step.run();
+ *
+ *   // Check the result
+ *   if (result.state === "succeeded") {
+ *     console.log("Step completed:", result.verbose);
+ *     if (result.transaction) {
+ *       console.log("Transaction:", result.transaction);
+ *     }
+ *   } else if (result.state === "failed") {
+ *     console.error("Step failed:", result.error);
+ *   }
+ * } catch (error) {
+ *   // Maybe retry the step.
+ *   console.error("Unexpected error during step execution:", error);
+ * }
+ * ```
+ */
+export interface Step {
+  /**
+   * Get descriptive information about what this step does.
+   * @returns Concise and verbose descriptions of the step's purpose
+   */
+  about: () => About;
+
+  /**
+   * Get the step's position in the execution plan.
+   * @returns Zero-based index of this step
+   */
+  index: () => number;
+
+  /**
+   * Get the current execution status of this step.
+   * @returns Current state, progress messages, and any results
+   */
+  status: () => StepStatus;
+
+  /**
+   * @returns `true` if it is this step's turn to run and if its state allows
+   * running. Otherwise returns `false`.
+   */
+  canRun: () => boolean;
+
+  /**
+   * Execute this step's operation.
+   *
+   * This method is idempotent - calling it multiple times will not
+   * cause duplicate operations. Failed steps can be retried by calling run() again.
+   *
+   * If `canRun()` is `false`, then calling this function does nothing.
+   *
+   * @returns Promise resolving to the step's final status
+   * @throws Error if the step encounters an unexpected error during execution
+   */
+  run: () => Promise<StepStatus>;
+
+  /**
+   * Get the expected duration for this step to complete.
+   * @returns Expected duration in milliseconds
+   */
+  expectedDurationMs: () => number;
 }

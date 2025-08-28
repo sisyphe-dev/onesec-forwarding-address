@@ -1,5 +1,5 @@
 import type * as candid from "./generated/candid/onesec/onesec.did";
-import type { EvmChain, IcrcAccount, Token } from "./types";
+import type { EvmChain, EvmTx, IcrcAccount, Token } from "./types";
 
 export function token(token: Token): candid.Token {
   switch (token) {
@@ -37,4 +37,15 @@ export function icpAccount(account: IcrcAccount): candid.IcpAccount {
     subaccount = [account.subaccount];
   }
   return { ICRC: { owner: account.owner, subaccount } };
+}
+
+export function evmAccount(address: string): candid.EvmAccount {
+  return { address };
+}
+
+export function evmTx(tx: EvmTx): candid.EvmTx {
+  return {
+    hash: tx.hash,
+    log_index: tx.logIndex !== undefined ? [tx.logIndex] : [],
+  };
 }
