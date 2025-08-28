@@ -7,14 +7,9 @@ import type {
   StepStatus,
   Token,
 } from "../../types";
-import {
-  BaseStep,
-  encodeIcrcAccount,
-  EVM_CALL_DURATION_MS,
-  format,
-  formatIcpAccount,
-  GetEvmTx,
-} from "../shared";
+import { BaseStep, GetEvmTx } from "../baseStep";
+import { EVM_CALL_DURATION_MS } from "../shared";
+import { encodeIcrcAccount, format, formatIcpAccount } from "../../utils";
 
 export class BurnStep extends BaseStep implements GetEvmTx {
   private data1: Uint8Array;
@@ -46,6 +41,10 @@ export class BurnStep extends BaseStep implements GetEvmTx {
   }
 
   async run(): Promise<StepStatus> {
+    if (!this.canRun()) {
+      return this._status;
+    }
+
     this._status = {
       state: "running",
       concise: "preparing transaction",

@@ -7,19 +7,14 @@ import type {
   Token,
   TransferId,
 } from "../../../types";
-import {
-  BaseStep,
-  exponentialBackoff,
-  GetTransferId,
-  ICP_CALL_DURATION_MS,
-  sleep,
-} from "../../shared";
+import { BaseStep, GetTransferId } from "../../baseStep";
+import { exponentialBackoff, sleep } from "../../../utils";
+import { ICP_CALL_DURATION_MS } from "../../shared";
 import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
 
 export class ValidateForwardingReceiptStep
   extends BaseStep
-  implements GetTransferId
-{
+  implements GetTransferId {
   private transferId?: TransferId;
 
   constructor(
@@ -49,6 +44,10 @@ export class ValidateForwardingReceiptStep
   }
 
   async run(): Promise<StepStatus> {
+    if (!this.canRun()) {
+      return this._status;
+    }
+
     const forwardingAddress =
       this.computeForwardingAddressStep.getForwardingAddress();
     const lastTransferId =

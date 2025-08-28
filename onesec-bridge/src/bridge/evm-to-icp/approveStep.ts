@@ -6,12 +6,9 @@ import type {
   StepStatus,
   Token,
 } from "../../types";
-import {
-  BaseStep,
-  EVM_CALL_DURATION_MS,
-  format,
-  formatIcpAccount,
-} from "../shared";
+import { BaseStep } from "../baseStep";
+import { EVM_CALL_DURATION_MS } from "../shared";
+import { format, formatIcpAccount } from "../../utils";
 
 export class ApproveStep extends BaseStep {
   constructor(
@@ -38,6 +35,10 @@ export class ApproveStep extends BaseStep {
   }
 
   async run(): Promise<StepStatus> {
+    if (!this.canRun()) {
+      return this._status;
+    }
+
     this._status = {
       state: "running",
       concise: "preparing transaction",

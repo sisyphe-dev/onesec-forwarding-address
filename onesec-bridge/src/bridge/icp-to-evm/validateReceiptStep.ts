@@ -1,15 +1,9 @@
 import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
 import type { About, EvmChain, StepStatus, Token } from "../../types";
-import {
-  amountFromUnits,
-  BaseStep,
-  exponentialBackoff,
-  format,
-  formatTx,
-  ICP_CALL_DURATION_MS,
-  sleep,
-} from "../shared";
+import { BaseStep } from "../baseStep";
+import { amountFromUnits, exponentialBackoff, format, formatTx, sleep } from "../../utils";
+import { ICP_CALL_DURATION_MS } from "../shared";
 import { TransferStep } from "./transferStep";
 
 export class ValidateReceiptStep extends BaseStep {
@@ -37,6 +31,10 @@ export class ValidateReceiptStep extends BaseStep {
   }
 
   async run(): Promise<StepStatus> {
+    if (!this.canRun()) {
+      return this._status;
+    }
+
     const transferId = this.transferStep.getTransferId();
 
     if (transferId === undefined) {

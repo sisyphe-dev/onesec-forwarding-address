@@ -8,13 +8,9 @@ import type {
   Token,
   TransferId,
 } from "../../../types";
-import {
-  BaseStep,
-  exponentialBackoff,
-  format,
-  ICP_CALL_DURATION_MS,
-  sleep,
-} from "../../shared";
+import { BaseStep } from "../../baseStep";
+import { exponentialBackoff, format, sleep } from "../../../utils";
+import { ICP_CALL_DURATION_MS } from "../../shared";
 import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
 
 export class WaitForForwardingTxStep extends BaseStep {
@@ -53,6 +49,10 @@ export class WaitForForwardingTxStep extends BaseStep {
   }
 
   async run(): Promise<StepStatus> {
+    if (!this.canRun()) {
+      return this._status;
+    }
+
     const forwardingAddress =
       this.computeForwardingAddressStep.getForwardingAddress();
     const lastTransferId =

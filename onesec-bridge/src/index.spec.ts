@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import { EvmToIcpBridgeBuilder, IcpToEvmBridgeBuilder } from "./index";
 import { createTestSigners } from "./testUtils";
 
-it.skip(
+// The purpose of this test is to show how to use the API. It is skipped by
+// default because it requires private keys and interacts with the mainnet.
+it(
   "should transfer USDC from Base to ICP using bridge directly",
   { timeout: 200000 },
   async () => {
@@ -21,7 +23,7 @@ it.skip(
     console.log("");
 
     let nextStep;
-    while ((nextStep = plan.nextStep())) {
+    while ((nextStep = plan.nextStepToRun())) {
       const status = nextStep.status();
       if (status.state === "planned") {
         console.log(nextStep.about().verbose);
@@ -36,13 +38,25 @@ it.skip(
       }
     }
 
-    const lastStep = plan.lastStep()!;
-    const result = lastStep.status();
+    const latestStep = plan.latestStep()!;
+    const result = latestStep.status();
     expect(result.state).toBe("succeeded");
+
+    // Verify final results are available
+    if (result.amount) {
+      console.log(`Received: ${result.amount.inTokens} USDC (${result.amount.inUnits} units)`);
+      expect(result.amount.inUnits).toBeGreaterThan(0n);
+    }
+    if (result.transaction) {
+      console.log(`Final transaction:`, result.transaction);
+      expect(result.transaction).toBeDefined();
+    }
   },
 );
 
-it.skip(
+// The purpose of this test is to show how to use the API. It is skipped by
+// default because it requires private keys and interacts with the mainnet.
+it(
   "should transfer USDC from ICP to Base using bridge directly",
   { timeout: 200000 },
   async () => {
@@ -68,7 +82,7 @@ it.skip(
     console.log("");
 
     let nextStep;
-    while ((nextStep = plan.nextStep())) {
+    while ((nextStep = plan.nextStepToRun())) {
       const status = nextStep.status();
       if (status.state === "planned") {
         console.log(nextStep.about().verbose);
@@ -83,14 +97,26 @@ it.skip(
       }
     }
 
-    const lastStep = plan.lastStep()!;
-    const result = lastStep.status();
+    const latestStep = plan.latestStep()!;
+    const result = latestStep.status();
 
     expect(result.state).toBe("succeeded");
+
+    // Verify final results are available
+    if (result.amount) {
+      console.log(`Received: ${result.amount.inTokens} USDC (${result.amount.inUnits} units)`);
+      expect(result.amount.inUnits).toBeGreaterThan(0n);
+    }
+    if (result.transaction) {
+      console.log(`Final EVM transaction:`, result.transaction);
+      expect(result.transaction).toBeDefined();
+    }
   },
 );
 
-it.skip(
+// The purpose of this test is to show how to use the API. It is skipped by
+// default because it requires private keys and interacts with the mainnet.
+it(
   "should transfer USDC from Base to ICP using forwarding address",
   { timeout: 200000 },
   async () => {
@@ -109,7 +135,7 @@ it.skip(
 
     let nextStep;
     let forwardingAddress;
-    while ((nextStep = plan.nextStep())) {
+    while ((nextStep = plan.nextStepToRun())) {
       const status = nextStep.status();
       if (status.state === "planned") {
         console.log(nextStep.about().verbose);
@@ -132,7 +158,7 @@ it.skip(
     // Wait until the user transfers USDC and then
     // continue with the remaining steps.
 
-    while ((nextStep = plan.nextStep())) {
+    while ((nextStep = plan.nextStepToRun())) {
       const status = nextStep.status();
       if (status.state === "planned") {
         console.log(nextStep.about().verbose);
@@ -147,10 +173,20 @@ it.skip(
       }
     }
 
-    const lastStep = plan.lastStep()!;
-    const result = lastStep.status();
+    const latestStep = plan.latestStep()!;
+    const result = latestStep.status();
 
     expect(result.state).toBe("succeeded");
+
+    // Verify final results are available
+    if (result.amount) {
+      console.log(`Received: ${result.amount.inTokens} USDC (${result.amount.inUnits} units)`);
+      expect(result.amount.inUnits).toBeGreaterThan(0n);
+    }
+    if (result.transaction) {
+      console.log(`Final ICP transaction:`, result.transaction);
+      expect(result.transaction).toBeDefined();
+    }
   },
 );
 

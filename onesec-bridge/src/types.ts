@@ -319,8 +319,6 @@ export interface StepStatus {
   expectedFee?: ExpectedFee;
   /** Transaction details if this step submitted a transaction */
   transaction?: Tx;
-  /** Link to external resource (e.g., block explorer) */
-  link?: string;
   /** Transfer ID if this step initiated a transfer */
   transferId?: TransferId;
   /** Generated forwarding address (for forwarding steps) */
@@ -339,7 +337,7 @@ export interface StepStatus {
  * @example
  * ```typescript
  * // Get step information before execution
- * const step = plan.nextStep();
+ * const step = plan.nextStepToRun();
  * console.log(step.about().verbose); // "Submit transaction on Base"
  *
  * // Execute the step with error handling
@@ -381,10 +379,18 @@ export interface Step {
   status: () => StepStatus;
 
   /**
+   * @returns `true` if it is this step's turn to run and if its state allows
+   * running. Otherwise returns `false`. 
+   */
+  canRun: () => boolean;
+
+  /**
    * Execute this step's operation.
    *
    * This method is idempotent - calling it multiple times will not
    * cause duplicate operations. Failed steps can be retried by calling run() again.
+   * 
+   * If `canRun()` is `false`, then calling this function does nothing.
    *
    * @returns Promise resolving to the step's final status
    * @throws Error if the step encounters an unexpected error during execution

@@ -6,7 +6,8 @@ import type {
   StepStatus,
   Token,
 } from "../../../types";
-import { BaseStep, ICP_CALL_DURATION_MS } from "../../shared";
+import { BaseStep } from "../../baseStep";
+import { ICP_CALL_DURATION_MS } from "../../shared";
 import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
 
 export class NotifyForwardingPaymentStep extends BaseStep {
@@ -32,6 +33,10 @@ export class NotifyForwardingPaymentStep extends BaseStep {
   }
 
   async run(): Promise<StepStatus> {
+    if (!this.canRun()) {
+      return this._status;
+    }
+
     const forwardingAddress =
       this.computeForwardingAddressStep.getForwardingAddress();
 

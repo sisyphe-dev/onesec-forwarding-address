@@ -7,7 +7,9 @@ import type {
   Token,
   TransferId,
 } from "../../../types";
-import { BaseStep, formatIcpAccount, ICP_CALL_DURATION_MS } from "../../shared";
+import { BaseStep } from "../../baseStep";
+import { formatIcpAccount } from "../../../utils";
+import { ICP_CALL_DURATION_MS } from "../../shared";
 
 export class ComputeForwardingAddressStep extends BaseStep {
   private lastTransferId?: TransferId;
@@ -42,6 +44,10 @@ export class ComputeForwardingAddressStep extends BaseStep {
   }
 
   async run(): Promise<StepStatus> {
+    if (!this.canRun()) {
+      return this._status;
+    }
+
     this._status = {
       state: "running",
       concise: "running",

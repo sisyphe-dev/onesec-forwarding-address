@@ -9,14 +9,9 @@ import type {
   Token,
   TransferId,
 } from "../../types";
-import {
-  BaseStep,
-  exponentialBackoff,
-  GetEvmTx,
-  GetTransferId,
-  ICP_CALL_DURATION_MS,
-  sleep,
-} from "../shared";
+import { BaseStep, GetEvmTx, GetTransferId } from "../baseStep";
+import { exponentialBackoff, sleep } from "../../utils";
+import { ICP_CALL_DURATION_MS } from "../shared";
 
 export class ValidateReceiptStep extends BaseStep implements GetTransferId {
   private transferId?: TransferId;
@@ -50,6 +45,10 @@ export class ValidateReceiptStep extends BaseStep implements GetTransferId {
   }
 
   async run(): Promise<StepStatus> {
+    if (!this.canRun()) {
+      return this._status;
+    }
+
     const evmTx = this.getEvmTx.getEvmTx();
 
     if (evmTx === undefined) {

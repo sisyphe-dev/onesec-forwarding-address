@@ -14,12 +14,10 @@ import {
   type _SERVICE as IcrcLedger,
 } from "../../generated/candid/icrc_ledger/icrc_ledger.did";
 import { Deployment, EvmChain, IcrcAccount, Token } from "../../types";
-import {
-  ConfirmBlocksStep,
-  FetchFeesAndCheckLimits,
-  numberToBigintScaled,
-  oneSecWithAgent,
-} from "../shared";
+import { oneSecWithAgent } from "../shared";
+import { ConfirmBlocksStep } from "../confirmBlocksStep";
+import { FetchFeesAndCheckLimitsStep } from "../fetchFeesAndCheckLimitsStep";
+import { numberToBigintScaled } from "../../utils";
 import { ApproveStep } from "./approveStep";
 import { TransferStep } from "./transferStep";
 import { ValidateReceiptStep } from "./validateReceiptStep";
@@ -215,7 +213,7 @@ export class IcpToEvmBridgeBuilder {
       config,
     );
 
-    const checkFeesAndLimitsStep = new FetchFeesAndCheckLimits(
+    const checkFeesAndLimitsStep = new FetchFeesAndCheckLimitsStep(
       oneSecActor,
       this.token,
       "ICP",

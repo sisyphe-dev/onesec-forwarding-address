@@ -10,7 +10,9 @@ import type {
   Token,
   TransferId,
 } from "../../types";
-import { BaseStep, format, formatTx, ICP_CALL_DURATION_MS } from "../shared";
+import { BaseStep } from "../baseStep";
+import { format, formatTx } from "../../utils";
+import { ICP_CALL_DURATION_MS } from "../shared";
 
 export class TransferStep extends BaseStep {
   private transferId?: TransferId;
@@ -44,6 +46,10 @@ export class TransferStep extends BaseStep {
   }
 
   async run(): Promise<StepStatus> {
+    if (!this.canRun()) {
+      return this._status;
+    }
+
     this._status = {
       state: "running",
       concise: "running",

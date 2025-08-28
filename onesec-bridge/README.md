@@ -26,18 +26,19 @@ yarn add onesec-bridge
 Use this approach when users can connect their wallet and sign transactions directly.
 
 ```typescript
-import { EvmToIcpBridgeBuilder } from "@onesec/bridge-sdk";
+import { EvmToIcpBridgeBuilder } from "onesec-bridge";
 import { JsonRpcProvider, Wallet } from "ethers";
 import { Principal } from "@dfinity/principal";
 
-// Setup wallet
+// Setup wallet or use the browser wallet API.
 const provider = new JsonRpcProvider("https://mainnet.base.org");
 const wallet = new Wallet("your-private-key", provider);
 
 // Create bridging plan
 const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
   .receiver(Principal.fromText("your-icp-principal"))
-  .amountInUnits(1_500_000n) // 1.5 USDC
+  .amountInTokens(1_500_000n) // 1.5 USDC
+  // alternative: use `.amountInTokens(1.5)`
   .build(wallet);
 
 // Print plan overview
@@ -48,7 +49,7 @@ plan.steps().forEach((step, index) => {
 
 // Execute step by step with progress tracking
 let nextStep;
-while (nextStep = plan.nextStep()) {
+while (nextStep = plan.nextStepToRun()) {
   const status = nextStep.status();
   if (status.state === "planned") {
     console.log(nextStep.about().verbose);
@@ -61,6 +62,21 @@ while (nextStep = plan.nextStep()) {
     break;
   }
 }
+
+// Get final results after completion
+const finalStep = plan.latestStep();
+if (finalStep) {
+  const status = finalStep.status();
+  if (status.state === "succeeded") {
+    console.log("Bridging completed successfully!");
+    if (status.amount) {
+      console.log(`Received: ${status.amount.inTokens} USDC`);
+    }
+    if (status.transaction) {
+      console.log(`Transaction: ${JSON.stringify(status.transaction)}`);
+    }
+  }
+}
 ```
 
 ### EVM to ICP Bridging (Forwarding Address)
@@ -68,7 +84,7 @@ while (nextStep = plan.nextStep()) {
 Use this approach when users cannot connect a wallet or prefer to send tokens manually.
 
 ```typescript
-import { EvmToIcpBridgeBuilder } from "@onesec/bridge-sdk";
+import { EvmToIcpBridgeBuilder } from "onesec-bridge";
 import { Principal } from "@dfinity/principal";
 
 // Create forwarding-based bridging plan
@@ -78,7 +94,7 @@ const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
 
 // Execute with progress tracking
 let nextStep;
-while (nextStep = plan.nextStep()) {
+while (nextStep = plan.nextStepToRun()) {
   const status = nextStep.status();
   if (status.state === "planned") {
     console.log(nextStep.about().verbose);
@@ -97,6 +113,21 @@ while (nextStep = plan.nextStep()) {
     break;
   }
 }
+
+// Get final results after completion
+const finalStep = plan.latestStep();
+if (finalStep) {
+  const status = finalStep.status();
+  if (status.state === "succeeded") {
+    console.log("Bridging completed successfully!");
+    if (status.amount) {
+      console.log(`Received: ${status.amount.inTokens} USDC`);
+    }
+    if (status.transaction) {
+      console.log(`ICP Transaction: ${JSON.stringify(status.transaction)}`);
+    }
+  }
+}
 ```
 
 ### ICP to EVM Bridging
@@ -104,7 +135,7 @@ while (nextStep = plan.nextStep()) {
 Transfer tokens from ICP to EVM chains. Requires an authenticated ICP agent.
 
 ```typescript
-import { IcpToEvmBridgeBuilder } from "@onesec/bridge-sdk";
+import { IcpToEvmBridgeBuilder } from "onesec-bridge";
 import { HttpAgent } from "@dfinity/agent";
 import { Secp256k1KeyIdentity } from "@dfinity/identity-secp256k1";
 
@@ -120,12 +151,38 @@ const plan = await new IcpToEvmBridgeBuilder(agent, "Base", "USDC")
   .sender(identity.getPrincipal())
   .receiver("0x742d35Cc6575C4B9bE904C1e13D21c4C624A9960")
   .amountInUnits(1_500_000n) // 1.5 USDC
+  // alternative: use `.amountInTokens(1.5)`
   .build();
 
-// Execute with progress tracking (same pattern as above)
+// Execute with progress tracking
 let nextStep;
-while (nextStep = plan.nextStep()) {
-  // ... execution logic
+while (nextStep = plan.nextStepToRun()) {
+  const status = nextStep.status();
+  if (status.state === "planned") {
+    console.log(nextStep.about().verbose);
+  }
+  try {
+    const result = await nextStep.run();
+    console.log(`  - ${result.verbose}`);
+  } catch (error) {
+    console.error("Step execution failed:", error);
+    break;
+  }
+}
+
+// Get final results after completion
+const finalStep = plan.latestStep();
+if (finalStep) {
+  const status = finalStep.status();
+  if (status.state === "succeeded") {
+    console.log("Bridging completed successfully!");
+    if (status.amount) {
+      console.log(`Received: ${status.amount.inTokens} USDC`);
+    }
+    if (status.transaction) {
+      console.log(`EVM Transaction: ${JSON.stringify(status.transaction)}`);
+    }
+  }
 }
 ```
 
@@ -178,8 +235,9 @@ agent to interact with ICP canisters on behalf of the user.
 - [target](#gear-target)
 - [sender](#gear-sender)
 - [receiver](#gear-receiver)
-- [amountInTokens](#gear-amountintokens)
 - [amountInUnits](#gear-amountinunits)
+- [amountInTokens](#gear-amountintokens)
+- [payApproveFeeFromAmount](#gear-payapprovefeefromamount)
 - [withConfig](#gear-withconfig)
 
 ##### :gear: target
@@ -195,7 +253,7 @@ Parameters:
 * `deployment`: Target network ("Mainnet", "Testnet", or "Local")
 
 
-[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L68)
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L70)
 
 ##### :gear: sender
 
@@ -211,7 +269,7 @@ Parameters:
 * `subaccount`: Optional 32-byte subaccount
 
 
-[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L78)
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L80)
 
 ##### :gear: receiver
 
@@ -226,15 +284,7 @@ Parameters:
 * `address`: EVM address receiving the tokens
 
 
-[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L87)
-
-##### :gear: amountInTokens
-
-| Method | Type |
-| ---------- | ---------- |
-| `amountInTokens` | `(amount: number) => IcpToEvmBridgeBuilder` |
-
-[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L95)
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L89)
 
 ##### :gear: amountInUnits
 
@@ -249,7 +299,47 @@ Parameters:
 * `amount`: Amount in base units (e.g., 1_500_000n for 1.5 USDC)
 
 
-[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L104)
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L99)
+
+##### :gear: amountInTokens
+
+Set amount to bridge in human-readable token units.
+
+| Method | Type |
+| ---------- | ---------- |
+| `amountInTokens` | `(amount: number) => IcpToEvmBridgeBuilder` |
+
+Parameters:
+
+* `amount`: Amount in token units (e.g., 1.5 for 1.5 USDC)
+
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L108)
+
+##### :gear: payApproveFeeFromAmount
+
+Deduct the ledger approval fee from the bridging amount.
+
+When enabled, the approval fee is subtracted from the specified amount, so the user
+only needs to have exactly the bridging amount in their account rather than
+bridging amount + approval fee.
+
+| Method | Type |
+| ---------- | ---------- |
+| `payApproveFeeFromAmount` | `() => IcpToEvmBridgeBuilder` |
+
+Examples:
+
+```typescript
+// Without payApproveFeeFromAmount(): User needs 1.5 USDC + approval fee
+const plan1 = await builder.amountInUnits(1_500_000n).build();
+
+// With payApproveFeeFromAmount(): User needs exactly 1.5 USDC, approval fee deducted from amount
+const plan2 = await builder.amountInUnits(1_500_000n).payApproveFeeFromAmount().build();
+```
+
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L129)
 
 ##### :gear: withConfig
 
@@ -264,7 +354,7 @@ Parameters:
 * `config`: Custom bridge configuration
 
 
-[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L113)
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/icp-to-evm/index.ts#L138)
 
 
 ### :factory: EvmToIcpBridgeBuilder
@@ -275,13 +365,14 @@ Supports two bridging modes:
 - Direct bridging via `build()` - requires user to connect wallet and sign transactions
 - Forwarding via `forward()` - user sends tokens to a generated forwarding address
 
-[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/evm-to-icp/index.ts#L59)
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/evm-to-icp/index.ts#L58)
 
 #### Methods
 
 - [target](#gear-target)
 - [sender](#gear-sender)
 - [amountInUnits](#gear-amountinunits)
+- [amountInTokens](#gear-amountintokens)
 - [receiver](#gear-receiver)
 - [withConfig](#gear-withconfig)
 
@@ -330,6 +421,21 @@ Parameters:
 
 [:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/evm-to-icp/index.ts#L97)
 
+##### :gear: amountInTokens
+
+Set amount to bridge in human-readable token units.
+
+| Method | Type |
+| ---------- | ---------- |
+| `amountInTokens` | `(amount: number) => EvmToIcpBridgeBuilder` |
+
+Parameters:
+
+* `amount`: Amount in token units (e.g., 1.5 for 1.5 USDC)
+
+
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/evm-to-icp/index.ts#L106)
+
 ##### :gear: receiver
 
 Set ICP recipient account.
@@ -344,7 +450,7 @@ Parameters:
 * `subaccount`: Optional 32-byte subaccount
 
 
-[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/evm-to-icp/index.ts#L107)
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/evm-to-icp/index.ts#L116)
 
 ##### :gear: withConfig
 
@@ -359,7 +465,7 @@ Parameters:
 * `config`: Custom bridge configuration
 
 
-[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/evm-to-icp/index.ts#L119)
+[:link: Source](https://github.com/sisyphe-dev/key_token.git/tree/main/src/bridge/evm-to-icp/index.ts#L128)
 
 
 <!-- TSDOC_END -->

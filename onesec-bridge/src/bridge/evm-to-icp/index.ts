@@ -19,13 +19,10 @@ import type {
   Step,
   Token,
 } from "../../types";
-import {
-  anonymousAgent,
-  ConfirmBlocksStep,
-  FetchFeesAndCheckLimits,
-  numberToBigintScaled,
-  oneSecWithAgent,
-} from "../shared";
+import { anonymousAgent, oneSecWithAgent } from "../shared";
+import { ConfirmBlocksStep } from "../confirmBlocksStep";
+import { FetchFeesAndCheckLimitsStep } from "../fetchFeesAndCheckLimitsStep";
+import { numberToBigintScaled } from "../../utils";
 import { ApproveStep } from "./approveStep";
 import { BurnStep } from "./burnStep";
 import { ComputeForwardingAddressStep } from "./forwarding/computeForwardingAddressStep";
@@ -195,7 +192,7 @@ export class EvmToIcpBridgeBuilder {
     const agent = await anonymousAgent(this.deployment, config);
     const oneSecActor = await oneSecWithAgent(oneSecId, agent);
 
-    const checkFeesAndLimitsStep = new FetchFeesAndCheckLimits(
+    const checkFeesAndLimitsStep = new FetchFeesAndCheckLimitsStep(
       oneSecActor,
       this.token,
       this.evmChain,
@@ -373,7 +370,7 @@ export class EvmToIcpBridgeBuilder {
     const agent = await anonymousAgent(this.deployment, config);
     const oneSecActor = await oneSecWithAgent(oneSecId, agent);
 
-    const checkFeesAndLimitsStep = new FetchFeesAndCheckLimits(
+    const checkFeesAndLimitsStep = new FetchFeesAndCheckLimitsStep(
       oneSecActor,
       this.token,
       this.evmChain,

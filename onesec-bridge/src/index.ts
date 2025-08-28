@@ -1,23 +1,12 @@
+import { BaseStep } from "./bridge";
 import { OneSecForwardingImpl } from "./forwarding";
 import type { Deployment, OneSecForwarding, Step, StepStatus } from "./types";
 
 export { EvmToIcpBridgeBuilder, IcpToEvmBridgeBuilder } from "./bridge";
-export {
-  DEFAULT_CONFIG,
-  getTokenConfig,
-  getTokenDecimals,
-  getTokenErc20Address,
-  getTokenLedgerCanister,
-  getTokenLockerAddress,
-} from "./config";
+export { DEFAULT_CONFIG } from "./config";
 export type { Config, IcpConfig, TokenConfig } from "./config";
-export type {
-  About,
-  Amount,
-  OneSecForwarding,
-  Step,
-  StepStatus as StepStatus,
-} from "./types";
+export type { About, Amount, OneSecForwarding, Step, StepStatus as StepStatus, } from "./types";
+
 
 /**
  * Constructs an instance of `OneSecForwarding` for bridging tokens from EVM
@@ -50,7 +39,7 @@ export type {
  *
  * // Execute step by step with progress tracking
  * let nextStep;
- * while (nextStep = plan.nextStep()) {
+ * while (nextStep = plan.nextStepToRun()) {
  *   const status = nextStep.status();
  *   if (status.state === "planned") {
  *     console.log(nextStep.about().verbose);
@@ -64,6 +53,21 @@ export type {
  *   } catch (error) {
  *     console.error("Step execution failed:", error);
  *     break;
+ *   }
+ * }
+ *
+ * // Get final results after completion
+ * const finalStep = plan.latestStep();
+ * if (finalStep) {
+ *   const status = finalStep.status();
+ *   if (status.state === "succeeded") {
+ *     console.log("Forwarding completed successfully!");
+ *     if (status.amount) {
+ *       console.log(`Received: ${status.amount.inTokens} USDC`);
+ *     }
+ *     if (status.transaction) {
+ *       console.log(`ICP Transaction: ${JSON.stringify(status.transaction)}`);
+ *     }
  *   }
  * }
  * ```
@@ -80,7 +84,7 @@ export function oneSecForwarding(setup?: Deployment): OneSecForwarding {
  *
  * A BridgingPlan contains an ordered sequence of steps that must be executed
  * to complete a token bridge operation. Steps can be run individually with
- * `nextStep().run()` or all at once with `runAllSteps()`.
+ * `nextStepToRun().run()` or all at once with `runAllSteps()`.
  *
  * The plan tracks execution state and handles step dependencies, ensuring
  * steps are executed in the correct order and failed steps halt progression.
@@ -100,7 +104,7 @@ export function oneSecForwarding(setup?: Deployment): OneSecForwarding {
  *
  * // Execute step-by-step with progress tracking
  * let nextStep;
- * while (nextStep = plan.nextStep()) {
+ * while (nextStep = plan.nextStepToRun()) {
  *   const status = nextStep.status();
  *   if (status.state === "planned") {
  *     console.log(nextStep.about().verbose);
@@ -114,10 +118,33 @@ export function oneSecForwarding(setup?: Deployment): OneSecForwarding {
  *   }
  * }
  *
+ * // Get final results after completion
+ * const finalStep = plan.latestStep();
+ * if (finalStep) {
+ *   const status = finalStep.status();
+ *   if (status.state === "succeeded") {
+ *     console.log("Bridging completed successfully!");
+ *     if (status.amount) {
+ *       console.log(`Received: ${status.amount.inTokens} USDC`);
+ *     }
+ *     if (status.transaction) {
+ *       console.log(`Transaction: ${JSON.stringify(status.transaction)}`);
+ *     }
+ *   }
+ * }
+ *
  * // Or execute all steps at once
  * try {
  *   const finalResult = await plan.runAllSteps();
  *   console.log("Bridging completed:", finalResult.state);
+ *   if (finalResult.state === "succeeded") {
+ *     if (finalResult.amount) {
+ *       console.log(`Received: ${finalResult.amount.inTokens} USDC`);
+ *     }
+ *     if (finalResult.transaction) {
+ *       console.log(`Transaction: ${JSON.stringify(finalResult.transaction)}`);
+ *     }
+ *   }
  * } catch (error) {
  *   console.error("Bridging failed:", error);
  * }
@@ -126,7 +153,11 @@ export function oneSecForwarding(setup?: Deployment): OneSecForwarding {
 export class BridgingPlan {
   private currentStepIndex: number = 0;
 
-  constructor(private _steps: Step[]) {}
+  constructor(private _steps: Step[]) {
+    for (let i = 0; i < _steps.length; i++) {
+      (_steps[i] as BaseStep).initialize(this, i);
+    }
+  }
 
   /**
    * Get all steps in this bridging plan.
@@ -138,9 +169,11 @@ export class BridgingPlan {
 
   /**
    * Get the most recently executed step.
-   * @returns The last executed step, or undefined if no steps have been executed
+   * @returns The latest executed step, or undefined if no steps have been executed
    */
-  lastStep(): Step | undefined {
+  latestStep(): Step | undefined {
+    this.skipDone();
+
     if (this.currentStepIndex === 0) {
       return undefined;
     }
@@ -155,16 +188,16 @@ export class BridgingPlan {
    *
    * @returns Next step to execute, or undefined if plan is complete/failed
    */
-  nextStep(): Step | undefined {
+  nextStepToRun(): Step | undefined {
     this.skipDone();
 
-    const lastStep = this.lastStep();
-    if (lastStep) {
-      const state = lastStep.status().state;
+    const latestStep = this.latestStep();
+    if (latestStep) {
+      const state = latestStep.status().state;
       switch (state) {
         case "failed":
         case "refunded": {
-          // There is no next step if the last step has failed or triggered a refund.
+          // There is no next step if the previous step has failed or triggered a refund.
           return undefined;
         }
         case "succeeded":
@@ -189,12 +222,12 @@ export class BridgingPlan {
    * @throws Error if a step encounters an unexpected error during execution
    */
   async runAllSteps(): Promise<StepStatus> {
-    let nextStep = this.nextStep();
+    let nextStep = this.nextStepToRun();
     while (nextStep) {
       await nextStep.run();
-      nextStep = this.nextStep();
+      nextStep = this.nextStepToRun();
     }
-    return this.lastStep()!.status();
+    return this.latestStep()!.status();
   }
 
   /**
