@@ -14,10 +14,10 @@ import {
   type _SERVICE as IcrcLedger,
 } from "../../generated/candid/icrc_ledger/icrc_ledger.did";
 import { Deployment, EvmChain, IcrcAccount, Token } from "../../types";
-import { oneSecWithAgent } from "../shared";
+import { numberToBigintScaled } from "../../utils";
 import { ConfirmBlocksStep } from "../confirmBlocksStep";
 import { FetchFeesAndCheckLimitsStep } from "../fetchFeesAndCheckLimitsStep";
-import { numberToBigintScaled } from "../../utils";
+import { oneSecWithAgent } from "../shared";
 import { ApproveStep } from "./approveStep";
 import { TransferStep } from "./transferStep";
 import { ValidateReceiptStep } from "./validateReceiptStep";
@@ -61,7 +61,7 @@ export class IcpToEvmBridgeBuilder {
     private agent: Agent,
     private evmChain: EvmChain,
     private token: Token,
-  ) { }
+  ) {}
 
   /**
    * Set target deployment network.
@@ -91,7 +91,6 @@ export class IcpToEvmBridgeBuilder {
     return this;
   }
 
-
   /**
    * Set amount to bridge in token's smallest units.
    * @param amount Amount in base units (e.g., 1_500_000n for 1.5 USDC)
@@ -112,16 +111,16 @@ export class IcpToEvmBridgeBuilder {
 
   /**
    * Deduct the ledger approval fee from the bridging amount.
-   * 
+   *
    * When enabled, the approval fee is subtracted from the specified amount, so the user
    * only needs to have exactly the bridging amount in their account rather than
    * bridging amount + approval fee.
-   * 
+   *
    * @example
    * ```typescript
    * // Without payApproveFeeFromAmount(): User needs 1.5 USDC + approval fee
    * const plan1 = await builder.amountInUnits(1_500_000n).build();
-   * 
+   *
    * // With payApproveFeeFromAmount(): User needs exactly 1.5 USDC, approval fee deducted from amount
    * const plan2 = await builder.amountInUnits(1_500_000n).payApproveFeeFromAmount().build();
    * ```
@@ -159,7 +158,9 @@ export class IcpToEvmBridgeBuilder {
     const icpAccount = this.icpAccount || { owner: agentPrincipal };
 
     if (icpAccount.owner != agentPrincipal) {
-      throw new Error(`The principal of sender does not match the principal of the agent: ${icpAccount.owner} vs ${agentPrincipal}`);
+      throw new Error(
+        `The principal of sender does not match the principal of the agent: ${icpAccount.owner} vs ${agentPrincipal}`,
+      );
     }
 
     if (
@@ -195,7 +196,6 @@ export class IcpToEvmBridgeBuilder {
     if (this.approveFeeInAmount && amount >= approveFee) {
       amount -= approveFee;
     }
-
 
     const oneSecId = Principal.fromText(
       config.icp.onesec.get(this.deployment)!,

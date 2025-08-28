@@ -1,8 +1,14 @@
 import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
 import type { About, IcrcAccount, StepStatus, Token } from "../../types";
+import {
+  amountFromUnits,
+  exponentialBackoff,
+  format,
+  formatIcpAccount,
+  sleep,
+} from "../../utils";
 import { BaseStep, GetTransferId } from "../baseStep";
-import { amountFromUnits, exponentialBackoff, format, formatIcpAccount, sleep } from "../../utils";
 import { ICP_CALL_DURATION_MS } from "../shared";
 
 export class WaitForIcpTx extends BaseStep {

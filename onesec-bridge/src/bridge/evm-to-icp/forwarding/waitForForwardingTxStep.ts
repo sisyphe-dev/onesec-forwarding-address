@@ -8,8 +8,8 @@ import type {
   Token,
   TransferId,
 } from "../../../types";
-import { BaseStep } from "../../baseStep";
 import { exponentialBackoff, format, sleep } from "../../../utils";
+import { BaseStep } from "../../baseStep";
 import { ICP_CALL_DURATION_MS } from "../../shared";
 import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
 

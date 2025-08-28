@@ -7,9 +7,9 @@ import type {
   StepStatus,
   Token,
 } from "../../types";
+import { encodeIcrcAccount, format, formatIcpAccount } from "../../utils";
 import { BaseStep, GetEvmTx } from "../baseStep";
 import { EVM_CALL_DURATION_MS } from "../shared";
-import { encodeIcrcAccount, format, formatIcpAccount } from "../../utils";
 
 export class BurnStep extends BaseStep implements GetEvmTx {
   private data1: Uint8Array;

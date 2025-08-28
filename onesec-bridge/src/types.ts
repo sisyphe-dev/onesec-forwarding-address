@@ -380,7 +380,7 @@ export interface Step {
 
   /**
    * @returns `true` if it is this step's turn to run and if its state allows
-   * running. Otherwise returns `false`. 
+   * running. Otherwise returns `false`.
    */
   canRun: () => boolean;
 
@@ -389,7 +389,7 @@ export interface Step {
    *
    * This method is idempotent - calling it multiple times will not
    * cause duplicate operations. Failed steps can be retried by calling run() again.
-   * 
+   *
    * If `canRun()` is `false`, then calling this function does nothing.
    *
    * @returns Promise resolving to the step's final status

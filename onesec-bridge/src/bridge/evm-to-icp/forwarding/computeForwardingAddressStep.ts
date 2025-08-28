@@ -7,8 +7,8 @@ import type {
   Token,
   TransferId,
 } from "../../../types";
-import { BaseStep } from "../../baseStep";
 import { formatIcpAccount } from "../../../utils";
+import { BaseStep } from "../../baseStep";
 import { ICP_CALL_DURATION_MS } from "../../shared";
 
 export class ComputeForwardingAddressStep extends BaseStep {

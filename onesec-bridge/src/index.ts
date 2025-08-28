@@ -5,8 +5,13 @@ import type { Deployment, OneSecForwarding, Step, StepStatus } from "./types";
 export { EvmToIcpBridgeBuilder, IcpToEvmBridgeBuilder } from "./bridge";
 export { DEFAULT_CONFIG } from "./config";
 export type { Config, IcpConfig, TokenConfig } from "./config";
-export type { About, Amount, OneSecForwarding, Step, StepStatus as StepStatus, } from "./types";
-
+export type {
+  About,
+  Amount,
+  OneSecForwarding,
+  Step,
+  StepStatus as StepStatus,
+} from "./types";
 
 /**
  * Constructs an instance of `OneSecForwarding` for bridging tokens from EVM

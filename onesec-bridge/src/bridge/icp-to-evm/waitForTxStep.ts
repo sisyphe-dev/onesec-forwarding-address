@@ -10,8 +10,13 @@ import type {
   StepStatus,
   Token,
 } from "../../types";
+import {
+  exponentialBackoff,
+  formatIcpAccount,
+  formatTx,
+  sleep,
+} from "../../utils";
 import { BaseStep } from "../baseStep";
-import { exponentialBackoff, formatIcpAccount, formatTx, sleep } from "../../utils";
 import { ICP_CALL_DURATION_MS } from "../shared";
 import { TransferStep } from "./transferStep";
 

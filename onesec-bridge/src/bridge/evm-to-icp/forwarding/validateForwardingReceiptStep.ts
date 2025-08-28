@@ -7,14 +7,15 @@ import type {
   Token,
   TransferId,
 } from "../../../types";
-import { BaseStep, GetTransferId } from "../../baseStep";
 import { exponentialBackoff, sleep } from "../../../utils";
+import { BaseStep, GetTransferId } from "../../baseStep";
 import { ICP_CALL_DURATION_MS } from "../../shared";
 import { ComputeForwardingAddressStep } from "./computeForwardingAddressStep";
 
 export class ValidateForwardingReceiptStep
   extends BaseStep
-  implements GetTransferId {
+  implements GetTransferId
+{
   private transferId?: TransferId;
 
   constructor(

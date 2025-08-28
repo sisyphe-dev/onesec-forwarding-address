@@ -10,8 +10,8 @@ import type {
   StepStatus,
   Token,
 } from "../../types";
-import { BaseStep } from "../baseStep";
 import { format, formatTx } from "../../utils";
+import { BaseStep } from "../baseStep";
 import { ICP_CALL_DURATION_MS } from "../shared";
 
 export class ApproveStep extends BaseStep {

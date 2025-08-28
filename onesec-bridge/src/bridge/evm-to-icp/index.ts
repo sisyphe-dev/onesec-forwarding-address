@@ -19,10 +19,10 @@ import type {
   Step,
   Token,
 } from "../../types";
-import { anonymousAgent, oneSecWithAgent } from "../shared";
+import { numberToBigintScaled } from "../../utils";
 import { ConfirmBlocksStep } from "../confirmBlocksStep";
 import { FetchFeesAndCheckLimitsStep } from "../fetchFeesAndCheckLimitsStep";
-import { numberToBigintScaled } from "../../utils";
+import { anonymousAgent, oneSecWithAgent } from "../shared";
 import { ApproveStep } from "./approveStep";
 import { BurnStep } from "./burnStep";
 import { ComputeForwardingAddressStep } from "./forwarding/computeForwardingAddressStep";
@@ -70,7 +70,7 @@ export class EvmToIcpBridgeBuilder {
   constructor(
     private evmChain: EvmChain,
     private token: Token,
-  ) { }
+  ) {}
 
   /**
    * Set target deployment network.

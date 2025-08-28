@@ -9,8 +9,8 @@ import type {
   Token,
   TransferId,
 } from "../../types";
-import { BaseStep, GetEvmTx, GetTransferId } from "../baseStep";
 import { exponentialBackoff, sleep } from "../../utils";
+import { BaseStep, GetEvmTx, GetTransferId } from "../baseStep";
 import { ICP_CALL_DURATION_MS } from "../shared";
 
 export class ValidateReceiptStep extends BaseStep implements GetTransferId {

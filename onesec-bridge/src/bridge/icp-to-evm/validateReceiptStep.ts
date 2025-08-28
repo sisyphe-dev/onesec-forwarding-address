@@ -1,8 +1,14 @@
 import * as fromCandid from "../../fromCandid";
 import { type _SERVICE as OneSec } from "../../generated/candid/onesec/onesec.did";
 import type { About, EvmChain, StepStatus, Token } from "../../types";
+import {
+  amountFromUnits,
+  exponentialBackoff,
+  format,
+  formatTx,
+  sleep,
+} from "../../utils";
 import { BaseStep } from "../baseStep";
-import { amountFromUnits, exponentialBackoff, format, formatTx, sleep } from "../../utils";
 import { ICP_CALL_DURATION_MS } from "../shared";
 import { TransferStep } from "./transferStep";
 

@@ -6,9 +6,9 @@ import type {
   StepStatus,
   Token,
 } from "../../types";
+import { format, formatIcpAccount } from "../../utils";
 import { BaseStep } from "../baseStep";
 import { EVM_CALL_DURATION_MS } from "../shared";
-import { format, formatIcpAccount } from "../../utils";
 
 export class ApproveStep extends BaseStep {
   constructor(

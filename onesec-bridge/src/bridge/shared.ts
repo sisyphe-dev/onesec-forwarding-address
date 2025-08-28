@@ -10,7 +10,6 @@ import type { Deployment } from "../types";
 export const EVM_CALL_DURATION_MS = 5000;
 export const ICP_CALL_DURATION_MS = 5000;
 
-
 const _anonymousAgent: Map<Deployment, Agent> = new Map<Deployment, Agent>();
 
 export async function anonymousAgent(
@@ -72,5 +71,3 @@ function defaultOneSecCanisterId(
   }
   return canisterId;
 }
-
-

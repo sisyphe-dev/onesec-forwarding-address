@@ -5,7 +5,7 @@ import { createTestSigners } from "./testUtils";
 
 // The purpose of this test is to show how to use the API. It is skipped by
 // default because it requires private keys and interacts with the mainnet.
-it(
+it.skip(
   "should transfer USDC from Base to ICP using bridge directly",
   { timeout: 200000 },
   async () => {
@@ -14,6 +14,7 @@ it(
     const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
       .receiver(icpIdentity.getPrincipal())
       .amountInUnits(1_500_000n)
+      // alternative: use `.amountInTokens(1.5)`
       .build(evmSigner);
 
     console.log("Plan steps:");
@@ -44,7 +45,9 @@ it(
 
     // Verify final results are available
     if (result.amount) {
-      console.log(`Received: ${result.amount.inTokens} USDC (${result.amount.inUnits} units)`);
+      console.log(
+        `Received: ${result.amount.inTokens} USDC (${result.amount.inUnits} units)`,
+      );
       expect(result.amount.inUnits).toBeGreaterThan(0n);
     }
     if (result.transaction) {
@@ -56,7 +59,7 @@ it(
 
 // The purpose of this test is to show how to use the API. It is skipped by
 // default because it requires private keys and interacts with the mainnet.
-it(
+it.skip(
   "should transfer USDC from ICP to Base using bridge directly",
   { timeout: 200000 },
   async () => {
@@ -73,6 +76,7 @@ it(
       .sender(icpIdentity.getPrincipal())
       .receiver(evmAddress)
       .amountInUnits(1_500_000n)
+      // alternative: use `.amountInTokens(1.5)`
       .build();
 
     console.log("Plan steps:");
@@ -104,7 +108,9 @@ it(
 
     // Verify final results are available
     if (result.amount) {
-      console.log(`Received: ${result.amount.inTokens} USDC (${result.amount.inUnits} units)`);
+      console.log(
+        `Received: ${result.amount.inTokens} USDC (${result.amount.inUnits} units)`,
+      );
       expect(result.amount.inUnits).toBeGreaterThan(0n);
     }
     if (result.transaction) {
@@ -116,7 +122,7 @@ it(
 
 // The purpose of this test is to show how to use the API. It is skipped by
 // default because it requires private keys and interacts with the mainnet.
-it(
+it.skip(
   "should transfer USDC from Base to ICP using forwarding address",
   { timeout: 200000 },
   async () => {
@@ -124,7 +130,6 @@ it(
 
     const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
       .receiver(icpIdentity.getPrincipal())
-      .amountInUnits(1_500_000n)
       .forward();
 
     console.log("Plan steps:");
@@ -180,7 +185,9 @@ it(
 
     // Verify final results are available
     if (result.amount) {
-      console.log(`Received: ${result.amount.inTokens} USDC (${result.amount.inUnits} units)`);
+      console.log(
+        `Received: ${result.amount.inTokens} USDC (${result.amount.inUnits} units)`,
+      );
       expect(result.amount.inUnits).toBeGreaterThan(0n);
     }
     if (result.transaction) {
