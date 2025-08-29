@@ -164,7 +164,7 @@ export const DEFAULT_CONFIG: Config = {
     hosts: new Map([
       ["Mainnet", "https://ic0.app"],
       ["Testnet", "https://ic0.app"],
-      ["Local", "http://127.0.1:8080"],
+      ["Local", "http://127.0.0.1:8080"],
     ]),
     onesec: new Map([
       ["Mainnet", "5okwm-giaaa-aaaar-qbn6a-cai"],
