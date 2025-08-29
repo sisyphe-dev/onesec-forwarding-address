@@ -1,0 +1,4 @@
+.vscode
+**/*.pem
+**/.env
+**/target

@@ -10,6 +10,8 @@ import type {
   Status,
   Token,
   Transfer,
+  TransferFee,
+  TransferResponse,
   Tx,
 } from "./types";
 
@@ -223,4 +225,49 @@ export function transfer(transfer: candid.Transfer): Transfer {
     destination: asset(transfer.destination),
     status: status(transfer.status[0]),
   };
+}
+
+export function transferResponse(
+  response: candid.TransferResponse,
+): TransferResponse {
+  switch (true) {
+    case "Failed" in response:
+      return { Failed: response.Failed };
+    case "Accepted" in response:
+      return { Accepted: response.Accepted };
+    case "Fetching" in response:
+      return { Fetching: { blockHeight: response.Fetching.block_height } };
+    default: {
+      const _exhaustiveCheck: never = response;
+      throw Error("unexpected candid transfer response");
+    }
+  }
+}
+
+export function transferFee(
+  response: candid.TransferFee,
+): TransferFee | undefined {
+  const maybeToken = token(response.source_token[0]);
+  const maybeSourceChain = chain(response.source_chain[0]);
+  const maybeDestinationChain = chain(response.destination_chain[0]);
+
+  if (!maybeToken || !maybeSourceChain || !maybeDestinationChain) {
+    return undefined;
+  }
+
+  return {
+    token: maybeToken,
+    sourceChain: maybeSourceChain,
+    destinationChain: maybeDestinationChain,
+    minAmount: response.min_amount,
+    maxAmount: response.max_amount,
+    available: response.available[0],
+    latestTransferFee: response.latest_transfer_fee_in_tokens,
+    averageTransferFee: response.average_transfer_fee_in_tokens,
+    protocolFeeInPercent: response.protocol_fee_in_percent,
+  };
+}
+
+export function transferFees(response: candid.TransferFee[]): TransferFee[] {
+  return response.map(transferFee).filter((x) => x !== undefined);
 }

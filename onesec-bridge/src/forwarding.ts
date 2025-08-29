@@ -1,8 +1,9 @@
 import { unzip } from "fflate";
+import { anonymousOneSec } from "./bridge/shared";
 import * as fromCandid from "./fromCandid";
+import { type _SERVICE as OneSec } from "./generated/candid/onesec/onesec.did";
 import wasmInit, * as wasm from "./generated/wasm/forwarding_address";
 import { FORWARDING_ADDRESS_WASM } from "./generated/wasm/forwarding_address.wasm";
-import { anonymousOneSec, type OneSec } from "./icp";
 import * as toCandid from "./toCandid";
 import type {
   Deployment,
