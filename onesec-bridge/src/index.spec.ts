@@ -124,12 +124,19 @@ it.skip(
 // default because it requires private keys and interacts with the mainnet.
 it.skip(
   "should transfer USDC from Base to ICP using forwarding address",
-  { timeout: 200000 },
+  { timeout: 2000000 },
   async () => {
     const { icpIdentity } = createTestSigners();
 
     const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
-      .receiver(icpIdentity.getPrincipal())
+      .receiver(
+        icpIdentity.getPrincipal(),
+        Uint8Array.from([
+          1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+          1, 1, 1, 1, 1, 1, 1, 1, 1,
+        ]),
+      )
+      .deployment("Testnet")
       .forward();
 
     console.log("Plan steps:");

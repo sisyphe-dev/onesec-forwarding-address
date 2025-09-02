@@ -61,7 +61,7 @@ export class IcpToEvmBridgeBuilder {
     private agent: Agent,
     private evmChain: EvmChain,
     private token: Token,
-  ) { }
+  ) {}
 
   /**
    * Set target deployment network.

@@ -78,9 +78,15 @@ export class ValidateForwardingReceiptStep
 
     const transferId = response.done;
 
+    this._status = {
+      state: "running",
+      concise: "querying",
+      verbose: `calling get_forwarding_status of OneSec: ${transferId?.id}, ${lastTransferId?.id}`,
+    };
+
     if (
       transferId !== undefined &&
-      (lastTransferId === undefined || transferId > lastTransferId)
+      (lastTransferId === undefined || transferId.id > lastTransferId.id)
     ) {
       this.transferId = transferId;
       this._status = {
