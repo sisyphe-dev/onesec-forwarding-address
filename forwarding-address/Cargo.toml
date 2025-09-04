@@ -6,12 +6,13 @@ edition = "2021"
 [features]
 default = ["js"]
 js = ["dep:getrandom"]
+wasm-bindgen = ["dep:wasm-bindgen"]
 
 [lib]
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-wasm-bindgen = "0.2"
+wasm-bindgen = { version = "0.2", optional = true }
 ic-ethereum-types = { git = "https://github.com/dfinity/ic.git", rev = "5128134d24b7a5b8e24a3d5d40c4cce9d81fd375" }
 ic-secp256k1 = "0.1.0"
 ic-sha3 = { git = "https://github.com/dfinity/ic.git", rev = "5128134d24b7a5b8e24a3d5d40c4cce9d81fd375" }
