@@ -359,7 +359,7 @@ export class EvmToIcpBridgeBuilder {
     const amount =
       this.evmAmountInUnits !== undefined
         ? this.evmAmountInUnits
-        : this.amountInTokens !== undefined
+        : this.evmAmountInTokens !== undefined
           ? numberToBigintScaled(this.evmAmountInTokens!, decimals)
           : undefined;
 

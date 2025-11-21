@@ -37,7 +37,7 @@ const wallet = new Wallet("your-private-key", provider);
 // Create bridging plan
 const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
   .receiver(Principal.fromText("your-icp-principal"))
-  .amountInTokens(1_500_000n) // 1.5 USDC
+  .amountInUnits(1_500_000n) // 1.5 USDC
   // alternative: use `.amountInTokens(1.5)`
   .build(wallet);
 
