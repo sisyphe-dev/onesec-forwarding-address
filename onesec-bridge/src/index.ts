@@ -10,7 +10,9 @@ export type {
   Amount,
   OneSecForwarding,
   Step,
-  StepStatus as StepStatus,
+  StepStatus,
+  Token,
+  EvmChain,
 } from "./types";
 
 /**
