@@ -1,5 +1,6 @@
 use ic_ethereum_types::Address;
 use ic_secp256k1::{DerivationIndex, DerivationPath, PublicKey};
+#[cfg(feature = "wasm-bindgen")]
 use wasm_bindgen::prelude::*;
 
 pub const MAINNET_KEY_ID: u8 = 0;
@@ -37,12 +38,12 @@ MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEgPOczsVDO2aWzmQCP5S3AcUGi+y3FxZJ
 pub const LOCAL_CHAIN_CODE: &str =
     "70628cc337d33056c29f473dd91d1644a232ac16a8d1d87e0c524e0feafefb6c";
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm-bindgen", wasm_bindgen)]
 pub fn forwarding_address_from_icrc(key: u8, principal: Vec<u8>, subaccount: Vec<u8>) -> String {
     forwarding_address_from_path(key, derivation_path_icrc(principal, subaccount))
 }
 
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm-bindgen", wasm_bindgen)]
 pub fn forwarding_address_from_account_id(key: u8, account_id: Vec<u8>) -> String {
     forwarding_address_from_path(key, derivation_path_account_id(account_id))
 }
