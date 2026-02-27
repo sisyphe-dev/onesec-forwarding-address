@@ -157,7 +157,7 @@ export function formatIcpAccount(account: IcrcAccount): string {
     const subaccount = [...account.subaccount]
       .map((byte) => byte.toString(16).padStart(2, "0"))
       .join("");
-    return `${account.owner.toText} / ${subaccount}`;
+    return `${account.owner.toText()} / ${subaccount}`;
   }
   return account.owner.toText();
 }

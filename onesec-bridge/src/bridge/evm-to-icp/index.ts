@@ -70,7 +70,7 @@ export class EvmToIcpBridgeBuilder {
   constructor(
     private evmChain: EvmChain,
     private token: Token,
-  ) { }
+  ) {}
 
   /**
    * Set target deployment network.

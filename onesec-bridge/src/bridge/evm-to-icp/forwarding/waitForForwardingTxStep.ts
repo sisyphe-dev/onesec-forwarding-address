@@ -85,7 +85,7 @@ export class WaitForForwardingTxStep extends BaseStep {
 
     if (
       transferId !== undefined &&
-      (lastTransferId === undefined || transferId > lastTransferId)
+      (lastTransferId === undefined || transferId.id > lastTransferId.id)
     ) {
       this.transferId = transferId;
       this._status = {
