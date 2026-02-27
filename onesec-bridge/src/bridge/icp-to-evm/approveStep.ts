@@ -1,6 +1,5 @@
 import { Principal } from "@dfinity/principal";
 import {
-  Allowance,
   ApproveError,
   type _SERVICE as IcrcLedger,
 } from "../../generated/candid/icrc_ledger/icrc_ledger.did";
@@ -52,21 +51,23 @@ export class ApproveStep extends BaseStep {
       verbose: `calling icrc2_approve of ${this.token} ledger`,
     };
 
-    const allowanceResult = await this.ledgerActor.icrc2_allowance({
-      owner: this.icpAccount,
+    const allowance = await this.ledgerActor.icrc2_allowance({
+      account: {
+        owner: this.icpAccount.owner,
+        subaccount: this.icpAccount.subaccount
+          ? [this.icpAccount.subaccount]
+          : [],
+      },
       spender: { owner: this.oneSecId, subaccount: [] },
-    })
-    if ("Ok" in allowanceResult) {
-      const allowance : Allowance = allowanceResult.Ok;
-      // We can skip approval if the current allowance is sufficient and expires_at is not set.
-      if (allowance.expires_at.length === 0 && allowance.allowance >= this.amount) {
-        this._status = {
-          state: "succeeded",
-          concise: "already approved",
-          verbose: `already approved ${format(allowance.allowance, this.decimals)} ${this.token} to OneSec`,
-        };
-        return this._status;
-      }
+    });
+    // We can skip approval if the current allowance is sufficient and expires_at is not set.
+    if (allowance.expires_at.length === 0 && allowance.allowance >= this.amount) {
+      this._status = {
+        state: "succeeded",
+        concise: "already approved",
+        verbose: `already approved ${format(allowance.allowance, this.decimals)} ${this.token} to OneSec`,
+      };
+      return this._status;
     }
 
     const approvalResult = await this.ledgerActor.icrc2_approve({

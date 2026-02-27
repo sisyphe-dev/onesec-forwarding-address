@@ -12,7 +12,9 @@ import type {
 } from "./types";
 
 export { EvmToIcpBridgeBuilder, IcpToEvmBridgeBuilder } from "./bridge";
+export { resumeIcpToEvm } from "./bridge/icp-to-evm/resumeIcpToEvm";
 export { DEFAULT_CONFIG } from "./config";
+export { getTransfers } from "./getTransfers";
 export type { Config, IcpConfig, TokenConfig } from "./config";
 export type {
   About,
@@ -23,6 +25,8 @@ export type {
   StepStatus,
   Token,
   EvmChain,
+  Transfer,
+  TransferId,
 } from "./types";
 
 /**
