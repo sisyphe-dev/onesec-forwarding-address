@@ -1,6 +1,15 @@
+import type { Principal } from "@dfinity/principal";
 import { BaseStep } from "./bridge";
 import { OneSecForwardingImpl } from "./forwarding";
-import type { Deployment, OneSecForwarding, Step, StepStatus } from "./types";
+import type {
+  Deployment,
+  EvmChain,
+  ForwardingResponse,
+  OneSecForwarding,
+  Step,
+  StepStatus,
+  Token,
+} from "./types";
 
 export { EvmToIcpBridgeBuilder, IcpToEvmBridgeBuilder } from "./bridge";
 export { DEFAULT_CONFIG } from "./config";
@@ -8,10 +17,59 @@ export type { Config, IcpConfig, TokenConfig } from "./config";
 export type {
   About,
   Amount,
+  ForwardingResponse,
   OneSecForwarding,
   Step,
   StepStatus as StepStatus,
 } from "./types";
+
+/**
+ * Computes the EVM forwarding address for a given ICP principal.
+ *
+ * The forwarding address is deterministic and depends only on the receiver's
+ * ICP account and the deployment network — it is the same regardless of
+ * which EVM chain or token is used.
+ *
+ * @param principal ICP principal receiving the bridged tokens
+ * @param subaccount Optional 32-byte subaccount
+ * @param deployment Target network (defaults to "Mainnet")
+ * @returns The EVM forwarding address
+ */
+export async function forwardingAddress(
+  principal: Principal,
+  subaccount?: Uint8Array,
+  deployment?: Deployment,
+): Promise<string> {
+  const onesec = new OneSecForwardingImpl(deployment ?? "Mainnet");
+  return onesec.addressFor({ owner: principal, subaccount });
+}
+
+/**
+ * Notifies the OneSec bridge that a user has sent tokens to a forwarding address,
+ * triggering the bridging process.
+ *
+ * @param token Token that was sent (e.g., "USDC", "ICP")
+ * @param evmChain EVM chain the tokens were sent on (e.g., "Base", "Arbitrum")
+ * @param forwardingAddress The EVM forwarding address that received the tokens
+ * @param principal ICP principal of the receiver
+ * @param subaccount Optional 32-byte subaccount
+ * @param deployment Target network (defaults to "Mainnet")
+ * @returns The forwarding response with status and optional transfer ID
+ */
+export async function notifyForwardingPayment(
+  token: Token,
+  evmChain: EvmChain,
+  forwardingAddress: string,
+  principal: Principal,
+  subaccount?: Uint8Array,
+  deployment?: Deployment,
+): Promise<ForwardingResponse> {
+  const onesec = new OneSecForwardingImpl(deployment ?? "Mainnet");
+  return onesec.forwardEvmToIcp(token, evmChain, forwardingAddress, {
+    owner: principal,
+    subaccount,
+  });
+}
 
 /**
  * Constructs an instance of `OneSecForwarding` for bridging tokens from EVM
