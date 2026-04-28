@@ -1,4 +1,4 @@
-import { HttpAgent } from "@dfinity/agent";
+import { HttpAgent } from "@icp-sdk/core/agent";
 import { describe, expect, it } from "vitest";
 import { EvmToIcpBridgeBuilder, IcpToEvmBridgeBuilder } from "./index";
 import { createTestSigners } from "./testUtils";

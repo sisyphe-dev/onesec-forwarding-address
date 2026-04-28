@@ -1,6 +1,6 @@
 {
   "name": "onesec-bridge",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "A library for interacting with the onesec.to bridge",
   "license": "Apache-2.0",
   "type": "module",
@@ -42,17 +42,21 @@
     "prettier": "npx prettier --write ./src/"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.13",
-    "@types/node": "^20.12.7",
-    "dotenv": "^17.2.1",
-    "jsdom": "^25.0.0",
-    "prettier": "^3.3.3",
-    "prettier-plugin-organize-imports": "^4.0.0",
-    "tsdoc-markdown": "^0.6.0",
-    "typescript": "^5.3.3",
-    "vite": "^7.3.1",
+    "@icp-sdk/core": "^5.3.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.19.39",
+    "dotenv": "^17.4.2",
+    "jsdom": "^29.0.2",
+    "prettier": "^3.8.3",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "tsdoc-markdown": "^1.4.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.2",
     "vite-plugin-dts": "^4.5.4",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.4"
+  },
+  "peerDependencies": {
+    "@icp-sdk/core": "^5"
   },
   "engines": {
     "node": ">=20"
@@ -61,12 +65,7 @@
     "minimatch": "^10.2.4"
   },
   "dependencies": {
-    "@dfinity/agent": "^3.2.1",
-    "@dfinity/candid": "^3.2.2",
-    "@dfinity/identity": "^3.2.2",
-    "@dfinity/identity-secp256k1": "^3.2.2",
-    "@dfinity/principal": "^3.2.2",
-    "ethers": "^6.15.0",
+    "ethers": "^6.16.0",
     "fflate": "^0.8.2"
   }
 }

@@ -1,5 +1,5 @@
-import { Actor, HttpAgent, type Agent } from "@dfinity/agent";
-import { Principal } from "@dfinity/principal";
+import { Actor, HttpAgent, type Agent } from "@icp-sdk/core/agent";
+import { Principal } from "@icp-sdk/core/principal";
 import { DEFAULT_CONFIG, type Config } from "../config";
 import {
   idlFactory as OneSecIDL,

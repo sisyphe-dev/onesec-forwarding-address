@@ -2,6 +2,10 @@
 
 A TypeScript SDK for bridging tokens between EVM chains (Ethereum, Arbitrum, Base) and the Internet Computer (ICP) using the OneSec bridge protocol.
 
+## Changelog
+
+- **0.13.0**: migrated to `@icp-sdk/core@^5` (peer dep). Consumers must install it themselves. Pin `onesec-bridge@0.12.x` to stay on the legacy `@dfinity/*` packages.
+
 ## Features
 
 - **Bi-directional bridging**: Transfer tokens from EVM chains to ICP and vice versa
@@ -10,13 +14,15 @@ A TypeScript SDK for bridging tokens between EVM chains (Ethereum, Arbitrum, Bas
 
 ## Installation
 
+`onesec-bridge` declares `@icp-sdk/core@^5` as a peer dependency, so consumers must install it alongside.
+
 ```bash
 # with npm
-npm install onesec-bridge
+npm install onesec-bridge @icp-sdk/core
 # with pnpm
-pnpm add onesec-bridge
+pnpm add onesec-bridge @icp-sdk/core
 # with yarn
-yarn add onesec-bridge
+yarn add onesec-bridge @icp-sdk/core
 ```
 
 ## Quick Start
@@ -28,7 +34,7 @@ Use this approach when users can connect their wallet and sign transactions dire
 ```typescript
 import { EvmToIcpBridgeBuilder } from "onesec-bridge";
 import { JsonRpcProvider, Wallet } from "ethers";
-import { Principal } from "@dfinity/principal";
+import { Principal } from "@icp-sdk/core/principal";
 
 // Setup wallet or use the browser wallet API.
 const provider = new JsonRpcProvider("https://mainnet.base.org");
@@ -85,7 +91,7 @@ Use this approach when users cannot connect a wallet or prefer to send tokens ma
 
 ```typescript
 import { EvmToIcpBridgeBuilder } from "onesec-bridge";
-import { Principal } from "@dfinity/principal";
+import { Principal } from "@icp-sdk/core/principal";
 
 // Create forwarding-based bridging plan
 const plan = await new EvmToIcpBridgeBuilder("Base", "USDC")
@@ -136,8 +142,8 @@ Transfer tokens from ICP to EVM chains. Requires an authenticated ICP agent.
 
 ```typescript
 import { IcpToEvmBridgeBuilder } from "onesec-bridge";
-import { HttpAgent } from "@dfinity/agent";
-import { Secp256k1KeyIdentity } from "@dfinity/identity-secp256k1";
+import { HttpAgent } from "@icp-sdk/core/agent";
+import { Secp256k1KeyIdentity } from "@icp-sdk/core/identity/secp256k1";
 
 // Setup ICP identity and agent
 const identity = Secp256k1KeyIdentity.fromSecretKey(/* your private key */);

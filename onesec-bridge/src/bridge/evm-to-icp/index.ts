@@ -1,4 +1,4 @@
-import { Principal } from "@dfinity/principal";
+import { Principal } from "@icp-sdk/core/principal";
 import { Contract, Signer } from "ethers";
 import { BridgingPlan } from "../..";
 import {

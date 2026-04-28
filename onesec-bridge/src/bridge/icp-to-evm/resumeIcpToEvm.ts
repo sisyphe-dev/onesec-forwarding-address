@@ -1,5 +1,5 @@
-import type { Agent } from "@dfinity/agent";
-import { Principal } from "@dfinity/principal";
+import type { Agent } from "@icp-sdk/core/agent";
+import { Principal } from "@icp-sdk/core/principal";
 import { BridgingPlan } from "../..";
 import {
   Config,

@@ -1,4 +1,4 @@
-import { IDL } from "@dfinity/candid";
+import { IDL } from "@icp-sdk/core/candid";
 export const idlFactory = () => {
   const GetBlocksResult = IDL.Rec();
   const ICRC3Value = IDL.Rec();

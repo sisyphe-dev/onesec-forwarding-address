@@ -1,6 +1,6 @@
 import { OneSecForwardingImpl } from "./forwarding";
 
-import { Principal } from "@dfinity/principal";
+import { Principal } from "@icp-sdk/core/principal";
 import { expect, it } from "vitest";
 
 const TEST_USER: Principal = Principal.fromText(

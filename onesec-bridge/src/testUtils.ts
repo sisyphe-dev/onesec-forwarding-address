@@ -1,4 +1,4 @@
-import { Secp256k1KeyIdentity } from "@dfinity/identity-secp256k1";
+import { Secp256k1KeyIdentity } from "@icp-sdk/core/identity/secp256k1";
 import { config } from "dotenv";
 import { JsonRpcProvider, Wallet } from "ethers";
 

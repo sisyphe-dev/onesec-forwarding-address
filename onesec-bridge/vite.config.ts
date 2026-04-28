@@ -19,11 +19,11 @@ export default defineConfig({
     },
     rollupOptions: {
       // Exclude peer dependencies from the bundle
-      external: ['@dfinity/agent', 'fflate'],
+      external: [/^@icp-sdk\/core(\/.*)?$/, 'fflate', 'ethers'],
       output: {
         globals: {
-          '@dfinity/agent': 'DFINITYAgent',
-          'fflate': 'fflate'
+          'fflate': 'fflate',
+          'ethers': 'ethers'
         }
       }
     }
